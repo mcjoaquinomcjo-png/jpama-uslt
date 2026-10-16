@@ -13,8 +13,9 @@ import {
   GraduationCap,
   Plus,
   Trash2,
+  Trophy,
 } from "lucide-react";
-import { AboutContent, DEFAULT_ABOUT_CONTENT } from "@/lib/siteContent";
+import { AboutContent, FacultyAdviser, DEFAULT_ABOUT_CONTENT } from "@/lib/siteContent";
 
 interface AboutPageEditorProps {
   content: AboutContent;
@@ -31,7 +32,9 @@ export default function AboutPageEditor({
   isSaved,
   onReset,
 }: AboutPageEditorProps) {
-  const [activeTab, setActiveTab] = useState<"header" | "mission_vision" | "milestones" | "faculty" | "constitution">("header");
+  const [activeTab, setActiveTab] = useState<
+    "header" | "mission_vision" | "milestones" | "faculty" | "achievements" | "constitution"
+  >("header");
 
   const updateHeader = (field: keyof AboutContent["header"], value: string) => {
     onChange({
@@ -78,10 +81,65 @@ export default function AboutPageEditor({
     });
   };
 
-  const updateFaculty = (field: keyof AboutContent["faculty"], value: string) => {
+  // Faculty Advisers
+  const facultyList = content.faculty_advisers || [];
+  const updateFacultyAdviser = (idx: number, field: keyof FacultyAdviser, value: string) => {
+    const list = [...facultyList];
+    list[idx] = { ...list[idx], [field]: value };
+    onChange({ ...content, faculty_advisers: list });
+  };
+
+  const addFacultyAdviser = () => {
     onChange({
       ...content,
-      faculty: { ...content.faculty, [field]: value },
+      faculty_advisers: [
+        ...facultyList,
+        {
+          name: "New Faculty Adviser, CPA",
+          role: "Academic Adviser",
+          title: "Faculty, Department of Accountancy",
+          subjects_handled: "Management Accounting",
+          avatar: "",
+        },
+      ],
+    });
+  };
+
+  const removeFacultyAdviser = (idx: number) => {
+    if (facultyList.length <= 1) return;
+    onChange({
+      ...content,
+      faculty_advisers: facultyList.filter((_, i) => i !== idx),
+    });
+  };
+
+  // Achievements & Honors
+  const achievementsList = content.achievements || [];
+  const updateAchievement = (idx: number, field: "year" | "title" | "category" | "description", value: string) => {
+    const list = [...achievementsList];
+    list[idx] = { ...list[idx], [field]: value };
+    onChange({ ...content, achievements: list });
+  };
+
+  const addAchievement = () => {
+    onChange({
+      ...content,
+      achievements: [
+        ...achievementsList,
+        {
+          year: new Date().getFullYear().toString(),
+          title: "New Chapter Honor / Competition Award",
+          category: "Academic Competition",
+          description: "Details regarding the championship, recognition, or institutional citation.",
+        },
+      ],
+    });
+  };
+
+  const removeAchievement = (idx: number) => {
+    onChange({
+      ...content,
+      achievements: achievementsList.filter((_, i) => i !== idx),
     });
   };
 
@@ -94,9 +152,10 @@ export default function AboutPageEditor({
   const navTabs = [
     { id: "header", label: "Banner Header" },
     { id: "mission_vision", label: "Mission & Vision" },
-    { id: "milestones", label: "Milestones & Heritage" },
+    { id: "milestones", label: "Heritage Milestones" },
     { id: "faculty", label: "Faculty Advisers" },
-    { id: "constitution", label: "Constitution & By-Laws" },
+    { id: "achievements", label: "Achievements & Honors" },
+    { id: "constitution", label: "Constitution Articles" },
   ];
 
   return (
@@ -111,36 +170,37 @@ export default function AboutPageEditor({
             </h2>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Super User privileged controls: edit all banners, statements, faculty leadership, and constitutional articles.
+            Super User Exclusive: Customize all public sections, faculty credentials, achievements, and constitutional articles.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          {isSaved && (
-            <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-lg flex items-center gap-1.5 animate-fadeIn">
-              <Check className="w-3.5 h-3.5" />
-              <span>Saved Live!</span>
-            </span>
-          )}
+          <button
+            onClick={onReset}
+            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Reset Defaults</span>
+          </button>
           <button
             onClick={onSave}
-            className="px-5 py-2.5 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all"
+            className="px-4 py-1.5 bg-[#0A2540] hover:bg-[#14487A] text-white text-xs font-bold rounded-lg flex items-center gap-1.5 shadow-sm transition-all"
           >
-            <Save className="w-3.5 h-3.5" />
-            <span>Save About Page</span>
+            {isSaved ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Save className="w-3.5 h-3.5" />}
+            <span>{isSaved ? "Saved!" : "Save Changes"}</span>
           </button>
         </div>
       </div>
 
-      {/* Nav tabs */}
-      <div className="px-6 border-b border-slate-200 flex gap-2 overflow-x-auto">
+      {/* Sub-tab navigation */}
+      <div className="px-6 border-b border-slate-200 flex flex-wrap gap-2">
         {navTabs.map((t) => (
           <button
             key={t.id}
             onClick={() => setActiveTab(t.id as any)}
-            className={`px-4 py-2 text-xs font-semibold rounded-t-lg transition-colors border-b-2 whitespace-nowrap ${
+            className={`pb-3 px-2 text-xs font-semibold border-b-2 transition-colors ${
               activeTab === t.id
-                ? "border-[#0A2540] text-[#0A2540] bg-white font-bold"
+                ? "border-[#0A2540] text-[#0A2540]"
                 : "border-transparent text-slate-500 hover:text-slate-800"
             }`}
           >
@@ -149,58 +209,58 @@ export default function AboutPageEditor({
         ))}
       </div>
 
-      {/* Content body */}
-      <div className="p-6 space-y-6">
+      {/* Form sections */}
+      <div className="p-6 pt-2 space-y-6 text-xs">
         {/* 1. BANNER HEADER */}
         {activeTab === "header" && (
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Eyebrow School / Department Badge
+                Top Eyebrow Badge
               </label>
               <input
                 type="text"
                 value={content.header.badge}
                 onChange={(e) => updateHeader("badge", e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white"
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Main Title Prefix
+                  Main Title (Prefix)
                 </label>
                 <input
                   type="text"
                   value={content.header.title}
                   onChange={(e) => updateHeader("title", e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white font-serif font-bold text-[#0A2540]"
+                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540] font-bold text-[#0A2540]"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Title Highlight (Gold Accent)
+                  Gold Highlight Title
                 </label>
                 <input
                   type="text"
                   value={content.header.title_highlight}
                   onChange={(e) => updateHeader("title_highlight", e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white font-serif font-bold text-amber-800"
+                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540] font-bold text-[#C5A059]"
                 />
               </div>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                About Introduction Paragraph
+                Subtitle Description
               </label>
               <textarea
                 rows={3}
                 value={content.header.description}
                 onChange={(e) => updateHeader("description", e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white leading-relaxed"
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
               />
             </div>
           </div>
@@ -209,14 +269,16 @@ export default function AboutPageEditor({
         {/* 2. MISSION & VISION */}
         {activeTab === "mission_vision" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Mission Card */}
+            {/* Mission */}
             <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/60 space-y-3">
-              <span className="text-[10px] font-bold text-[#C5A059] uppercase tracking-wider">
-                Mission Section
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#C5A059]" />
+                <h4 className="font-serif font-bold text-sm text-[#0A2540]">Chapter Mission</h4>
+              </div>
+
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Eyebrow Label
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                  Eyebrow Tag
                 </label>
                 <input
                   type="text"
@@ -225,38 +287,42 @@ export default function AboutPageEditor({
                   className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                   Mission Headline
                 </label>
                 <input
                   type="text"
                   value={content.mission.title}
                   onChange={(e) => updateMission("title", e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540] font-serif font-bold text-[#0A2540]"
+                  className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540] font-bold text-[#0A2540]"
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                   Mission Statement
                 </label>
                 <textarea
                   rows={4}
                   value={content.mission.desc}
                   onChange={(e) => updateMission("desc", e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540] leading-relaxed"
+                  className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
                 />
               </div>
             </div>
 
-            {/* Vision Card */}
+            {/* Vision */}
             <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/60 space-y-3">
-              <span className="text-[10px] font-bold text-[#C5A059] uppercase tracking-wider">
-                Vision Section
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#0A2540]" />
+                <h4 className="font-serif font-bold text-sm text-[#0A2540]">Chapter Vision</h4>
+              </div>
+
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Eyebrow Label
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                  Eyebrow Tag
                 </label>
                 <input
                   type="text"
@@ -265,65 +331,65 @@ export default function AboutPageEditor({
                   className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                   Vision Headline
                 </label>
                 <input
                   type="text"
                   value={content.vision.title}
                   onChange={(e) => updateVision("title", e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540] font-serif font-bold text-[#0A2540]"
+                  className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540] font-bold text-[#0A2540]"
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                   Vision Statement
                 </label>
                 <textarea
                   rows={4}
                   value={content.vision.desc}
                   onChange={(e) => updateVision("desc", e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540] leading-relaxed"
+                  className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
                 />
               </div>
             </div>
           </div>
         )}
 
-        {/* 3. CHAPTER HERITAGE MILESTONES */}
+        {/* 3. MILESTONES & HERITAGE */}
         {activeTab === "milestones" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-xs text-slate-500">
-                Milestones appear on the Chapter Heritage timeline on the About page.
+                Key milestones displayed in the Chapter Heritage timeline on the About page.
               </p>
               <button
+                type="button"
                 onClick={addMilestone}
-                className="px-3 py-1.5 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-md text-xs font-semibold flex items-center gap-1 shadow-sm"
+                className="px-3 py-1 bg-[#0A2540] text-white rounded text-xs font-semibold flex items-center gap-1 hover:bg-[#14487A]"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-3 h-3" />
                 <span>Add Milestone</span>
               </button>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               {content.milestones.map((ms, idx) => (
-                <div key={idx} className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-3 relative">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-[#0A2540]">Milestone #{idx + 1}</span>
-                    {content.milestones.length > 1 && (
-                      <button
-                        onClick={() => removeMilestone(idx)}
-                        className="text-red-500 hover:text-red-700 p-1"
-                        title="Remove milestone"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
+                <div key={idx} className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-3 relative">
+                  <button
+                    type="button"
+                    onClick={() => removeMilestone(idx)}
+                    disabled={content.milestones.length <= 1}
+                    className="absolute top-3 right-3 text-slate-400 hover:text-red-500 disabled:opacity-30 p-1"
+                    title="Remove Milestone"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pr-6">
                     <div>
                       <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                         Year
@@ -332,10 +398,11 @@ export default function AboutPageEditor({
                         type="text"
                         value={ms.year}
                         onChange={(e) => updateMilestone(idx, "year", e.target.value)}
-                        className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540] font-bold font-serif"
+                        className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540] font-mono font-bold"
                       />
                     </div>
-                    <div className="sm:col-span-3">
+
+                    <div className="sm:col-span-2">
                       <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                         Milestone Title
                       </label>
@@ -367,203 +434,195 @@ export default function AboutPageEditor({
 
         {/* 4. FACULTY ADVISERS */}
         {activeTab === "faculty" && (
-          <div className="space-y-6">
-            <p className="text-xs text-slate-500">
-              Configure the 3 key faculty posts presiding over the JPAMA USLT Chapter: Chapter Adviser, SABH Dean, and Department Head.
-            </p>
-
-            {/* 1. Chapter Adviser */}
-            <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/60 space-y-4">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#C5A059]" />
-                <h4 className="font-serif font-bold text-sm text-[#0A2540]">
-                  Post 1: Chapter Adviser
-                </h4>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Adviser Full Name & Credentials
-                  </label>
-                  <input
-                    type="text"
-                    value={content.faculty.adviser_name}
-                    onChange={(e) => updateFaculty("adviser_name", e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540] font-bold text-[#0A2540]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Role Eyebrow Label
-                  </label>
-                  <input
-                    type="text"
-                    value={content.faculty.adviser_role}
-                    onChange={(e) => updateFaculty("adviser_role", e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Academic Designation / Title
-                  </label>
-                  <input
-                    type="text"
-                    value={content.faculty.adviser_title}
-                    onChange={(e) => updateFaculty("adviser_title", e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Adviser Photo URL (optional)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="https://... or leave blank for initials"
-                    value={content.faculty.adviser_avatar || ""}
-                    onChange={(e) => updateFaculty("adviser_avatar", e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
-                  />
-                </div>
-              </div>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-slate-500">
+                Manage all presiding faculty advisers, SABH administrators, and department heads.
+              </p>
+              <button
+                type="button"
+                onClick={addFacultyAdviser}
+                className="px-3 py-1.5 bg-[#0A2540] text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 hover:bg-[#14487A]"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Faculty Adviser</span>
+              </button>
             </div>
 
-            {/* 2. SABH Dean */}
-            <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/60 space-y-4">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#14487A]" />
-                <h4 className="font-serif font-bold text-sm text-[#0A2540]">
-                  Post 2: SABH Dean
-                </h4>
-              </div>
+            <div className="space-y-4">
+              {facultyList.map((adv, idx) => (
+                <div key={idx} className="p-5 rounded-xl border border-slate-200 bg-slate-50/70 space-y-4 relative">
+                  <div className="flex items-center justify-between border-b border-slate-200/80 pb-2">
+                    <span className="font-bold text-xs text-[#0A2540] uppercase tracking-wider">
+                      Adviser Post #{idx + 1}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeFacultyAdviser(idx)}
+                      disabled={facultyList.length <= 1}
+                      className="text-slate-400 hover:text-red-500 disabled:opacity-30 p-1"
+                      title="Delete Adviser"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Dean Full Name & Credentials
-                  </label>
-                  <input
-                    type="text"
-                    value={content.faculty.dean_name}
-                    onChange={(e) => updateFaculty("dean_name", e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540] font-bold text-[#0A2540]"
-                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Full Name & Titles / Degrees
+                      </label>
+                      <input
+                        type="text"
+                        value={adv.name}
+                        onChange={(e) => updateFacultyAdviser(idx, "name", e.target.value)}
+                        className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540] font-bold text-[#0A2540]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Role Eyebrow (e.g. Chapter Adviser, SABH Dean)
+                      </label>
+                      <input
+                        type="text"
+                        value={adv.role}
+                        onChange={(e) => updateFacultyAdviser(idx, "role", e.target.value)}
+                        className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Academic Designation / Institutional Office
+                      </label>
+                      <input
+                        type="text"
+                        value={adv.title}
+                        onChange={(e) => updateFacultyAdviser(idx, "title", e.target.value)}
+                        className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Subjects Handled / Specializations
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Strategic Cost Management, MAS"
+                        value={adv.subjects_handled || ""}
+                        onChange={(e) => updateFacultyAdviser(idx, "subjects_handled", e.target.value)}
+                        className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Adviser Photo URL (optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="https://... or leave blank for initials"
+                      value={adv.avatar || ""}
+                      onChange={(e) => updateFacultyAdviser(idx, "avatar", e.target.value)}
+                      className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
+                    />
+                  </div>
                 </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Role Eyebrow Label
-                  </label>
-                  <input
-                    type="text"
-                    value={content.faculty.dean_role}
-                    onChange={(e) => updateFaculty("dean_role", e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    School / Dean Title
-                  </label>
-                  <input
-                    type="text"
-                    value={content.faculty.dean_title}
-                    onChange={(e) => updateFaculty("dean_title", e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Dean Photo URL (optional)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="https://... or leave blank for initials"
-                    value={content.faculty.dean_avatar || ""}
-                    onChange={(e) => updateFaculty("dean_avatar", e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* 3. Department Head */}
-            <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/60 space-y-4">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#1B3A5C]" />
-                <h4 className="font-serif font-bold text-sm text-[#0A2540]">
-                  Post 3: Department Head
-                </h4>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Department Head Full Name & Credentials
-                  </label>
-                  <input
-                    type="text"
-                    value={content.faculty.head_name}
-                    onChange={(e) => updateFaculty("head_name", e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540] font-bold text-[#0A2540]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Role Eyebrow Label
-                  </label>
-                  <input
-                    type="text"
-                    value={content.faculty.head_role}
-                    onChange={(e) => updateFaculty("head_role", e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Department Designation
-                  </label>
-                  <input
-                    type="text"
-                    value={content.faculty.head_title}
-                    onChange={(e) => updateFaculty("head_title", e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Photo URL (optional)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="https://... or leave blank for initials"
-                    value={content.faculty.head_avatar || ""}
-                    onChange={(e) => updateFaculty("head_avatar", e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
-                  />
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         )}
 
-        {/* 5. CONSTITUTION ARTICLES */}
+        {/* 5. ACHIEVEMENTS & HONORS */}
+        {activeTab === "achievements" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-slate-500">
+                Chapter awards, inter-collegiate championships, and institutional citations shown under About.
+              </p>
+              <button
+                type="button"
+                onClick={addAchievement}
+                className="px-3 py-1.5 bg-[#0A2540] text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 hover:bg-[#14487A]"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Achievement</span>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {achievementsList.map((ach, idx) => (
+                <div key={idx} className="p-5 rounded-xl border border-slate-200 bg-slate-50/70 space-y-3 relative">
+                  <button
+                    type="button"
+                    onClick={() => removeAchievement(idx)}
+                    className="absolute top-3 right-3 text-slate-400 hover:text-red-500 p-1"
+                    title="Remove Honor"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pr-6">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                        Year
+                      </label>
+                      <input
+                        type="text"
+                        value={ach.year}
+                        onChange={(e) => updateAchievement(idx, "year", e.target.value)}
+                        className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540] font-mono font-bold"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                        Award / Distinction Title
+                      </label>
+                      <input
+                        type="text"
+                        value={ach.title}
+                        onChange={(e) => updateAchievement(idx, "title", e.target.value)}
+                        className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540] font-bold text-[#0A2540]"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                      Award Category (e.g. Academic Competition, Professional Certification, University Award)
+                    </label>
+                    <input
+                      type="text"
+                      value={ach.category}
+                      onChange={(e) => updateAchievement(idx, "category", e.target.value)}
+                      className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                      Citation Description
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={ach.description}
+                      onChange={(e) => updateAchievement(idx, "description", e.target.value)}
+                      className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 6. CONSTITUTION ARTICLES */}
         {activeTab === "constitution" && (
           <div className="space-y-4">
             <p className="text-xs text-slate-500">
@@ -572,19 +631,20 @@ export default function AboutPageEditor({
 
             <div className="space-y-4">
               {content.constitution_articles.map((art, idx) => (
-                <div key={idx} className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-3">
+                <div key={idx} className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-3">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                       <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                        Article Designator
+                        Article Number
                       </label>
                       <input
                         type="text"
                         value={art.article}
                         onChange={(e) => updateArticle(idx, "article", e.target.value)}
-                        className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540] font-bold"
+                        className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540] font-mono font-bold"
                       />
                     </div>
+
                     <div className="sm:col-span-2">
                       <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                         Article Title
@@ -600,13 +660,13 @@ export default function AboutPageEditor({
 
                   <div>
                     <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                      Summary Content
+                      Article Summary / Clause
                     </label>
                     <textarea
-                      rows={2}
+                      rows={3}
                       value={art.content}
                       onChange={(e) => updateArticle(idx, "content", e.target.value)}
-                      className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540] leading-relaxed"
+                      className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
                     />
                   </div>
                 </div>
@@ -614,30 +674,6 @@ export default function AboutPageEditor({
             </div>
           </div>
         )}
-
-        {/* Save footer */}
-        <div className="pt-5 border-t border-slate-200 flex items-center justify-between">
-          <button
-            onClick={() => {
-              if (confirm("Reset About page content to defaults?")) {
-                onChange(DEFAULT_ABOUT_CONTENT);
-                onReset();
-              }
-            }}
-            className="px-3 py-1.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold text-xs transition-colors flex items-center gap-1"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Reset Defaults</span>
-          </button>
-
-          <button
-            onClick={onSave}
-            className="px-6 py-2.5 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all"
-          >
-            <Save className="w-3.5 h-3.5" />
-            <span>Save All About Page Changes</span>
-          </button>
-        </div>
       </div>
     </div>
   );

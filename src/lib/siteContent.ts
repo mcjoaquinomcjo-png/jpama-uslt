@@ -80,8 +80,8 @@ export const DEFAULT_OVERVIEW_CONTENT: OverviewContent = {
     badge: "Academic Library & Materials",
     title: "Curated BSMA Reviewers & Course Syllabi",
     description:
-      "Access verified handouts, practice assessments, and mock board reviewers for Strategic Cost Management, MAS, Taxation, and Auditing. Exclusively curated for Louisian scholars.",
-    tags: ["Strategic Cost Mgt", "Mgt Advisory Services", "Business Law & Tax"],
+      "Access verified handouts, practice assessments, mock board reviewers, financial modeling templates, and testbanks spanning all BSMA core subjects — from Cost Accounting and MAS to Taxation, Auditing, and Business Law. Exclusively curated for Louisian scholars.",
+    tags: ["Cost Accounting & MAS", "Taxation & Business Law", "Auditing & Assurance"],
     btn_text: "Explore Resources",
   },
   contact: {
@@ -93,6 +93,14 @@ export const DEFAULT_OVERVIEW_CONTENT: OverviewContent = {
     hours_desc: "Monday – Friday: 8:00 AM – 5:00 PM (SABH Hallway Desk)",
   },
 };
+
+export interface FacultyAdviser {
+  name: string;
+  role: string;
+  title: string;
+  subjects_handled?: string; // e.g. "Cost Accounting, MAS"
+  avatar?: string;
+}
 
 export interface AboutContent {
   header: {
@@ -116,26 +124,53 @@ export interface AboutContent {
     title: string;
     desc: string;
   }>;
-  faculty: {
-    adviser_name: string;
-    adviser_role: string;
-    adviser_title: string;
-    adviser_avatar?: string;
-    dean_name: string;
-    dean_role: string;
-    dean_title: string;
-    dean_avatar?: string;
-    head_name: string;
-    head_role: string;
-    head_title: string;
-    head_avatar?: string;
-  };
+  /** Dynamic list of faculty advisers */
+  faculty_advisers: FacultyAdviser[];
+  /** Chapter achievements and honors merged under About */
+  achievements: Array<{
+    year: string;
+    title: string;
+    category: string;
+    description: string;
+  }>;
   constitution_articles: Array<{
     article: string;
     title: string;
     content: string;
   }>;
 }
+
+export interface ContactContent {
+  desk_name: string;
+  address_heading: string;
+  address_body: string;
+  email_heading: string;
+  email_address: string;
+  hours_heading: string;
+  hours_body: string;
+  facebook_label: string;
+  facebook_url: string;
+  linkedin_label: string;
+  linkedin_url: string;
+  inquiry_card_title: string;
+  inquiry_card_desc: string;
+}
+
+export const DEFAULT_CONTACT_CONTENT: ContactContent = {
+  desk_name: "Bulwagang San Jacinto Desk",
+  address_heading: "Campus Address",
+  address_body: "JPAMA Chapter Headquarters, Bulwagang San Jacinto, University of Saint Louis, Mabini St., Tuguegarao City, Cagayan, Philippines 3500",
+  email_heading: "Email Address",
+  email_address: "jpama@uslt.edu.ph",
+  hours_heading: "Secretariat Consultation Hours",
+  hours_body: "Monday to Friday: 9:00 AM – 5:00 PM\nSaturday: 9:00 AM – 12:00 PM (By appointment)",
+  facebook_label: "JPAMA - University of Saint Louis Tuguegarao",
+  facebook_url: "https://facebook.com/jpama.uslt",
+  linkedin_label: "JPAMA USLT Chapter",
+  linkedin_url: "https://linkedin.com",
+  inquiry_card_title: "BSMA Academic Inquiries",
+  inquiry_card_desc: "For questions on course syllabi or exam review circles, please coordinate directly with the Academic Wing committee.",
+};
 
 export const DEFAULT_ABOUT_CONTENT: AboutContent = {
   header: {
@@ -172,20 +207,49 @@ export const DEFAULT_ABOUT_CONTENT: AboutContent = {
       desc: "Inaugurating radiant beginnings through digital student portals, interactive review kits, and expanded student welfare.",
     },
   ],
-  faculty: {
-    adviser_name: "Prof. Marites G. Cardenas, CPA, MBA, CMA",
-    adviser_role: "Chapter Adviser",
-    adviser_title: "Faculty Adviser, JPAMA USLT Chapter",
-    adviser_avatar: "",
-    dean_name: "Dr. Ronald M. Villa, CPA, PhD",
-    dean_role: "SABH Dean",
-    dean_title: "Dean, School of Accountancy, Business, and Hospitality (SABH)",
-    dean_avatar: "",
-    head_name: "Prof. Maria Clara Fontanilla, CPA, CMA",
-    head_role: "Department Head",
-    head_title: "Head, Department of Accountancy",
-    head_avatar: "",
-  },
+  faculty_advisers: [
+    {
+      name: "Prof. Marites G. Cardenas, CPA, MBA, CMA",
+      role: "Chapter Adviser",
+      title: "Faculty Adviser, JPAMA USLT Chapter",
+      subjects_handled: "Management Accounting, Strategic Cost Management",
+      avatar: "",
+    },
+    {
+      name: "Dr. Ronald M. Villa, CPA, PhD",
+      role: "SABH Dean",
+      title: "Dean, School of Accountancy, Business, and Hospitality (SABH)",
+      subjects_handled: "Advanced Financial Accounting, Corporate Governance",
+      avatar: "",
+    },
+    {
+      name: "Prof. Maria Clara Fontanilla, CPA, CMA",
+      role: "Department Head",
+      title: "Head, Department of Accountancy",
+      subjects_handled: "Cost Accounting & Control, MAS",
+      avatar: "",
+    },
+  ],
+  achievements: [
+    {
+      year: "2025",
+      title: "Regional Management Accounting Academic Championship",
+      category: "Academic Competition",
+      description: "Champion in the Regional Inter-Collegiate Management Accounting Quiz Bee organized by NFJPIA Region 2.",
+    },
+    {
+      year: "2025",
+      title: "100% Passing Rate - Certified Management Accountant (CMA) Part 1",
+      category: "Professional Certification",
+      description: "Louisian BSMA candidate scholars attained a flawless 100% passing mark on the IMA international assessment.",
+    },
+    {
+      year: "2024",
+      title: "Most Outstanding Academic Student Organization",
+      category: "University Award",
+      description: "Conferred by the USLT Supreme Student Council and Office of Student Affairs for excellence in co-curricular initiatives.",
+    },
+  ],
   constitution_articles: [
     {
       article: "Article I",

@@ -1,20 +1,23 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Mail,
   MapPin,
   Phone,
   Facebook,
+  Linkedin,
   Clock,
   Send,
   Check,
   AlertCircle,
   GraduationCap,
 } from "lucide-react";
+import { DEFAULT_CONTACT_CONTENT, ContactContent } from "@/lib/siteContent";
 
 export default function ContactPage() {
+  const [content, setContent] = useState<ContactContent>(DEFAULT_CONTACT_CONTENT);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [subject, setSubject] = useState("");
@@ -24,6 +27,18 @@ export default function ContactPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("jpama_contact_content");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === "object") {
+          setContent((prev) => ({ ...prev, ...parsed }));
+        }
+      }
+    } catch (e) {}
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,16 +102,16 @@ export default function ContactPage() {
           <div className="lg:col-span-5 space-y-6">
             <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-5">
               <h3 className="font-serif font-bold text-lg text-[#0A2540] border-b border-slate-100 pb-3">
-                Bulwagang San Jacinto Desk
+                {content.desk_name}
               </h3>
 
               <div className="space-y-4 text-xs">
                 <div className="flex items-start gap-3">
                   <MapPin className="w-4 h-4 text-[#C5A059] flex-shrink-0 mt-0.5" />
                   <div>
-                    <strong className="block text-slate-800">Campus Address</strong>
-                    <span className="text-slate-600 leading-relaxed">
-                      JPAMA Chapter Headquarters, Bulwagang San Jacinto, University of Saint Louis, Mabini St., Tuguegarao City, Cagayan, Philippines 3500
+                    <strong className="block text-slate-800">{content.address_heading}</strong>
+                    <span className="text-slate-600 leading-relaxed whitespace-pre-line">
+                      {content.address_body}
                     </span>
                   </div>
                 </div>
@@ -104,9 +119,9 @@ export default function ContactPage() {
                 <div className="flex items-start gap-3">
                   <Mail className="w-4 h-4 text-[#C5A059] flex-shrink-0 mt-0.5" />
                   <div>
-                    <strong className="block text-slate-800">Email Address</strong>
-                    <a href="mailto:jpama@uslt.edu.ph" className="text-[#0A2540] font-medium hover:underline">
-                      jpama@uslt.edu.ph
+                    <strong className="block text-slate-800">{content.email_heading}</strong>
+                    <a href={`mailto:${content.email_address}`} className="text-[#0A2540] font-medium hover:underline">
+                      {content.email_address}
                     </a>
                   </div>
                 </div>
@@ -114,10 +129,9 @@ export default function ContactPage() {
                 <div className="flex items-start gap-3">
                   <Clock className="w-4 h-4 text-[#C5A059] flex-shrink-0 mt-0.5" />
                   <div>
-                    <strong className="block text-slate-800">Secretariat Consultation Hours</strong>
-                    <span className="text-slate-600">
-                      Monday to Friday: 9:00 AM – 5:00 PM<br />
-                      Saturday: 9:00 AM – 12:00 PM (By appointment)
+                    <strong className="block text-slate-800">{content.hours_heading}</strong>
+                    <span className="text-slate-600 whitespace-pre-line">
+                      {content.hours_body}
                     </span>
                   </div>
                 </div>
@@ -125,24 +139,41 @@ export default function ContactPage() {
                 <div className="flex items-start gap-3">
                   <Facebook className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
                   <div>
-                    <strong className="block text-slate-800">Social Media</strong>
+                    <strong className="block text-slate-800">Facebook Page</strong>
                     <a
-                      href="https://facebook.com"
+                      href={content.facebook_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[#0A2540] font-medium hover:underline"
+                      className="text-[#0A2540] font-medium hover:underline block"
                     >
-                      JPAMA - University of Saint Louis Tuguegarao
+                      {content.facebook_label}
                     </a>
                   </div>
                 </div>
+
+                {content.linkedin_url && (
+                  <div className="flex items-start gap-3">
+                    <Linkedin className="w-4 h-4 text-blue-700 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="block text-slate-800">Professional Network</strong>
+                      <a
+                        href={content.linkedin_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#0A2540] font-medium hover:underline block"
+                      >
+                        {content.linkedin_label || "JPAMA Official LinkedIn"}
+                      </a>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
             <div className="bg-[#EAF2FA] rounded-xl border border-blue-200 p-5 text-xs text-[#0A2540] space-y-1">
-              <strong className="block font-semibold">BSMA Academic Inquiries</strong>
+              <strong className="block font-semibold">{content.inquiry_card_title}</strong>
               <p className="text-slate-600">
-                For questions on course syllabi or exam review circles, please coordinate directly with the Academic Wing committee.
+                {content.inquiry_card_desc}
               </p>
             </div>
           </div>

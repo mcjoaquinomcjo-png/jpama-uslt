@@ -662,6 +662,7 @@ class LocalStore {
     advisory_notice: "Welcome BS Management Accounting scholars to A.Y. 2026–2027.",
     official_email: "jpama@uslt.edu.ph",
     facebook_url: "https://facebook.com/jpama.uslt",
+    linkedin_url: "https://linkedin.com",
     office_location: "Bulwagang San Jacinto, USLT Mabini Campus, Tuguegarao City",
   };
 

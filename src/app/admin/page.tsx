@@ -17,6 +17,7 @@ import {
   Lock,
   Unlock,
   AlertCircle,
+  Save,
   Crown,
   KeyRound,
   Database,
@@ -43,6 +44,8 @@ import {
   OverviewContent,
   DEFAULT_ABOUT_CONTENT,
   AboutContent,
+  DEFAULT_CONTACT_CONTENT,
+  ContactContent,
   DEFAULT_ACCESS_CONFIG,
   MasterAccessConfig,
 } from "@/lib/siteContent";
@@ -54,15 +57,21 @@ export default function AdminDashboardPage() {
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [authError, setAuthError] = useState("");
 
-  const [activeTab, setActiveTab] = useState<"members" | "events" | "resources" | "leadership" | "system" | "overview" | "about" | "security">("members");
+  const [activeTab, setActiveTab] = useState<
+    "members" | "events" | "resources" | "leadership" | "system" | "overview" | "about" | "contact" | "security"
+  >("members");
   const [overviewContent, setOverviewContent] = useState<OverviewContent>(DEFAULT_OVERVIEW_CONTENT);
   const [aboutContent, setAboutContent] = useState<AboutContent>(DEFAULT_ABOUT_CONTENT);
+  const [contactContent, setContactContent] = useState<ContactContent>(DEFAULT_CONTACT_CONTENT);
+  const [contactContentSaved, setContactContentSaved] = useState(false);
+  const [contactInquiries, setContactInquiries] = useState<any[]>([]);
   const [accessConfig, setAccessConfig] = useState<MasterAccessConfig>(DEFAULT_ACCESS_CONFIG);
   const [accessConfigSaved, setAccessConfigSaved] = useState(false);
   const [editingOverviewSection, setEditingOverviewSection] = useState<string | null>(null);
   const [overviewContentSaved, setOverviewContentSaved] = useState(false);
   const [aboutContentSaved, setAboutContentSaved] = useState(false);
   const [showFacultyModal, setShowFacultyModal] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<string>("All");
 
   const [members, setMembers] = useState<Member[]>([]);
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -112,6 +121,14 @@ export default function AdminDashboardPage() {
           setAccessConfig((prev) => ({ ...prev, ...parsed }));
         }
       }
+
+      const savedContact = localStorage.getItem("jpama_contact_content");
+      if (savedContact) {
+        const parsed = JSON.parse(savedContact);
+        if (parsed && typeof parsed === "object") {
+          setContactContent((prev) => ({ ...prev, ...parsed }));
+        }
+      }
     } catch (e) {
       // ignore
     }
@@ -140,6 +157,14 @@ export default function AdminDashboardPage() {
     } catch (e) {}
   };
 
+  const handleSaveContactContent = () => {
+    try {
+      localStorage.setItem("jpama_contact_content", JSON.stringify(contactContent));
+      setContactContentSaved(true);
+      setTimeout(() => setContactContentSaved(false), 3000);
+    } catch (e) {}
+  };
+
   const handleSaveAccessConfig = () => {
     try {
       localStorage.setItem("jpama_access_config", JSON.stringify(accessConfig));
@@ -148,12 +173,60 @@ export default function AdminDashboardPage() {
     } catch (e) {}
   };
 
-  const handleSaveFacultyModal = (updatedFaculty: AboutContent["faculty"]) => {
-    const nextAbout = { ...aboutContent, faculty: updatedFaculty };
+  const handleSaveFacultyModal = (updatedFaculty: import("@/lib/siteContent").FacultyAdviser[]) => {
+    const nextAbout = { ...aboutContent, faculty_advisers: updatedFaculty };
     setAboutContent(nextAbout);
     try {
       localStorage.setItem("jpama_about_content", JSON.stringify(nextAbout));
     } catch (e) {}
+  };
+
+  const handleUpdateInquiryStatus = async (id: string, status: "Unread" | "Read" | "Resolved") => {
+    try {
+      const res = await fetch("/api/contact", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      });
+      if (res.ok) {
+        setContactInquiries((prev) =>
+          prev.map((inq) => (inq.id === id ? { ...inq, status } : inq))
+        );
+      }
+    } catch (e) {}
+  };
+
+  const handleDeleteInquiry = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this inquiry message?")) return;
+    try {
+      const res = await fetch(`/api/contact?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (res.ok) {
+        setContactInquiries((prev) => prev.filter((inq) => inq.id !== id));
+      }
+    } catch (e) {}
+  };
+
+  const handleBatchApprovePending = async () => {
+    const pendingList = members.filter((m) => m.status === "Pending");
+    if (pendingList.length === 0) return;
+    if (!confirm(`Are you sure you want to approve all ${pendingList.length} pending student registration(s)?`)) return;
+
+    try {
+      await Promise.all(
+        pendingList.map((m) =>
+          fetch("/api/members", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: m.id, status: "Active" }),
+          })
+        )
+      );
+      setMembers((prev) =>
+        prev.map((m) => (m.status === "Pending" ? { ...m, status: "Active" } : m))
+      );
+    } catch (err) {
+      console.error(err);
+    }
   };
   const [settings, setSettings] = useState<PortalSettings>({
     portal_title: "Junior Philippine Association of Management Accountants",
@@ -161,6 +234,7 @@ export default function AdminDashboardPage() {
     advisory_notice: "Welcome BS Management Accounting scholars to A.Y. 2026–2027.",
     official_email: "jpama@uslt.edu.ph",
     facebook_url: "https://facebook.com/jpama.uslt",
+    linkedin_url: "",
     office_location: "Bulwagang San Jacinto, USLT Mabini Campus, Tuguegarao City",
   });
   const [loading, setLoading] = useState(false);
@@ -243,12 +317,13 @@ export default function AdminDashboardPage() {
   const loadAllData = async () => {
     setLoading(true);
     try {
-      const [resMem, resEv, resRes, resOff, resSet] = await Promise.all([
+      const [resMem, resEv, resRes, resOff, resSet, resCont] = await Promise.all([
         fetch("/api/members").then((r) => r.json()),
         fetch("/api/events").then((r) => r.json()),
         fetch("/api/resources").then((r) => r.json()),
         fetch("/api/leadership").then((r) => r.json()),
         fetch("/api/settings").then((r) => r.json()),
+        fetch("/api/contact").then((r) => r.json()).catch(() => ({ success: false })),
       ]);
 
       if (resMem.success && Array.isArray(resMem.data)) setMembers(resMem.data);
@@ -256,6 +331,7 @@ export default function AdminDashboardPage() {
       if (resRes.success && Array.isArray(resRes.data)) setResources(resRes.data);
       if (resOff.success && Array.isArray(resOff.data)) setOfficers(resOff.data);
       if (resSet.success && resSet.data) setSettings(resSet.data);
+      if (resCont.success && Array.isArray(resCont.data)) setContactInquiries(resCont.data);
     } catch (e) {
       console.error(e);
     } finally {
@@ -705,6 +781,8 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const pendingMembers = members.filter((m) => m.status === "Pending");
+
   // Filter members
   const filteredMembers = members.filter((m) => {
     const matchesQuery =
@@ -712,7 +790,8 @@ export default function AdminDashboardPage() {
       m.student_number.toLowerCase().includes(searchMember.toLowerCase()) ||
       m.email.toLowerCase().includes(searchMember.toLowerCase());
     const matchesYear = filterYear === "All" || m.year_level === filterYear;
-    return matchesQuery && matchesYear;
+    const matchesStatus = filterStatus === "All" || m.status === filterStatus;
+    return matchesQuery && matchesYear && matchesStatus;
   });
 
   // Render Login State
@@ -843,13 +922,18 @@ export default function AdminDashboardPage() {
             {(userRole === "super_user" || accessConfig.officerPermissions.members.view) && (
               <button
                 onClick={() => setActiveTab("members")}
-                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
                   activeTab === "members"
                     ? "bg-[#0A2540] text-white shadow-sm"
                     : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
                 }`}
               >
-                Students & Members ({members.length})
+                <span>Students & Members ({members.length})</span>
+                {pendingMembers.length > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-full bg-amber-400 text-[#0A2540] font-bold text-[10px] animate-pulse">
+                    {pendingMembers.length} PENDING
+                  </span>
+                )}
               </button>
             )}
 
@@ -941,6 +1025,23 @@ export default function AdminDashboardPage() {
                   <ShieldCheck className="w-3.5 h-3.5" />
                   <span>Access & Security</span>
                 </button>
+
+                <button
+                  onClick={() => setActiveTab("contact")}
+                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                    activeTab === "contact"
+                      ? "bg-[#C5A059] text-[#0A2540] font-bold shadow-sm"
+                      : "bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-300"
+                  }`}
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>Contact Desk</span>
+                  {contactInquiries.filter((m) => m.status === "Unread").length > 0 && (
+                    <span className="px-1.5 py-0.5 rounded-full bg-blue-600 text-white font-bold text-[10px]">
+                      {contactInquiries.filter((m) => m.status === "Unread").length}
+                    </span>
+                  )}
+                </button>
               </>
             )}
           </div>
@@ -1006,6 +1107,47 @@ export default function AdminDashboardPage() {
             ======================================================== */}
         {activeTab === "members" && (
           <div className="space-y-4">
+            {/* FLOATING PENDING APPROVAL QUEUE BANNER */}
+            {pendingMembers.length > 0 && (
+              <div className="p-4 rounded-xl bg-gradient-to-r from-amber-500/15 via-amber-400/10 to-amber-500/5 border border-amber-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm animate-fadeIn">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold text-sm flex-shrink-0 animate-bounce">
+                    ⚡
+                  </div>
+                  <div>
+                    <h4 className="font-serif font-bold text-sm text-[#0A2540] flex items-center gap-2">
+                      <span>Membership Approval Queue</span>
+                      <span className="px-2 py-0.5 rounded-full bg-amber-400 text-[#0A2540] font-bold text-[10px]">
+                        {pendingMembers.length} Awaiting Approval
+                      </span>
+                    </h4>
+                    <p className="text-xs text-slate-600">
+                      New BSMA student registration requests floating in portal. Review credentials and approve to grant access.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => setFilterStatus(filterStatus === "Pending" ? "All" : "Pending")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
+                      filterStatus === "Pending"
+                        ? "bg-amber-600 text-white border-amber-600"
+                        : "bg-white border-amber-300 hover:bg-amber-50 text-amber-900"
+                    }`}
+                  >
+                    {filterStatus === "Pending" ? "Show All Records" : `Filter Pending (${pendingMembers.length})`}
+                  </button>
+                  <button
+                    onClick={handleBatchApprovePending}
+                    className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-sm transition-colors flex items-center gap-1.5"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Approve All ({pendingMembers.length})</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Search & Filters */}
             <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="relative w-full sm:w-80">
@@ -1019,19 +1161,35 @@ export default function AdminDashboardPage() {
                 <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               </div>
 
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <span className="text-xs text-slate-500 font-medium">Year Level:</span>
-                <select
-                  value={filterYear}
-                  onChange={(e) => setFilterYear(e.target.value)}
-                  className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none"
-                >
-                  <option value="All">All Years</option>
-                  <option value="1st Year">1st Year</option>
-                  <option value="2nd Year">2nd Year</option>
-                  <option value="3rd Year">3rd Year</option>
-                  <option value="4th Year">4th Year</option>
-                </select>
+              <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-slate-500 font-medium">Status:</span>
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none font-semibold text-[#0A2540]"
+                  >
+                    <option value="All">All Statuses ({members.length})</option>
+                    <option value="Pending">Pending Review ({pendingMembers.length})</option>
+                    <option value="Active">Active Members</option>
+                    <option value="Graduated">Graduated</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-slate-500 font-medium">Year:</span>
+                  <select
+                    value={filterYear}
+                    onChange={(e) => setFilterYear(e.target.value)}
+                    className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none"
+                  >
+                    <option value="All">All Years</option>
+                    <option value="1st Year">1st Year</option>
+                    <option value="2nd Year">2nd Year</option>
+                    <option value="3rd Year">3rd Year</option>
+                    <option value="4th Year">4th Year</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -1059,7 +1217,14 @@ export default function AdminDashboardPage() {
                       </tr>
                     ) : (
                       filteredMembers.map((m) => (
-                        <tr key={m.id} className="hover:bg-slate-50/70 transition-colors">
+                        <tr
+                          key={m.id}
+                          className={`transition-colors ${
+                            m.status === "Pending"
+                              ? "bg-amber-50/70 hover:bg-amber-100/70 border-l-4 border-l-amber-500"
+                              : "hover:bg-slate-50/70"
+                          }`}
+                        >
                           <td className="py-3 px-4 font-mono font-semibold text-[#0A2540]">
                             {m.student_number}
                           </td>
@@ -1090,13 +1255,13 @@ export default function AdminDashboardPage() {
                               {(userRole === "super_user" || accessConfig.officerPermissions.members.edit) && (
                                 <button
                                   onClick={() => handleToggleStatus(m)}
-                                  className={`px-2 py-1 rounded text-[11px] font-semibold transition-colors ${
+                                  className={`px-2.5 py-1 rounded text-[11px] font-bold transition-all shadow-sm ${
                                     m.status === "Active"
                                       ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                                      : "bg-emerald-600 text-white hover:bg-emerald-700"
+                                      : "bg-emerald-600 text-white hover:bg-emerald-700 flex items-center gap-1"
                                   }`}
                                 >
-                                  {m.status === "Active" ? "Set Pending" : "Approve"}
+                                  {m.status === "Active" ? "Set Pending" : "✓ Approve"}
                                 </button>
                               )}
 
@@ -1337,84 +1502,39 @@ export default function AdminDashboardPage() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {/* 1. Chapter Adviser */}
-                <div
-                  onClick={() => setShowFacultyModal(true)}
-                  className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-3 relative group hover:border-[#C5A059] cursor-pointer transition-colors"
-                >
-                  <div className="w-12 h-12 rounded-full bg-[#0A2540] flex items-center justify-center text-white font-serif font-bold text-sm shadow-sm overflow-hidden flex-shrink-0">
-                    {aboutContent.faculty.adviser_avatar ? (
-                      <img src={aboutContent.faculty.adviser_avatar} alt="Adviser" className="w-full h-full object-cover" />
-                    ) : (
-                      <span>MGC</span>
-                    )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {(aboutContent.faculty_advisers || []).map((adviser, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => setShowFacultyModal(true)}
+                    className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-3 relative group hover:border-[#C5A059] cursor-pointer transition-colors"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-[#0A2540] flex items-center justify-center text-white font-serif font-bold text-sm shadow-sm overflow-hidden flex-shrink-0">
+                      {adviser.avatar ? (
+                        <img src={adviser.avatar} alt={adviser.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span>{adviser.name.split(" ").filter((w: string) => !["Prof.", "Dr.", "CPA,", "MBA,", "CMA", "PhD"].includes(w)).map((n: string) => n[0]).slice(0, 2).join("") || "FA"}</span>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#C5A059] block">
+                        {adviser.role}
+                      </span>
+                      <h4 className="font-serif font-bold text-xs text-[#0A2540] leading-snug truncate">
+                        {adviser.name}
+                      </h4>
+                      <p className="text-[11px] text-slate-500 leading-snug mt-0.5 line-clamp-2">
+                        {adviser.title}
+                      </p>
+                      {adviser.subjects_handled && (
+                        <p className="text-[10px] text-slate-400 italic mt-1 truncate">
+                          {adviser.subjects_handled}
+                        </p>
+                      )}
+                    </div>
+                    <Pencil className="w-3 h-3 text-slate-400 group-hover:text-[#0A2540] absolute right-3 top-3 transition-colors" />
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#C5A059] block">
-                      {aboutContent.faculty.adviser_role}
-                    </span>
-                    <h4 className="font-serif font-bold text-xs text-[#0A2540] leading-snug truncate">
-                      {aboutContent.faculty.adviser_name}
-                    </h4>
-                    <p className="text-[11px] text-slate-500 leading-snug mt-0.5 line-clamp-2">
-                      {aboutContent.faculty.adviser_title}
-                    </p>
-                  </div>
-                  <Pencil className="w-3 h-3 text-slate-400 group-hover:text-[#0A2540] absolute right-3 top-3 transition-colors" />
-                </div>
-
-                {/* 2. SABH Dean */}
-                <div
-                  onClick={() => setShowFacultyModal(true)}
-                  className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-3 relative group hover:border-[#C5A059] cursor-pointer transition-colors"
-                >
-                  <div className="w-12 h-12 rounded-full bg-[#14487A] flex items-center justify-center text-white font-serif font-bold text-sm shadow-sm overflow-hidden flex-shrink-0">
-                    {aboutContent.faculty.dean_avatar ? (
-                      <img src={aboutContent.faculty.dean_avatar} alt="Dean" className="w-full h-full object-cover" />
-                    ) : (
-                      <span>RMV</span>
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#C5A059] block">
-                      {aboutContent.faculty.dean_role}
-                    </span>
-                    <h4 className="font-serif font-bold text-xs text-[#0A2540] leading-snug truncate">
-                      {aboutContent.faculty.dean_name}
-                    </h4>
-                    <p className="text-[11px] text-slate-500 leading-snug mt-0.5 line-clamp-2">
-                      {aboutContent.faculty.dean_title}
-                    </p>
-                  </div>
-                  <Pencil className="w-3 h-3 text-slate-400 group-hover:text-[#0A2540] absolute right-3 top-3 transition-colors" />
-                </div>
-
-                {/* 3. Department Head */}
-                <div
-                  onClick={() => setShowFacultyModal(true)}
-                  className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-3 relative group hover:border-[#C5A059] cursor-pointer transition-colors"
-                >
-                  <div className="w-12 h-12 rounded-full bg-[#1B3A5C] flex items-center justify-center text-white font-serif font-bold text-sm shadow-sm overflow-hidden flex-shrink-0">
-                    {aboutContent.faculty.head_avatar ? (
-                      <img src={aboutContent.faculty.head_avatar} alt="Head" className="w-full h-full object-cover" />
-                    ) : (
-                      <span>MCF</span>
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#C5A059] block">
-                      {aboutContent.faculty.head_role}
-                    </span>
-                    <h4 className="font-serif font-bold text-xs text-[#0A2540] leading-snug truncate">
-                      {aboutContent.faculty.head_name}
-                    </h4>
-                    <p className="text-[11px] text-slate-500 leading-snug mt-0.5 line-clamp-2">
-                      {aboutContent.faculty.head_title}
-                    </p>
-                  </div>
-                  <Pencil className="w-3 h-3 text-slate-400 group-hover:text-[#0A2540] absolute right-3 top-3 transition-colors" />
-                </div>
+                ))}
               </div>
             </div>
 
@@ -1572,16 +1692,31 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  Campus Headquarters / Office Venue
-                </label>
-                <input
-                  type="text"
-                  value={settings.office_location}
-                  onChange={(e) => setSettings({ ...settings, office_location: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540]"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1">
+                    <span>LinkedIn Page URL</span>
+                    <span className="text-[10px] font-normal text-slate-400 ml-1">(optional)</span>
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://linkedin.com/company/jpama-uslt"
+                    value={settings.linkedin_url}
+                    onChange={(e) => setSettings({ ...settings, linkedin_url: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Campus Headquarters / Office Venue
+                  </label>
+                  <input
+                    type="text"
+                    value={settings.office_location}
+                    onChange={(e) => setSettings({ ...settings, office_location: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540]"
+                  />
+                </div>
               </div>
 
               <div>
@@ -1768,6 +1903,288 @@ export default function AdminDashboardPage() {
             isSaved={accessConfigSaved}
             onReset={() => setAccessConfig(DEFAULT_ACCESS_CONFIG)}
           />
+        )}
+
+        {/* ========================================================
+            TAB 9: CONTACT DESK & INQUIRIES MANAGEMENT
+            ======================================================== */}
+        {activeTab === "contact" && (
+          <div className="space-y-8 animate-fadeIn">
+            {/* 1. Public Contact Information Settings */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#C5A059]">
+                    PUBLIC CONTACT DESK CONFIGURATION
+                  </span>
+                  <h3 className="font-serif font-bold text-xl text-[#0A2540]">
+                    Official Chapter Helpdesk & Office Details
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Updates the public Bulwagang San Jacinto desk info, consultation hours, and official channels.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSaveContactContent}
+                  className="px-5 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white text-xs font-bold rounded-lg flex items-center gap-2 shadow-sm transition-all"
+                >
+                  {contactContentSaved ? <Check className="w-4 h-4 text-emerald-400" /> : <Save className="w-4 h-4" />}
+                  <span>{contactContentSaved ? "Saved Successfully!" : "Save Contact Info"}</span>
+                </button>
+              </div>
+
+              <div className="space-y-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Desk / Office Name
+                    </label>
+                    <input
+                      type="text"
+                      value={contactContent.desk_name}
+                      onChange={(e) => setContactContent({ ...contactContent, desk_name: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] font-bold text-[#0A2540]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Official Chapter Inquiries Email
+                    </label>
+                    <input
+                      type="email"
+                      value={contactContent.email_address}
+                      onChange={(e) => setContactContent({ ...contactContent, email_address: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Campus Office Address
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={contactContent.address_body}
+                    onChange={(e) => setContactContent({ ...contactContent, address_body: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Secretariat Consultation Hours
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={contactContent.hours_body}
+                    onChange={(e) => setContactContent({ ...contactContent, hours_body: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Facebook Page URL
+                    </label>
+                    <input
+                      type="text"
+                      value={contactContent.facebook_url}
+                      onChange={(e) => setContactContent({ ...contactContent, facebook_url: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Facebook Display Label
+                    </label>
+                    <input
+                      type="text"
+                      value={contactContent.facebook_label}
+                      onChange={(e) => setContactContent({ ...contactContent, facebook_label: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      LinkedIn Page URL
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="https://linkedin.com/company/jpama-uslt"
+                      value={contactContent.linkedin_url || ""}
+                      onChange={(e) => setContactContent({ ...contactContent, linkedin_url: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      LinkedIn Display Label
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="JPAMA USLT Chapter"
+                      value={contactContent.linkedin_label || ""}
+                      onChange={(e) => setContactContent({ ...contactContent, linkedin_label: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540]"
+                    />
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-200/80 space-y-3">
+                  <span className="font-bold text-[#0A2540] text-xs">
+                    Academic Inquiries Callout Box
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                        Box Title
+                      </label>
+                      <input
+                        type="text"
+                        value={contactContent.inquiry_card_title}
+                        onChange={(e) => setContactContent({ ...contactContent, inquiry_card_title: e.target.value })}
+                        className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                        Box Advisory Description
+                      </label>
+                      <input
+                        type="text"
+                        value={contactContent.inquiry_card_desc}
+                        onChange={(e) => setContactContent({ ...contactContent, inquiry_card_desc: e.target.value })}
+                        className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Received Student Inquiries Inbox */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-[#C5A059]" />
+                    <h3 className="font-serif font-bold text-lg text-[#0A2540]">
+                      Secretariat Inquiries Inbox ({contactInquiries.length})
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Messages submitted by students and visitors via the public Contact page form.
+                  </p>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                      <th className="py-3.5 px-4">Date / Time</th>
+                      <th className="py-3.5 px-4">Student Sender</th>
+                      <th className="py-3.5 px-4">Subject & Message</th>
+                      <th className="py-3.5 px-4 text-center">Status</th>
+                      <th className="py-3.5 px-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {contactInquiries.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-slate-400">
+                          No messages received yet. Inquiries submitted on the Contact page will appear here.
+                        </td>
+                      </tr>
+                    ) : (
+                      contactInquiries.map((inq) => (
+                        <tr key={inq.id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="py-3 px-4 text-slate-500 font-mono text-[11px] whitespace-nowrap">
+                            {new Date(inq.created_at).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </td>
+                          <td className="py-3 px-4">
+                            <strong className="block text-slate-800">{inq.name}</strong>
+                            <a href={`mailto:${inq.email}`} className="text-[#0A2540] hover:underline font-mono text-[11px]">
+                              {inq.email}
+                            </a>
+                          </td>
+                          <td className="py-3 px-4 max-w-md">
+                            <span className="font-semibold text-[#0A2540] block">{inq.subject}</span>
+                            <p className="text-slate-600 text-xs mt-0.5 whitespace-pre-line leading-relaxed">
+                              {inq.message}
+                            </p>
+                          </td>
+                          <td className="py-3 px-4 text-center whitespace-nowrap">
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                inq.status === "Unread"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : inq.status === "Resolved"
+                                  ? "bg-emerald-100 text-emerald-800"
+                                  : "bg-slate-100 text-slate-600"
+                              }`}
+                            >
+                              {inq.status}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-right whitespace-nowrap">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {inq.status !== "Resolved" ? (
+                                <button
+                                  onClick={() => handleUpdateInquiryStatus(inq.id, "Resolved")}
+                                  className="px-2 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold transition-colors"
+                                  title="Mark as Resolved"
+                                >
+                                  Resolve
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleUpdateInquiryStatus(inq.id, "Unread")}
+                                  className="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-semibold transition-colors"
+                                  title="Mark as Unread"
+                                >
+                                  Reopen
+                                </button>
+                              )}
+                              <a
+                                href={`mailto:${inq.email}?subject=RE: ${encodeURIComponent(inq.subject)}`}
+                                className="px-2 py-1 rounded bg-[#0A2540] hover:bg-[#14487A] text-white text-[11px] font-semibold transition-colors inline-block"
+                                title="Reply via Email"
+                              >
+                                Reply
+                              </a>
+                              <button
+                                onClick={() => handleDeleteInquiry(inq.id)}
+                                className="p-1 text-slate-400 hover:text-red-500 rounded hover:bg-red-50 transition-colors"
+                                title="Delete Inquiry"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         )}
       </main>
 
@@ -2403,7 +2820,7 @@ export default function AdminDashboardPage() {
       <FacultyAdvisersModal
         isOpen={showFacultyModal}
         onClose={() => setShowFacultyModal(false)}
-        faculty={aboutContent.faculty}
+        faculty={aboutContent.faculty_advisers || []}
         onSave={handleSaveFacultyModal}
       />
     </div>

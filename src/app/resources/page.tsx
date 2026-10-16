@@ -171,7 +171,7 @@ export default function ResourcesPage() {
           </h1>
 
           <p className="text-slate-600 max-w-xl mx-auto text-xs sm:text-sm leading-relaxed">
-            Curated syllabus testbanks, Strategic Cost Management (SCM) materials, and financial modeling templates.
+            Curated syllabus testbanks, comprehensive reviewers across all BSMA core subjects, financial modeling templates, and professional certification preparation guides.
           </p>
         </div>
       </section>

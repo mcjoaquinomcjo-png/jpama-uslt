@@ -13,6 +13,7 @@ import {
   GraduationCap,
   ChevronRight,
   ExternalLink,
+  Trophy,
 } from "lucide-react";
 import { EXECUTIVE_BOARD } from "@/lib/store";
 import { OfficerItem } from "@/lib/types";
@@ -179,6 +180,46 @@ export default function AboutPage() {
                 ))}
               </div>
             </div>
+
+            {/* Chapter Achievements & Honors (Merged cleanly under About) */}
+            <div id="achievements" className="bg-white rounded-xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
+              <div className="border-b border-slate-100 pb-3">
+                <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#C5A059] mb-1">
+                  <Trophy className="w-3.5 h-3.5" />
+                  <span>Distinctions & Excellence</span>
+                </div>
+                <h3 className="font-serif font-bold text-xl text-[#0A2540]">
+                  Achievements & Honors
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Recognitions garnered by Louisian BSMA scholars in regional competitions, certification exams, and institutional convocations
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {(aboutContent.achievements || []).map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="p-5 rounded-xl bg-gradient-to-br from-slate-50 to-amber-50/20 border border-slate-200 hover:border-[#C5A059] transition-all space-y-2 relative shadow-sm"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono font-bold text-xs px-2 py-0.5 rounded bg-[#EAF2FA] text-[#0A2540]">
+                        {item.year}
+                      </span>
+                      <span className="text-[10px] font-semibold text-[#C5A059] uppercase tracking-wider">
+                        {item.category}
+                      </span>
+                    </div>
+                    <h4 className="font-serif font-bold text-sm text-[#0A2540] leading-snug pt-1">
+                      {item.title}
+                    </h4>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      {item.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
@@ -196,84 +237,38 @@ export default function AboutPage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                {/* Chapter Adviser */}
-                <div className="flex flex-col items-center text-center p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-3 hover:border-[#C5A059] transition-colors">
-                  <div className="w-20 h-20 rounded-full bg-[#0A2540] flex items-center justify-center text-white font-serif font-bold text-xl shadow-md overflow-hidden flex-shrink-0">
-                    {aboutContent.faculty.adviser_avatar ? (
-                      <img
-                        src={aboutContent.faculty.adviser_avatar}
-                        alt={aboutContent.faculty.adviser_name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span>{getInitials(aboutContent.faculty.adviser_name)}</span>
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    <div className="text-[10px] uppercase font-bold text-[#C5A059] tracking-wider">
-                      {aboutContent.faculty.adviser_role}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+                {(aboutContent.faculty_advisers || []).map((adviser, idx) => (
+                  <div key={idx} className="flex flex-col items-center text-center p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-3 hover:border-[#C5A059] transition-colors">
+                    <div className="w-20 h-20 rounded-full bg-[#0A2540] flex items-center justify-center text-white font-serif font-bold text-xl shadow-md overflow-hidden flex-shrink-0">
+                      {adviser.avatar ? (
+                        <img
+                          src={adviser.avatar}
+                          alt={adviser.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span>{getInitials(adviser.name)}</span>
+                      )}
                     </div>
-                    <h4 className="font-serif font-bold text-sm text-[#0A2540] leading-snug">
-                      {aboutContent.faculty.adviser_name}
-                    </h4>
-                    <p className="text-[11px] text-slate-500 leading-relaxed">
-                      {aboutContent.faculty.adviser_title}
-                    </p>
-                  </div>
-                </div>
-
-                {/* SABH Dean */}
-                <div className="flex flex-col items-center text-center p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-3 hover:border-[#C5A059] transition-colors">
-                  <div className="w-20 h-20 rounded-full bg-[#14487A] flex items-center justify-center text-white font-serif font-bold text-xl shadow-md overflow-hidden flex-shrink-0">
-                    {aboutContent.faculty.dean_avatar ? (
-                      <img
-                        src={aboutContent.faculty.dean_avatar}
-                        alt={aboutContent.faculty.dean_name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span>{getInitials(aboutContent.faculty.dean_name)}</span>
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    <div className="text-[10px] uppercase font-bold text-[#C5A059] tracking-wider">
-                      {aboutContent.faculty.dean_role}
+                    <div className="space-y-1">
+                      <div className="text-[10px] uppercase font-bold text-[#C5A059] tracking-wider">
+                        {adviser.role}
+                      </div>
+                      <h4 className="font-serif font-bold text-sm text-[#0A2540] leading-snug">
+                        {adviser.name}
+                      </h4>
+                      <p className="text-[11px] text-slate-500 leading-relaxed">
+                        {adviser.title}
+                      </p>
+                      {adviser.subjects_handled && (
+                        <p className="text-[10px] text-slate-400 italic mt-1">
+                          Handles: {adviser.subjects_handled}
+                        </p>
+                      )}
                     </div>
-                    <h4 className="font-serif font-bold text-sm text-[#0A2540] leading-snug">
-                      {aboutContent.faculty.dean_name}
-                    </h4>
-                    <p className="text-[11px] text-slate-500 leading-relaxed">
-                      {aboutContent.faculty.dean_title}
-                    </p>
                   </div>
-                </div>
-
-                {/* Department Head */}
-                <div className="flex flex-col items-center text-center p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-3 hover:border-[#C5A059] transition-colors">
-                  <div className="w-20 h-20 rounded-full bg-[#1B3A5C] flex items-center justify-center text-white font-serif font-bold text-xl shadow-md overflow-hidden flex-shrink-0">
-                    {aboutContent.faculty.head_avatar ? (
-                      <img
-                        src={aboutContent.faculty.head_avatar}
-                        alt={aboutContent.faculty.head_name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span>{getInitials(aboutContent.faculty.head_name)}</span>
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    <div className="text-[10px] uppercase font-bold text-[#C5A059] tracking-wider">
-                      {aboutContent.faculty.head_role}
-                    </div>
-                    <h4 className="font-serif font-bold text-sm text-[#0A2540] leading-snug">
-                      {aboutContent.faculty.head_name}
-                    </h4>
-                    <p className="text-[11px] text-slate-500 leading-relaxed">
-                      {aboutContent.faculty.head_title}
-                    </p>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
 

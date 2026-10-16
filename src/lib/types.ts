@@ -87,6 +87,7 @@ export interface PortalSettings {
   advisory_notice: string;
   official_email: string;
   facebook_url: string;
+  linkedin_url: string;
   office_location: string;
 }
 

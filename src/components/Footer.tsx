@@ -127,7 +127,7 @@ export default function Footer() {
 
         {/* Bottom copyright */}
         <div className="border-t border-[#0E355C] mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-400 gap-4">
-          <p>© {new Date().getFullYear()} JPAMA — University of Saint Louis Tuguegarao. All Rights Reserved.</p>
+          <p>© {new Date().getFullYear()} Junior Philippine Association of Management Accountants. All Rights Reserved.</p>
           <p className="text-slate-400">Bachelor of Science in Management Accounting (BSMA)</p>
         </div>
       </div>

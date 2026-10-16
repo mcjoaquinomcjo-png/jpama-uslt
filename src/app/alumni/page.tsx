@@ -152,31 +152,30 @@ export default function AlumniPage() {
 
           {/* Stats Row */}
           <div className="pt-4 flex flex-wrap items-center justify-center gap-8">
-            {[
-              { icon: Users, value: `${alumni.length}+`, label: "Alumni Recorded" },
-              {
-                icon: Trophy,
-                value: `${Array.from(new Set(alumni.map((a) => a.year_graduated))).length}`,
-                label: "Batch Years",
-              },
-              {
-                icon: Award,
-                value: `${alumni.filter((a) => (a.badges || []).includes("CMA Passer")).length}`,
-                label: "CMA Passers",
-              },
-            ].map((stat) => (
-              <div key={stat.label} className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-lg bg-[#EAF2FA] flex items-center justify-center">
-                  <stat.icon className="w-4 h-4 text-[#C5A059]" />
+            {(() => {
+              const cmaCount = alumni.filter((a) => (a.badges || []).includes("CMA Passer")).length;
+              const batchCount = Array.from(new Set(alumni.map((a) => a.year_graduated))).length;
+              const stats = [
+                { icon: Users, value: `${alumni.length}+`, label: "Alumni Recorded" },
+                { icon: Trophy, value: `${batchCount}`, label: "Batch Years" },
+                ...(cmaCount > 0
+                  ? [{ icon: Award, value: `${cmaCount}`, label: "CMA Passers" }]
+                  : []),
+              ];
+              return stats.map((stat) => (
+                <div key={stat.label} className="flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-lg bg-[#EAF2FA] flex items-center justify-center">
+                    <stat.icon className="w-4 h-4 text-[#C5A059]" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-serif font-bold text-xl text-[#0A2540] leading-none">
+                      {stat.value}
+                    </p>
+                    <p className="text-[11px] text-slate-500">{stat.label}</p>
+                  </div>
                 </div>
-                <div className="text-left">
-                  <p className="font-serif font-bold text-xl text-[#0A2540] leading-none">
-                    {stat.value}
-                  </p>
-                  <p className="text-[11px] text-slate-500">{stat.label}</p>
-                </div>
-              </div>
-            ))}
+              ));
+            })()}
           </div>
         </div>
       </section>
