@@ -213,3 +213,49 @@ export const DEFAULT_ABOUT_CONTENT: AboutContent = {
     },
   ],
 };
+
+export interface RolePermissions {
+  members: { view: boolean; add: boolean; edit: boolean; delete: boolean };
+  events: { view: boolean; add: boolean; edit: boolean; delete: boolean };
+  resources: { view: boolean; add: boolean; edit: boolean; delete: boolean };
+  leadership: { view: boolean; edit: boolean };
+}
+
+export interface PortalFeatures {
+  publicLookup: boolean;
+  registrationOpen: boolean;
+  resourceDownloads: boolean;
+  alumniVisible: boolean;
+  maintenanceNotice: string;
+}
+
+export interface SecurityConfig {
+  super_passcode: string;
+  officer_passcode: string;
+}
+
+export interface MasterAccessConfig {
+  security: SecurityConfig;
+  officerPermissions: RolePermissions;
+  features: PortalFeatures;
+}
+
+export const DEFAULT_ACCESS_CONFIG: MasterAccessConfig = {
+  security: {
+    super_passcode: "super2026",
+    officer_passcode: "sihaya2026",
+  },
+  officerPermissions: {
+    members: { view: true, add: true, edit: true, delete: false },
+    events: { view: true, add: true, edit: true, delete: false },
+    resources: { view: true, add: true, edit: true, delete: false },
+    leadership: { view: true, edit: false },
+  },
+  features: {
+    publicLookup: true,
+    registrationOpen: true,
+    resourceDownloads: true,
+    alumniVisible: true,
+    maintenanceNotice: "",
+  },
+};

@@ -8,6 +8,7 @@ import {
   ExternalLink,
   ShieldCheck,
 } from "lucide-react";
+import JpamaLogo from "@/components/JpamaLogo";
 
 export default function Footer() {
   return (
@@ -18,9 +19,7 @@ export default function Footer() {
           {/* Organization & Affiliation */}
           <div className="md:col-span-2 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="gold-shimmer-badge h-10 px-3 rounded-lg bg-[#0E355C] flex items-center justify-center font-serif font-bold text-xs tracking-wider flex-shrink-0">
-                <span className="gold-shimmer-text">JPAMA</span>
-              </div>
+              <JpamaLogo size="sm" variant="crest" />
               <div>
                 <h3 className="font-serif text-lg font-bold text-white tracking-wide">
                   JPAMA USLT

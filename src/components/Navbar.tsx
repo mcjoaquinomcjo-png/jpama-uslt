@@ -13,6 +13,7 @@ import {
   Users,
   Award,
 } from "lucide-react";
+import JpamaLogo from "@/components/JpamaLogo";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -48,10 +49,7 @@ export default function Navbar() {
 
           {/* ── LOGO ── fixed-width, never shrinks */}
           <Link href="/" className="flex items-center gap-3 group flex-shrink-0">
-            {/* JPAMA badge: tall & wide, gold ring */}
-            <div className="gold-shimmer-badge h-[52px] w-[100px] rounded-xl bg-[#0A2540] ring-2 ring-[#C5A059]/70 flex items-center justify-center font-serif font-bold tracking-widest shadow-lg flex-shrink-0">
-              <span className="gold-shimmer-text text-[15px]">JPAMA</span>
-            </div>
+            <JpamaLogo size="md" variant="badge" className="group-hover:scale-[1.02] transition-transform" />
 
             {/* Full Title — never truncated */}
             <div className="hidden md:flex flex-col flex-shrink-0">
