@@ -11,60 +11,122 @@ interface JpamaLogoProps {
 
 export default function JpamaLogo({
   size = "md",
-  variant = "badge",
+  variant = "crest",
   className = "",
   withGlow = false,
 }: JpamaLogoProps) {
+  // Proportional executive plaque dimensions (approx 1.8 : 1 ratio)
   const sizeMap = {
-    sm:  { w: 38,  h: 38,  badgeW: 84,  badgeH: 34 },
-    md:  { w: 52,  h: 52,  badgeW: 108, badgeH: 42 },
-    lg:  { w: 72,  h: 72,  badgeW: 140, badgeH: 54 },
-    xl:  { w: 92,  h: 92,  badgeW: 172, badgeH: 66 },
+    sm: { w: 62,  h: 36,  badgeW: 84,  badgeH: 36 },
+    md: { w: 92,  h: 52,  badgeW: 116, badgeH: 46 },
+    lg: { w: 126, h: 70,  badgeW: 148, badgeH: 56 },
+    xl: { w: 164, h: 90,  badgeW: 184, badgeH: 68 },
   };
 
   const dim = sizeMap[size];
 
-  // Unique gradient IDs per instance to prevent SVG defs conflicts
+  // Unique ID to avoid gradient & filter ID collisions across instances
   const uid = React.useId().replace(/:/g, "");
 
-  // ─── 1. CREST ───────────────────────────────────────────────────────────────
+  // ─── 1. CREST / EXECUTIVE PLAQUE (Admin Login & Emblem Box) ──────────────────
   if (variant === "crest") {
     return (
       <div
-        className={`relative inline-flex items-center justify-center flex-shrink-0 select-none ${className}`}
+        className={`relative inline-flex items-center justify-center flex-shrink-0 select-none group ${className}`}
         style={{ width: dim.w, height: dim.h }}
       >
-        {withGlow && (
-          <div className="absolute inset-0 rounded-xl bg-[#C5A059]/30 blur-lg -z-10 animate-pulse pointer-events-none" />
+        {/* Illuminating ambient golden aura */}
+        {withGlow ? (
+          <div className="absolute -inset-2 rounded-2xl bg-gradient-to-r from-[#C5A059]/25 via-[#E8C97A]/35 to-[#C5A059]/25 blur-xl -z-10 animate-pulse pointer-events-none" />
+        ) : (
+          <div className="absolute -inset-1 rounded-xl bg-[#C5A059]/10 blur-md -z-10 pointer-events-none" />
         )}
+
         <svg
-          viewBox="0 0 100 100"
-          className="w-full h-full"
+          viewBox="0 0 160 88"
+          className="w-full h-full drop-shadow-md overflow-visible"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
           <defs>
-            <linearGradient id={`navy-${uid}`} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%"   stopColor="#071A2E" />
-              <stop offset="50%"  stopColor="#0A2540" />
-              <stop offset="100%" stopColor="#143A60" />
+            {/* Deep Royal Midnight Blue Enamel */}
+            <radialGradient id={`bgEnamel-${uid}`} cx="50%" cy="45%" r="70%">
+              <stop offset="0%" stopColor="#103052" />
+              <stop offset="50%" stopColor="#081E35" />
+              <stop offset="100%" stopColor="#040D18" />
+            </radialGradient>
+
+            {/* Beveled 24K Polished Gold Frame */}
+            <linearGradient id={`goldBezel-${uid}`} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FFF6CC" />
+              <stop offset="25%" stopColor="#E5C158" />
+              <stop offset="50%" stopColor="#C5A059" />
+              <stop offset="80%" stopColor="#9E7D38" />
+              <stop offset="100%" stopColor="#6E5018" />
             </linearGradient>
-            <linearGradient id={`gold-${uid}`} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%"   stopColor="#FFF8DC" />
-              <stop offset="30%"  stopColor="#E8C97A" />
-              <stop offset="55%"  stopColor="#C5A059" />
-              <stop offset="80%"  stopColor="#E8C97A" />
+
+            {/* Inner Gold Hairline Inset */}
+            <linearGradient id={`goldHairline-${uid}`} x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#9E7D38" />
+              <stop offset="20%" stopColor="#E5C158" />
+              <stop offset="50%" stopColor="#FFF6CC" />
+              <stop offset="80%" stopColor="#E5C158" />
               <stop offset="100%" stopColor="#9E7D38" />
             </linearGradient>
-            <linearGradient id={`shine-${uid}`} x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%"   stopColor="#FFFBE0" />
-              <stop offset="25%"  stopColor="#F5D978" />
-              <stop offset="50%"  stopColor="#C5A059" />
-              <stop offset="75%"  stopColor="#E8C97A" />
-              <stop offset="100%" stopColor="#9E7D38" />
+
+            {/* CONTINUOUS ILLUMINATING LIQUID GOLD SHIMMER FOR JPAMA */}
+            <linearGradient id={`shimmerBeam-${uid}`} x1="-100%" y1="0%" x2="50%" y2="0%">
+              <stop offset="0%" stopColor="#B38E3E" />
+              <stop offset="18%" stopColor="#DFB95C" />
+              <stop offset="35%" stopColor="#F9E292" />
+              <stop offset="47%" stopColor="#FFFFFF" />
+              <stop offset="50%" stopColor="#FFFEE8" />
+              <stop offset="53%" stopColor="#FFFFFF" />
+              <stop offset="65%" stopColor="#F9E292" />
+              <stop offset="82%" stopColor="#DFB95C" />
+              <stop offset="100%" stopColor="#B38E3E" />
+              <animate
+                attributeName="x1"
+                from="-120%"
+                to="140%"
+                dur="3.2s"
+                repeatCount="indefinite"
+              />
+              <animate
+                attributeName="x2"
+                from="30%"
+                to="290%"
+                dur="3.2s"
+                repeatCount="indefinite"
+              />
             </linearGradient>
-            <filter id={`glow-${uid}`} x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="1.5" result="blur" />
+
+            {/* Traveling Surface Glint Across the Lacquer Plaque */}
+            <linearGradient id={`surfaceSheen-${uid}`} x1="-150%" y1="0%" x2="50%" y2="100%">
+              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0" />
+              <stop offset="45%" stopColor="#FFFFFF" stopOpacity="0" />
+              <stop offset="50%" stopColor="#FFFFFF" stopOpacity="0.08" />
+              <stop offset="55%" stopColor="#FFFFFF" stopOpacity="0" />
+              <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+              <animate
+                attributeName="x1"
+                from="-150%"
+                to="150%"
+                dur="4.5s"
+                repeatCount="indefinite"
+              />
+              <animate
+                attributeName="x2"
+                from="50%"
+                to="350%"
+                dur="4.5s"
+                repeatCount="indefinite"
+              />
+            </linearGradient>
+
+            {/* Specular Text Bloom & Glow */}
+            <filter id={`illuminatingGlow-${uid}`} x="-20%" y="-40%" width="140%" height="180%">
+              <feGaussianBlur stdDeviation="1.2" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
@@ -72,45 +134,102 @@ export default function JpamaLogo({
             </filter>
           </defs>
 
-          {/* Background shield */}
-          <rect x="4" y="4" width="92" height="92" rx="20"
-            fill={`url(#navy-${uid})`} stroke={`url(#gold-${uid})`} strokeWidth="2.5" />
+          {/* 1. Main Outer Plaque (Clean, Executive 1.8:1 Proportions) */}
+          <rect
+            x="2.5"
+            y="2.5"
+            width="155"
+            height="83"
+            rx="12"
+            fill={`url(#bgEnamel-${uid})`}
+            stroke={`url(#goldBezel-${uid})`}
+            strokeWidth="2.4"
+          />
 
-          {/* Inner gold inset ring */}
-          <rect x="9" y="9" width="82" height="82" rx="15"
-            fill="none" stroke={`url(#gold-${uid})`} strokeWidth="0.8" strokeOpacity="0.45"
-            strokeDasharray="3 2" />
+          {/* 2. Traveling Surface Sheen Sweep */}
+          <rect
+            x="3.5"
+            y="3.5"
+            width="153"
+            height="81"
+            rx="11"
+            fill={`url(#surfaceSheen-${uid})`}
+          />
 
-          {/* Top ornament – small diamond */}
-          <polygon points="50,16 53,19 50,22 47,19" fill={`url(#shine-${uid})`} filter={`url(#glow-${uid})`} />
-          {/* Flanking lines */}
-          <line x1="15" y1="19" x2="44" y2="19" stroke={`url(#gold-${uid})`} strokeWidth="0.7" strokeOpacity="0.5" />
-          <line x1="56" y1="19" x2="85" y2="19" stroke={`url(#gold-${uid})`} strokeWidth="0.7" strokeOpacity="0.5" />
+          {/* 3. Solid Gold Hairline Inset (Pristine Jewellery Line - NO Dashes) */}
+          <rect
+            x="7"
+            y="7"
+            width="146"
+            height="74"
+            rx="8.5"
+            fill="none"
+            stroke={`url(#goldHairline-${uid})`}
+            strokeWidth="0.85"
+            strokeOpacity="0.6"
+          />
 
-          {/* JPAMA main text */}
+          {/* 4. Four Precision Corner Micro-Diamonds */}
+          <polygon points="12.5,10.5 14.5,12.5 12.5,14.5 10.5,12.5" fill={`url(#goldBezel-${uid})`} opacity="0.85" />
+          <polygon points="147.5,10.5 149.5,12.5 147.5,14.5 145.5,12.5" fill={`url(#goldBezel-${uid})`} opacity="0.85" />
+          <polygon points="12.5,73.5 14.5,75.5 12.5,77.5 10.5,75.5" fill={`url(#goldBezel-${uid})`} opacity="0.85" />
+          <polygon points="147.5,73.5 149.5,75.5 147.5,77.5 145.5,75.5" fill={`url(#goldBezel-${uid})`} opacity="0.85" />
+
+          {/* 5. Top Balance Rule with Radiant Center Star */}
+          <line
+            x1="34"
+            y1="23"
+            x2="126"
+            y2="23"
+            stroke={`url(#goldHairline-${uid})`}
+            strokeWidth="0.75"
+            strokeOpacity="0.5"
+          />
+          <polygon
+            points="80,18.5 82.5,23 80,27.5 77.5,23"
+            fill={`url(#shimmerBeam-${uid})`}
+            filter={`url(#illuminatingGlow-${uid})`}
+          />
+          <circle cx="80" cy="23" r="0.75" fill="#FFFFFF" />
+
+          {/* 6. STATIC JPAMA WORDMARK WITH ILLUMINATING CONTINUOUS SHIMMER */}
           <text
-            x="50" y="58"
+            x="80"
+            y="47"
             textAnchor="middle"
             dominantBaseline="middle"
-            fill={`url(#shine-${uid})`}
-            filter={`url(#glow-${uid})`}
-            fontFamily="'Cinzel', 'Playfair Display', Georgia, serif"
+            fill={`url(#shimmerBeam-${uid})`}
+            filter={`url(#illuminatingGlow-${uid})`}
+            fontFamily="'Cinzel', 'Playfair Display', 'Bodoni MT', 'Times New Roman', Georgia, serif"
             fontWeight="bold"
-            fontSize="20"
-            letterSpacing="3"
+            fontSize="25"
+            letterSpacing="6.5"
           >
             JPAMA
           </text>
 
-          {/* Bottom ornament lines */}
-          <line x1="18" y1="77" x2="82" y2="77" stroke={`url(#gold-${uid})`} strokeWidth="0.8" strokeOpacity="0.4" />
-          <polygon points="50,74 53,77 50,80 47,77" fill={`url(#shine-${uid})`} />
+          {/* 7. Bottom Balance Rule with Radiant Center Star */}
+          <line
+            x1="34"
+            y1="65"
+            x2="126"
+            y2="65"
+            stroke={`url(#goldHairline-${uid})`}
+            strokeWidth="0.75"
+            strokeOpacity="0.5"
+          />
+          <polygon
+            points="80,60.5 82.5,65 80,69.5 77.5,65"
+            fill={`url(#shimmerBeam-${uid})`}
+            filter={`url(#illuminatingGlow-${uid})`}
+          />
+          <circle cx="80" cy="65" r="0.75" fill="#FFFFFF" />
         </svg>
       </div>
     );
   }
 
-  // ─── 2. BADGE (Navbar pill) ──────────────────────────────────────────────────
+  // ─── 2. BADGE (Navbar Pill with Matching Illuminating Shimmer) ───────────────
   if (variant === "badge") {
     return (
       <div
@@ -118,33 +237,52 @@ export default function JpamaLogo({
         style={{ width: dim.badgeW, height: dim.badgeH }}
       >
         <svg
-          viewBox="0 0 180 60"
-          className="w-full h-full"
+          viewBox="0 0 176 60"
+          className="w-full h-full drop-shadow-sm overflow-visible"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
           <defs>
-            <linearGradient id={`bNavy-${uid}`} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%"   stopColor="#071A2E" />
-              <stop offset="50%"  stopColor="#0A2540" />
-              <stop offset="100%" stopColor="#143A60" />
-            </linearGradient>
-            {/* Shimmer sweep gradient */}
-            <linearGradient id={`bShimmer-${uid}`} x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%"   stopColor="#9E7D38" />
-              <stop offset="20%"  stopColor="#E8C97A" />
-              <stop offset="38%"  stopColor="#FFFBE0" />
-              <stop offset="50%"  stopColor="#F5D978" />
-              <stop offset="65%"  stopColor="#E8C97A" />
-              <stop offset="82%"  stopColor="#C5A059" />
-              <stop offset="100%" stopColor="#9E7D38" />
-            </linearGradient>
+            <radialGradient id={`bNavy-${uid}`} cx="50%" cy="40%" r="70%">
+              <stop offset="0%" stopColor="#103052" />
+              <stop offset="60%" stopColor="#081E35" />
+              <stop offset="100%" stopColor="#040D18" />
+            </radialGradient>
+
             <linearGradient id={`bBorder-${uid}`} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%"   stopColor="#E8C97A" />
-              <stop offset="50%"  stopColor="#C5A059" />
-              <stop offset="100%" stopColor="#9E7D38" />
+              <stop offset="0%" stopColor="#FFF6CC" />
+              <stop offset="30%" stopColor="#E5C158" />
+              <stop offset="70%" stopColor="#C5A059" />
+              <stop offset="100%" stopColor="#8A6726" />
             </linearGradient>
-            <filter id={`bGlow-${uid}`} x="-10%" y="-30%" width="120%" height="160%">
+
+            <linearGradient id={`bShimmerBeam-${uid}`} x1="-100%" y1="0%" x2="50%" y2="0%">
+              <stop offset="0%" stopColor="#B38E3E" />
+              <stop offset="20%" stopColor="#DFB95C" />
+              <stop offset="38%" stopColor="#F9E292" />
+              <stop offset="47%" stopColor="#FFFFFF" />
+              <stop offset="50%" stopColor="#FFFEE8" />
+              <stop offset="53%" stopColor="#FFFFFF" />
+              <stop offset="65%" stopColor="#F9E292" />
+              <stop offset="82%" stopColor="#DFB95C" />
+              <stop offset="100%" stopColor="#B38E3E" />
+              <animate
+                attributeName="x1"
+                from="-120%"
+                to="140%"
+                dur="3.2s"
+                repeatCount="indefinite"
+              />
+              <animate
+                attributeName="x2"
+                from="30%"
+                to="290%"
+                dur="3.2s"
+                repeatCount="indefinite"
+              />
+            </linearGradient>
+
+            <filter id={`bGlow-${uid}`} x="-15%" y="-30%" width="130%" height="160%">
               <feGaussianBlur stdDeviation="1" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
@@ -153,38 +291,50 @@ export default function JpamaLogo({
             </filter>
           </defs>
 
-          {/* Background rounded pill */}
-          <rect x="2" y="2" width="176" height="56" rx="14"
+          {/* Pill Container */}
+          <rect
+            x="2"
+            y="2"
+            width="172"
+            height="56"
+            rx="13"
             fill={`url(#bNavy-${uid})`}
             stroke={`url(#bBorder-${uid})`}
-            strokeWidth="1.8" />
+            strokeWidth="1.8"
+          />
 
-          {/* Inner subtle inset */}
-          <rect x="5.5" y="5.5" width="169" height="49" rx="11"
+          {/* Inner Solid Inset */}
+          <rect
+            x="5.5"
+            y="5.5"
+            width="165"
+            height="49"
+            rx="10"
             fill="none"
             stroke={`url(#bBorder-${uid})`}
-            strokeWidth="0.6"
-            strokeOpacity="0.35"
-            strokeDasharray="2.5 2" />
+            strokeWidth="0.65"
+            strokeOpacity="0.4"
+          />
 
-          {/* Flanking ornamental lines */}
-          <line x1="14" y1="30" x2="38" y2="30" stroke={`url(#bBorder-${uid})`} strokeWidth="0.7" strokeOpacity="0.55" />
-          <line x1="142" y1="30" x2="166" y2="30" stroke={`url(#bBorder-${uid})`} strokeWidth="0.7" strokeOpacity="0.55" />
-          {/* Small diamond ornaments */}
-          <polygon points="42,28 45,30 42,32 39,30" fill={`url(#bShimmer-${uid})`} opacity="0.7" />
-          <polygon points="138,28 141,30 138,32 135,30" fill={`url(#bShimmer-${uid})`} opacity="0.7" />
+          {/* Flanking Ornaments */}
+          <line x1="15" y1="30" x2="36" y2="30" stroke={`url(#bBorder-${uid})`} strokeWidth="0.75" strokeOpacity="0.5" />
+          <polygon points="40,28 42.5,30 40,32 37.5,30" fill={`url(#bShimmerBeam-${uid})`} opacity="0.75" />
 
-          {/* Main JPAMA text with shimmer */}
+          <line x1="140" y1="30" x2="161" y2="30" stroke={`url(#bBorder-${uid})`} strokeWidth="0.75" strokeOpacity="0.5" />
+          <polygon points="136,28 138.5,30 136,32 133.5,30" fill={`url(#bShimmerBeam-${uid})`} opacity="0.75" />
+
+          {/* Wordmark with Illuminating Shimmer */}
           <text
-            x="90" y="32"
+            x="88"
+            y="31"
             textAnchor="middle"
             dominantBaseline="middle"
-            fill={`url(#bShimmer-${uid})`}
+            fill={`url(#bShimmerBeam-${uid})`}
             filter={`url(#bGlow-${uid})`}
-            fontFamily="'Cinzel', 'Playfair Display', Georgia, serif"
+            fontFamily="'Cinzel', 'Playfair Display', 'Bodoni MT', Georgia, serif"
             fontWeight="bold"
-            fontSize="26"
-            letterSpacing="6"
+            fontSize="24"
+            letterSpacing="5.5"
           >
             JPAMA
           </text>
@@ -193,7 +343,7 @@ export default function JpamaLogo({
     );
   }
 
-  // ─── 3. FULL (Crest + text) ──────────────────────────────────────────────────
+  // ─── 3. FULL (Crest Plaque + Title text) ──────────────────────────────────────
   return (
     <div className={`flex items-center gap-3 select-none ${className}`}>
       <JpamaLogo size={size} variant="crest" />
