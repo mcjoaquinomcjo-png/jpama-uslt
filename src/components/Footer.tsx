@@ -98,6 +98,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/admin" className="hover:text-[#E8D8BA] text-slate-400 transition-colors flex items-center gap-1">
+                  <span>🔒 Officer Admin Dashboard</span>
+                </Link>
+              </li>
+              <li>
                 <a
                   href="https://facebook.com"
                   target="_blank"
