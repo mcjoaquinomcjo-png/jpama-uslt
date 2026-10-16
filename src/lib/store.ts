@@ -480,8 +480,67 @@ class LocalStore {
     return newRSVP;
   }
 
+  updateMember(id: string, updates: Partial<Member>): Member {
+    const idx = this.members.findIndex((m) => m.id === id);
+    if (idx === -1) throw new Error("Member not found");
+    this.members[idx] = { ...this.members[idx], ...updates };
+    return this.members[idx];
+  }
+
+  deleteMember(id: string): boolean {
+    const initialLen = this.members.length;
+    this.members = this.members.filter((m) => m.id !== id);
+    return this.members.length < initialLen;
+  }
+
+  addEvent(eventData: Omit<EventItem, "id">): EventItem {
+    const newEvent: EventItem = {
+      ...eventData,
+      id: "ev-" + Math.random().toString(36).substring(2, 9),
+    };
+    this.events.unshift(newEvent);
+    return newEvent;
+  }
+
+  updateEvent(id: string, updates: Partial<EventItem>): EventItem {
+    const idx = this.events.findIndex((e) => e.id === id);
+    if (idx === -1) throw new Error("Event not found");
+    this.events[idx] = { ...this.events[idx], ...updates };
+    return this.events[idx];
+  }
+
+  deleteEvent(id: string): boolean {
+    const initialLen = this.events.length;
+    this.events = this.events.filter((e) => e.id !== id);
+    return this.events.length < initialLen;
+  }
+
   getResources(): ResourceItem[] {
     return this.resources;
+  }
+
+  addResource(resourceData: Omit<ResourceItem, "id" | "downloads_count" | "updated_at">): ResourceItem {
+    const newRes: ResourceItem = {
+      ...resourceData,
+      id: "res-" + Math.random().toString(36).substring(2, 9),
+      downloads_count: 0,
+      updated_at: new Date().toISOString(),
+    };
+    this.resources.unshift(newRes);
+    return newRes;
+  }
+
+  updateResource(id: string, updates: Partial<ResourceItem>): ResourceItem {
+    const idx = this.resources.findIndex((r) => r.id === id);
+    if (idx === -1) throw new Error("Resource not found");
+    this.resources[idx] = { ...this.resources[idx], ...updates, updated_at: new Date().toISOString() };
+    return this.resources[idx];
+  }
+
+  deleteResource(id: string): boolean {
+    const initialLen = this.resources.length;
+    this.resources = this.resources.filter((r) => r.id !== id);
+    return this.resources.length < initialLen;
   }
 }
 

@@ -24,7 +24,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { student_number, full_name, email, year_level, program = "BSMA", payment_ref } = body;
+    const { student_number, full_name, email, year_level, program = "BSMA", payment_ref, status = "Pending" } = body;
 
     if (!student_number || !full_name || !email || !year_level) {
       return NextResponse.json(
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
             email: email.trim(),
             year_level,
             program: "BSMA",
-            status: "Pending",
+            status,
             payment_ref: payment_ref ? payment_ref.trim() : null,
           },
         ])
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
 
       return NextResponse.json({
         success: true,
-        message: "Registration submitted successfully! Your status is currently Pending verification.",
+        message: "Member saved successfully.",
         data,
       });
     }
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: "Registration submitted successfully! Your status is currently Pending verification.",
+      message: "Member saved successfully.",
       data: newMember,
     });
   } catch (error: any) {
@@ -86,5 +86,55 @@ export async function POST(request: Request) {
       { success: false, error: error.message || "Failed to register member." },
       { status: 400 }
     );
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const body = await request.json();
+    const { id, ...updates } = body;
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: "Member ID is required." }, { status: 400 });
+    }
+
+    if (isSupabaseConfigured && supabase) {
+      const { data, error } = await supabase
+        .from("members")
+        .update(updates)
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return NextResponse.json({ success: true, data });
+    }
+
+    const updated = dataStore.updateMember(id, updates);
+    return NextResponse.json({ success: true, data: updated });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: "Member ID is required." }, { status: 400 });
+    }
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from("members").delete().eq("id", id);
+      if (error) throw error;
+      return NextResponse.json({ success: true, message: "Member record deleted successfully." });
+    }
+
+    dataStore.deleteMember(id);
+    return NextResponse.json({ success: true, message: "Member record deleted successfully." });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

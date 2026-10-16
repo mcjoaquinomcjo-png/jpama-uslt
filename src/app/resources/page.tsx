@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Lock,
@@ -12,29 +12,46 @@ import {
   Download,
   Search,
   Plus,
+  Pencil,
+  Trash2,
   AlertCircle,
   GraduationCap,
 } from "lucide-react";
 import { ResourceItem } from "@/lib/types";
 
 export default function ResourcesPage() {
-  // Access control state
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [studentIdInput, setStudentIdInput] = useState<string>("");
   const [authError, setAuthError] = useState<string>("");
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
 
-  // Resources list - starts empty/blank as requested, but can be added/edited!
   const [resources, setResources] = useState<ResourceItem[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
+  const [editingItem, setEditingItem] = useState<ResourceItem | null>(null);
 
-  // New resource form state (for editing/adding)
-  const [newTitle, setNewTitle] = useState("");
-  const [newSubject, setNewSubject] = useState("Cost Accounting & Control");
-  const [newCategory, setNewCategory] = useState<ResourceItem["category"]>("Academic Reviewer");
-  const [newYear, setNewYear] = useState("1st Year");
-  const [newFormat, setNewFormat] = useState<ResourceItem["format"]>("PDF");
+  // Form state
+  const [formTitle, setFormTitle] = useState("");
+  const [formSubject, setFormSubject] = useState("Cost Accounting & Control");
+  const [formCategory, setFormCategory] = useState<ResourceItem["category"]>("Academic Reviewer");
+  const [formYear, setFormYear] = useState("1st Year");
+  const [formFormat, setFormFormat] = useState<ResourceItem["format"]>("PDF");
+
+  useEffect(() => {
+    loadResources();
+  }, []);
+
+  const loadResources = async () => {
+    try {
+      const res = await fetch("/api/resources");
+      const data = await res.json();
+      if (res.ok && data.success && Array.isArray(data.data)) {
+        setResources(data.data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const handleVerifyAccess = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,14 +61,12 @@ export default function ResourcesPage() {
     setAuthError("");
 
     try {
-      // Check if student exists in directory
       const res = await fetch(`/api/members/${encodeURIComponent(studentIdInput.trim())}`);
       const data = await res.json();
 
       if (res.ok && data.success) {
         setIsAuthenticated(true);
       } else {
-        // Allow demonstration unlock or notify
         if (studentIdInput.trim().toLowerCase() === "demo" || studentIdInput.trim().includes("202")) {
           setIsAuthenticated(true);
         } else {
@@ -59,40 +74,98 @@ export default function ResourcesPage() {
         }
       }
     } catch {
-      // Fallback for demonstration
       setIsAuthenticated(true);
     } finally {
       setIsVerifying(false);
     }
   };
 
-  const handleAddResource = (e: React.FormEvent) => {
+  const handleSaveResource = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTitle.trim()) return;
+    if (!formTitle.trim()) return;
 
-    const newItem: ResourceItem = {
-      id: `res-${Date.now()}`,
-      title: newTitle.trim(),
-      category: newCategory,
-      subject: newSubject,
-      year_level: newYear,
-      format: newFormat,
-      size: "2.4 MB",
-      author: "Academic Committee",
-      download_url: "#",
-      downloads_count: 0,
-      description: "Departmental reviewer for BS Management Accounting.",
-      updated_at: new Date().toISOString(),
-    };
+    if (editingItem) {
+      // Edit
+      try {
+        const res = await fetch("/api/resources", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: editingItem.id,
+            title: formTitle.trim(),
+            subject: formSubject.trim(),
+            category: formCategory,
+            year_level: formYear,
+            format: formFormat,
+          }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          setResources((prev) =>
+            prev.map((r) => (r.id === editingItem.id ? { ...r, ...data.data } : r))
+          );
+        }
+      } catch (err) {
+        console.error(err);
+      }
+      setEditingItem(null);
+    } else {
+      // Add
+      try {
+        const res = await fetch("/api/resources", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: formTitle.trim(),
+            subject: formSubject.trim(),
+            category: formCategory,
+            year_level: formYear,
+            format: formFormat,
+            description: "Departmental reviewer for BS Management Accounting.",
+          }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          setResources((prev) => [data.data, ...prev]);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
 
-    setResources((prev) => [newItem, ...prev]);
-    setNewTitle("");
+    setFormTitle("");
     setShowAddModal(false);
   };
 
-  const filteredResources = resources.filter((item) =>
-    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.subject.toLowerCase().includes(searchQuery.toLowerCase())
+  const handleDeleteResource = async (id: string, title: string) => {
+    if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
+
+    try {
+      const res = await fetch(`/api/resources?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setResources((prev) => prev.filter((r) => r.id !== id));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const startEdit = (res: ResourceItem) => {
+    setEditingItem(res);
+    setFormTitle(res.title);
+    setFormSubject(res.subject);
+    setFormCategory(res.category);
+    setFormYear(res.year_level);
+    setFormFormat(res.format);
+    setShowAddModal(true);
+  };
+
+  const filteredResources = resources.filter(
+    (item) =>
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.subject.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -117,7 +190,6 @@ export default function ResourcesPage() {
 
       {/* 2. Main Content */}
       <section className="py-12 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full space-y-8">
-        {/* ACCESS CONTROL GATE */}
         {!isAuthenticated ? (
           <div className="bg-white rounded-xl border border-slate-200 p-8 sm:p-10 shadow-sm max-w-xl mx-auto text-center space-y-5">
             <div className="w-12 h-12 rounded-full bg-[#EAF2FA] text-[#0A2540] flex items-center justify-center mx-auto">
@@ -173,22 +245,25 @@ export default function ResourcesPage() {
         ) : (
           /* UNLOCKED RESOURCE VAULT */
           <div className="space-y-6 animate-fadeIn">
-            {/* Access Granted Badge Bar */}
+            {/* Header controls bar */}
             <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-xs text-emerald-900 font-medium">
                 <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                <span>
-                  Access Unlocked: Verified BS Management Accounting Student Session
-                </span>
+                <span>Access Unlocked: Verified BS Management Accounting Student Session</span>
               </div>
 
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setShowAddModal(true)}
+                  onClick={() => {
+                    setEditingItem(null);
+                    setFormTitle("");
+                    setFormSubject("Cost Accounting & Control");
+                    setShowAddModal(true);
+                  }}
                   className="px-3 py-1.5 bg-[#0A2540] hover:bg-[#14487A] text-white rounded text-xs font-semibold flex items-center gap-1 shadow-sm transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Add / Edit Resource</span>
+                  <span>Add Resource</span>
                 </button>
                 <button
                   onClick={() => setIsAuthenticated(false)}
@@ -199,7 +274,7 @@ export default function ResourcesPage() {
               </div>
             </div>
 
-            {/* Empty State / Blank Placeholder as requested */}
+            {/* Empty State */}
             {resources.length === 0 ? (
               <div className="bg-white rounded-xl border border-dashed border-slate-300 p-12 text-center space-y-4">
                 <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
@@ -214,7 +289,11 @@ export default function ResourcesPage() {
                   </p>
                 </div>
                 <button
-                  onClick={() => setShowAddModal(true)}
+                  onClick={() => {
+                    setEditingItem(null);
+                    setFormTitle("");
+                    setShowAddModal(true);
+                  }}
                   className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-xs font-semibold inline-flex items-center gap-1.5 transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5 text-[#0A2540]" />
@@ -222,18 +301,35 @@ export default function ResourcesPage() {
                 </button>
               </div>
             ) : (
-              /* Resources Grid if items have been added */
+              /* Resources Grid with Edit & Delete options */
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredResources.map((res) => (
                   <div
                     key={res.id}
-                    className="bg-white rounded-lg border border-slate-200 p-5 shadow-sm space-y-3"
+                    className="bg-white rounded-lg border border-slate-200 p-5 shadow-sm space-y-3 relative group"
                   >
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-semibold text-[#0A2540] bg-[#EAF2FA] px-2 py-0.5 rounded">
                         {res.category}
                       </span>
-                      <span className="font-mono text-slate-400">{res.format}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-slate-400">{res.format}</span>
+                        {/* Edit & Delete Actions */}
+                        <button
+                          onClick={() => startEdit(res)}
+                          className="p-1 text-slate-400 hover:text-[#0A2540] rounded hover:bg-slate-100 transition-colors"
+                          title="Edit Resource"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteResource(res.id, res.title)}
+                          className="p-1 text-slate-400 hover:text-red-600 rounded hover:bg-red-50 transition-colors"
+                          title="Delete Resource"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
 
                     <h4 className="font-serif font-bold text-base text-[#0A2540]">
@@ -258,13 +354,13 @@ export default function ResourcesPage() {
           </div>
         )}
 
-        {/* Add Resource Modal */}
+        {/* Add / Edit Resource Modal */}
         {showAddModal && (
           <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
             <div className="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-xl">
               <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                 <h3 className="font-serif font-bold text-base text-[#0A2540]">
-                  Add / Edit Resource Item
+                  {editingItem ? "Edit Academic Resource" : "Add Academic Resource"}
                 </h3>
                 <button
                   onClick={() => setShowAddModal(false)}
@@ -274,7 +370,7 @@ export default function ResourcesPage() {
                 </button>
               </div>
 
-              <form onSubmit={handleAddResource} className="space-y-3 text-xs">
+              <form onSubmit={handleSaveResource} className="space-y-3 text-xs">
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
                     Resource Title *
@@ -283,20 +379,21 @@ export default function ResourcesPage() {
                     type="text"
                     required
                     placeholder="e.g. MAS Handouts & Practice Drills"
-                    value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
+                    value={formTitle}
+                    onChange={(e) => setFormTitle(e.target.value)}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
                   />
                 </div>
 
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
-                    Subject / Course
+                    Subject / Course *
                   </label>
                   <input
                     type="text"
-                    value={newSubject}
-                    onChange={(e) => setNewSubject(e.target.value)}
+                    required
+                    value={formSubject}
+                    onChange={(e) => setFormSubject(e.target.value)}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
                   />
                 </div>
@@ -307,8 +404,8 @@ export default function ResourcesPage() {
                       Category
                     </label>
                     <select
-                      value={newCategory}
-                      onChange={(e) => setNewCategory(e.target.value as any)}
+                      value={formCategory}
+                      onChange={(e) => setFormCategory(e.target.value as any)}
                       className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-md focus:outline-none"
                     >
                       <option value="Academic Reviewer">Academic Reviewer</option>
@@ -323,8 +420,8 @@ export default function ResourcesPage() {
                       Format
                     </label>
                     <select
-                      value={newFormat}
-                      onChange={(e) => setNewFormat(e.target.value as any)}
+                      value={formFormat}
+                      onChange={(e) => setFormFormat(e.target.value as any)}
                       className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-md focus:outline-none"
                     >
                       <option value="PDF">PDF</option>
@@ -347,7 +444,7 @@ export default function ResourcesPage() {
                     type="submit"
                     className="px-4 py-1.5 bg-[#0A2540] text-white rounded font-semibold"
                   >
-                    Save Resource
+                    {editingItem ? "Update Resource" : "Save Resource"}
                   </button>
                 </div>
               </form>
