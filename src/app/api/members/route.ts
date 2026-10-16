@@ -1,8 +1,19 @@
 import { NextResponse } from "next/server";
 import { dataStore } from "@/lib/store";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 export async function GET() {
   try {
+    if (isSupabaseConfigured && supabase) {
+      const { data, error } = await supabase
+        .from("members")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return NextResponse.json({ success: true, data });
+    }
+
     const members = dataStore.getMembers();
     return NextResponse.json({ success: true, data: members });
   } catch (error: any) {
@@ -13,13 +24,47 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { student_number, full_name, email, year_level, program, payment_ref } = body;
+    const { student_number, full_name, email, year_level, program = "BSMA", payment_ref } = body;
 
-    if (!student_number || !full_name || !email || !year_level || !program) {
+    if (!student_number || !full_name || !email || !year_level) {
       return NextResponse.json(
         { success: false, error: "Please provide all required fields." },
         { status: 400 }
       );
+    }
+
+    if (isSupabaseConfigured && supabase) {
+      const { data, error } = await supabase
+        .from("members")
+        .insert([
+          {
+            student_number: student_number.trim(),
+            full_name: full_name.trim(),
+            email: email.trim(),
+            year_level,
+            program: "BSMA",
+            status: "Pending",
+            payment_ref: payment_ref ? payment_ref.trim() : null,
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) {
+        if (error.code === "23505") {
+          return NextResponse.json(
+            { success: false, error: "A registration with this student number or email already exists." },
+            { status: 400 }
+          );
+        }
+        throw error;
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: "Registration submitted successfully! Your status is currently Pending verification.",
+        data,
+      });
     }
 
     const newMember = dataStore.addMember({
@@ -27,7 +72,7 @@ export async function POST(request: Request) {
       full_name: full_name.trim(),
       email: email.trim(),
       year_level,
-      program,
+      program: "BSMA",
       payment_ref: payment_ref ? payment_ref.trim() : undefined,
     });
 
