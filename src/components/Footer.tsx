@@ -18,8 +18,8 @@ export default function Footer() {
           {/* Organization & Affiliation */}
           <div className="md:col-span-2 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-[#0E355C] text-[#C5A059] flex items-center justify-center font-serif font-black text-lg border border-[#C5A059]/30">
-                JP
+              <div className="gold-shimmer-badge h-10 px-3 rounded-lg bg-[#0E355C] flex items-center justify-center font-serif font-bold text-xs tracking-wider flex-shrink-0">
+                <span className="gold-shimmer-text">JPAMA</span>
               </div>
               <div>
                 <h3 className="font-serif text-lg font-bold text-white tracking-wide">

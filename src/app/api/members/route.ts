@@ -24,7 +24,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { student_number, full_name, email, year_level, program = "BSMA", payment_ref, status = "Pending" } = body;
+    const { student_number, full_name, email, year_level, program = "BSMA", birthdate, residence, payment_ref, status = "Pending" } = body;
 
     if (!student_number || !full_name || !email || !year_level) {
       return NextResponse.json(
@@ -44,6 +44,8 @@ export async function POST(request: Request) {
             year_level,
             program: "BSMA",
             status,
+            birthdate: birthdate ? birthdate.trim() : null,
+            residence: residence ? residence.trim() : null,
             payment_ref: payment_ref ? payment_ref.trim() : null,
           },
         ])
@@ -73,6 +75,8 @@ export async function POST(request: Request) {
       email: email.trim(),
       year_level,
       program: "BSMA",
+      birthdate: birthdate ? birthdate.trim() : undefined,
+      residence: residence ? residence.trim() : undefined,
       payment_ref: payment_ref ? payment_ref.trim() : undefined,
     });
 

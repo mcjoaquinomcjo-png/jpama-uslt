@@ -7,7 +7,8 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- ---------------------------------------------------------
--- 1. MEMBERS TABLE
+-- ---------------------------------------------------------
+-- 1. MEMBERS TABLE (With Birthdate & Residence)
 -- ---------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.members (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -17,6 +18,8 @@ CREATE TABLE IF NOT EXISTS public.members (
     year_level VARCHAR(10) NOT NULL CHECK (year_level IN ('1st Year', '2nd Year', '3rd Year', '4th Year')),
     program VARCHAR(50) NOT NULL DEFAULT 'BSMA' CHECK (program = 'BSMA'),
     status VARCHAR(20) NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Active', 'Graduated')),
+    birthdate DATE,
+    residence VARCHAR(150),
     payment_ref VARCHAR(100),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -25,7 +28,7 @@ CREATE INDEX IF NOT EXISTS idx_members_student_number ON public.members(student_
 CREATE INDEX IF NOT EXISTS idx_members_email ON public.members(email);
 
 -- ---------------------------------------------------------
--- 2. EVENTS TABLE
+-- 2. EVENTS TABLE (With Time, Speaker, and Agenda JSON)
 -- ---------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -35,12 +38,14 @@ CREATE TABLE IF NOT EXISTS public.events (
     description TEXT NOT NULL,
     full_details TEXT,
     event_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    event_time VARCHAR(50) DEFAULT '08:30 AM',
     location VARCHAR(150) NOT NULL,
     max_capacity INTEGER NOT NULL DEFAULT 200,
     is_published BOOLEAN NOT NULL DEFAULT true,
     speaker VARCHAR(100),
     speaker_role VARCHAR(150),
     badge VARCHAR(50),
+    agenda JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -64,19 +69,37 @@ CREATE INDEX IF NOT EXISTS idx_rsvps_event_id ON public.rsvps(event_id);
 CREATE INDEX IF NOT EXISTS idx_rsvps_student ON public.rsvps(student_number);
 
 -- ---------------------------------------------------------
--- 4. ANNOUNCEMENTS TABLE (For Live Content Editing)
+-- 4. LEADERSHIP & FACULTY TABLE
 -- ---------------------------------------------------------
-CREATE TABLE IF NOT EXISTS public.announcements (
+CREATE TABLE IF NOT EXISTS public.officers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tag VARCHAR(50) NOT NULL,
-    text TEXT NOT NULL,
-    link VARCHAR(200) DEFAULT '/events',
-    is_active BOOLEAN NOT NULL DEFAULT true,
+    name VARCHAR(150) NOT NULL,
+    role VARCHAR(100) NOT NULL,
+    category VARCHAR(50) NOT NULL DEFAULT 'Executive Board',
+    committee VARCHAR(100) DEFAULT 'Executive Council',
+    term VARCHAR(50) DEFAULT 'A.Y. 2026–2027',
+    yearProgram VARCHAR(50) DEFAULT '4th Year • BSMA',
+    quote TEXT,
+    avatar TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- ---------------------------------------------------------
--- 5. ACADEMIC RESOURCES TABLE
+-- 5. PORTAL SETTINGS TABLE
+-- ---------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.settings (
+    id VARCHAR(50) PRIMARY KEY DEFAULT 'global-settings',
+    portal_title VARCHAR(200) NOT NULL DEFAULT 'Junior Philippine Association of Management Accountants',
+    academic_year VARCHAR(50) NOT NULL DEFAULT 'A.Y. 2026–2027',
+    advisory_notice TEXT NOT NULL DEFAULT 'Welcome BS Management Accounting scholars to A.Y. 2026–2027.',
+    official_email VARCHAR(100) NOT NULL DEFAULT 'jpama@uslt.edu.ph',
+    facebook_url VARCHAR(200) NOT NULL DEFAULT 'https://facebook.com/jpama.uslt',
+    office_location VARCHAR(200) NOT NULL DEFAULT 'Bulwagang San Jacinto, USLT Mabini Campus, Tuguegarao City',
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- ---------------------------------------------------------
+-- 6. ACADEMIC RESOURCES TABLE (With Cloud Links)
 -- ---------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.resources (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -86,42 +109,23 @@ CREATE TABLE IF NOT EXISTS public.resources (
     year_level VARCHAR(50) NOT NULL DEFAULT 'All Years',
     format VARCHAR(20) NOT NULL DEFAULT 'PDF',
     size VARCHAR(20) DEFAULT '2.5 MB',
-    download_url TEXT NOT NULL DEFAULT '#',
+    download_url TEXT NOT NULL DEFAULT 'https://drive.google.com',
     downloads_count INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- ---------------------------------------------------------
--- Row Level Security (RLS)
--- ---------------------------------------------------------
+-- Allow public read & writes
 ALTER TABLE public.members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.rsvps ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.announcements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.resources ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.officers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
 
--- Allow public read
+CREATE POLICY "Public read all" ON public.members FOR SELECT USING (true);
+CREATE POLICY "Public insert members" ON public.members FOR INSERT WITH CHECK (true);
 CREATE POLICY "Public read events" ON public.events FOR SELECT USING (true);
-CREATE POLICY "Public read announcements" ON public.announcements FOR SELECT USING (true);
 CREATE POLICY "Public read resources" ON public.resources FOR SELECT USING (true);
-CREATE POLICY "Public read members" ON public.members FOR SELECT USING (true);
+CREATE POLICY "Public read officers" ON public.officers FOR SELECT USING (true);
+CREATE POLICY "Public read settings" ON public.settings FOR SELECT USING (true);
 
--- Allow public insert (registration & RSVP)
-CREATE POLICY "Public register member" ON public.members FOR INSERT WITH CHECK (true);
-CREATE POLICY "Public submit rsvp" ON public.rsvps FOR INSERT WITH CHECK (true);
-
--- ---------------------------------------------------------
--- Initial Seed Data (Sample BSMA Members & Events)
--- ---------------------------------------------------------
-INSERT INTO public.members (student_number, full_name, email, year_level, program, status, payment_ref)
-VALUES 
-    ('2023-01042', 'Kirsten Joy Dela Cruz', 'kj.delacruz@uslt.edu.ph', '3rd Year', 'BSMA', 'Active', 'GCASH-891024881'),
-    ('2024-00519', 'Marc Alistair Valenzuela', 'marc.valenzuela@uslt.edu.ph', '2nd Year', 'BSMA', 'Active', 'CASHIER-USLT-4019'),
-    ('2025-00118', 'Sophia Reign Agcaoili', 'sophia.agcaoili@uslt.edu.ph', '1st Year', 'BSMA', 'Pending', 'GCASH-491023774')
-ON CONFLICT (student_number) DO NOTHING;
-
-INSERT INTO public.events (slug, title, category, description, event_date, location, max_capacity, is_published, badge)
-VALUES 
-    ('sihaya-induction-2026', 'Sihaya: The 2026 Grand Induction & Pinning Gala', 'Leadership', 'The official donning of pins and formal induction rites for newly registered JPAMA members.', '2026-10-24 08:30:00+00', 'USLT Bulwagang San Jacinto', 250, true, 'Flagship Event'),
-    ('mastering-strategic-cost-management', 'Masterclass: Strategic Cost Management & Decision Modeling', 'Academic', 'Comprehensive intensive review on activity-based costing and corporate controllership analytics.', '2026-11-14 13:00:00+00', 'SABH Multimedia Hall 3', 120, true, 'Curricular Review')
-ON CONFLICT (slug) DO NOTHING;

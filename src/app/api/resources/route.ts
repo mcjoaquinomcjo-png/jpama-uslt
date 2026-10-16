@@ -24,7 +24,15 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { title, subject, category = "Academic Reviewer", year_level = "All Years", format = "PDF", description } = body;
+    const {
+      title,
+      subject,
+      category = "Academic Reviewer",
+      year_level = "All Years",
+      format = "PDF",
+      description,
+      download_url = "https://drive.google.com",
+    } = body;
 
     if (!title || !subject) {
       return NextResponse.json({ success: false, error: "Title and Subject are required." }, { status: 400 });
@@ -41,7 +49,7 @@ export async function POST(request: Request) {
             year_level,
             format,
             size: "2.4 MB",
-            download_url: "#",
+            download_url: download_url ? download_url.trim() : "https://drive.google.com",
             downloads_count: 0,
           },
         ])
@@ -60,7 +68,7 @@ export async function POST(request: Request) {
       format,
       size: "2.4 MB",
       author: "Academic Committee",
-      download_url: "#",
+      download_url: download_url ? download_url.trim() : "https://drive.google.com",
       description: description || "Departmental reviewer for BS Management Accounting.",
     });
 

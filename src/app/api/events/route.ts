@@ -32,7 +32,18 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { title, category = "Leadership", description, event_date, location, max_capacity = 200 } = body;
+    const {
+      title,
+      category = "Leadership",
+      description,
+      event_date,
+      event_time,
+      location,
+      max_capacity = 200,
+      speaker,
+      speaker_role,
+      agenda,
+    } = body;
 
     if (!title || !event_date || !location) {
       return NextResponse.json({ success: false, error: "Title, date, and location are required." }, { status: 400 });
@@ -50,8 +61,12 @@ export async function POST(request: Request) {
             category,
             description: description ? description.trim() : "JPAMA USLT Chapter Assembly",
             event_date,
+            event_time: event_time ? event_time.trim() : null,
             location: location.trim(),
             max_capacity: Number(max_capacity) || 200,
+            speaker: speaker ? speaker.trim() : null,
+            speaker_role: speaker_role ? speaker_role.trim() : null,
+            agenda: agenda || [],
             is_published: true,
           },
         ])
@@ -68,8 +83,12 @@ export async function POST(request: Request) {
       category,
       description: description ? description.trim() : "JPAMA USLT Chapter Assembly",
       event_date,
+      event_time: event_time ? event_time.trim() : undefined,
       location: location.trim(),
       max_capacity: Number(max_capacity) || 200,
+      speaker: speaker ? speaker.trim() : undefined,
+      speaker_role: speaker_role ? speaker_role.trim() : undefined,
+      agenda: agenda || [],
       is_published: true,
     });
 

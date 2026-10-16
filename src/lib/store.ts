@@ -1,6 +1,6 @@
-import { Member, EventItem, RSVP, ResourceItem } from "./types";
+import { Member, EventItem, RSVP, ResourceItem, OfficerItem, PortalSettings } from "./types";
 
-// Seed Members
+// Seed Members (Updated with Birthdate & Residence)
 export const INITIAL_MEMBERS: Member[] = [
   {
     id: "m01-9482-aa01",
@@ -11,7 +11,8 @@ export const INITIAL_MEMBERS: Member[] = [
     program: "BSMA",
     status: "Active",
     created_at: "2024-08-15T09:30:00Z",
-    payment_ref: "GCASH-891024881",
+    birthdate: "2004-10-14",
+    residence: "Tuguegarao City, Cagayan",
   },
   {
     id: "m02-8821-bb02",
@@ -22,7 +23,8 @@ export const INITIAL_MEMBERS: Member[] = [
     program: "BSMA",
     status: "Active",
     created_at: "2024-08-20T14:15:00Z",
-    payment_ref: "CASHIER-USLT-4019",
+    birthdate: "2005-06-22",
+    residence: "Solana, Cagayan",
   },
   {
     id: "m03-1294-cc03",
@@ -33,7 +35,8 @@ export const INITIAL_MEMBERS: Member[] = [
     program: "BSMA",
     status: "Pending",
     created_at: "2024-09-02T11:00:00Z",
-    payment_ref: "GCASH-491023774",
+    birthdate: "2006-01-30",
+    residence: "Enrile, Cagayan",
   },
   {
     id: "m04-7741-dd04",
@@ -44,7 +47,8 @@ export const INITIAL_MEMBERS: Member[] = [
     program: "BSMA",
     status: "Graduated",
     created_at: "2021-09-01T08:00:00Z",
-    payment_ref: "CASHIER-USLT-1082",
+    birthdate: "2003-08-12",
+    residence: "Tuguegarao City, Cagayan",
   },
   {
     id: "m05-3392-ee05",
@@ -55,7 +59,8 @@ export const INITIAL_MEMBERS: Member[] = [
     program: "BSMA",
     status: "Active",
     created_at: "2024-08-18T16:45:00Z",
-    payment_ref: "GCASH-663810291",
+    birthdate: "2004-12-05",
+    residence: "Peñablanca, Cagayan",
   },
 ];
 
@@ -542,9 +547,136 @@ class LocalStore {
     this.resources = this.resources.filter((r) => r.id !== id);
     return this.resources.length < initialLen;
   }
+
+  // Leadership & Faculty Management
+  private officers: OfficerItem[] = [
+    {
+      id: "off-01",
+      name: "John Ezekiel M. Aquino",
+      role: "President",
+      category: "Executive Board",
+      committee: "Executive Council",
+      term: "A.Y. 2026–2027",
+      yearProgram: "4th Year • BSMA",
+      quote: "Leading with Sihaya: Radiance in ethics, precision in management accounting.",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
+    },
+    {
+      id: "off-02",
+      name: "Alyssa Marie C. Baloran",
+      role: "Executive Vice President",
+      category: "Executive Board",
+      committee: "Executive Council",
+      term: "A.Y. 2026–2027",
+      yearProgram: "4th Year • BSMA",
+      quote: "Empowering every Louisian management accountant to achieve global distinction.",
+      avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80",
+    },
+    {
+      id: "off-03",
+      name: "Dominic Kyle T. Guzman",
+      role: "VP for Internal Affairs",
+      category: "Executive Board",
+      committee: "Internal Affairs",
+      term: "A.Y. 2026–2027",
+      yearProgram: "3rd Year • BSMA",
+      quote: "Fostering synergy, student welfare, and seamless chapter operations.",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
+    },
+    {
+      id: "off-04",
+      name: "Frances Nicole D. Ramos",
+      role: "VP for External Affairs",
+      category: "Executive Board",
+      committee: "External Relations",
+      term: "A.Y. 2026–2027",
+      yearProgram: "3rd Year • BSMA",
+      quote: "Bridging USLT with national leagues, industry partners, and CMA bodies.",
+      avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80",
+    },
+    {
+      id: "off-05",
+      name: "Gian Carlo S. Manaligod",
+      role: "VP for Finance",
+      category: "Executive Board",
+      committee: "Finance & Audit",
+      term: "A.Y. 2026–2027",
+      yearProgram: "3rd Year • BSMA",
+      quote: "Maintaining absolute transparency and stewardship over chapter assets.",
+      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
+    },
+    {
+      id: "off-06",
+      name: "Chelsea Grace V. Cauilan",
+      role: "VP for Academics & CMA Affairs",
+      category: "Executive Board",
+      committee: "Academic Wing",
+      term: "A.Y. 2026–2027",
+      yearProgram: "4th Year • BSMA",
+      quote: "Providing top-tier study kits and mentoring for academic excellence.",
+      avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80",
+    },
+    {
+      id: "off-07",
+      name: "Prof. Marites G. Cardenas, CPA, MBA, CMA",
+      role: "Faculty Adviser",
+      category: "Faculty Adviser",
+      committee: "Faculty Leadership",
+      term: "A.Y. 2026–2027",
+      yearProgram: "JPAMA USLT Chapter Adviser",
+      quote: "With over 18 years in corporate controllership, guiding students toward ethical competence and international accreditation.",
+      avatar: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=400&q=80",
+    },
+  ];
+
+  getOfficers(): OfficerItem[] {
+    return this.officers;
+  }
+
+  addOfficer(data: Omit<OfficerItem, "id">): OfficerItem {
+    const newOfficer: OfficerItem = {
+      ...data,
+      id: "off-" + Math.random().toString(36).substring(2, 9),
+    };
+    this.officers.push(newOfficer);
+    return newOfficer;
+  }
+
+  updateOfficer(id: string, updates: Partial<OfficerItem>): OfficerItem {
+    const idx = this.officers.findIndex((o) => o.id === id);
+    if (idx === -1) throw new Error("Officer not found");
+    this.officers[idx] = { ...this.officers[idx], ...updates };
+    return this.officers[idx];
+  }
+
+  deleteOfficer(id: string): boolean {
+    const initialLen = this.officers.length;
+    this.officers = this.officers.filter((o) => o.id !== id);
+    return this.officers.length < initialLen;
+  }
+
+  // Portal Settings (Super User)
+  private settings: PortalSettings = {
+    portal_title: "Junior Philippine Association of Management Accountants",
+    academic_year: "A.Y. 2026–2027",
+    advisory_notice: "Welcome BS Management Accounting scholars to A.Y. 2026–2027.",
+    official_email: "jpama@uslt.edu.ph",
+    facebook_url: "https://facebook.com/jpama.uslt",
+    office_location: "Bulwagang San Jacinto, USLT Mabini Campus, Tuguegarao City",
+  };
+
+  getSettings(): PortalSettings {
+    return this.settings;
+  }
+
+  updateSettings(updates: Partial<PortalSettings>): PortalSettings {
+    this.settings = { ...this.settings, ...updates };
+    return this.settings;
+  }
 }
 
 // Global singleton
 const globalForStore = global as unknown as { __jpama_store?: LocalStore };
 export const dataStore = globalForStore.__jpama_store || new LocalStore();
 if (process.env.NODE_ENV !== "production") globalForStore.__jpama_store = dataStore;
+

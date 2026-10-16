@@ -21,7 +21,8 @@ export default function MembershipPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [yearLevel, setYearLevel] = useState<YearLevel>("1st Year");
-  const [paymentRef, setPaymentRef] = useState("");
+  const [birthdate, setBirthdate] = useState("");
+  const [residence, setResidence] = useState("");
 
   const [registering, setRegistering] = useState(false);
   const [regSuccess, setRegSuccess] = useState<Member | null>(null);
@@ -48,7 +49,8 @@ export default function MembershipPage() {
           email: email.trim(),
           year_level: yearLevel,
           program: "BSMA",
-          payment_ref: paymentRef.trim() || undefined,
+          birthdate: birthdate.trim() || undefined,
+          residence: residence.trim() || undefined,
         }),
       });
 
@@ -58,7 +60,8 @@ export default function MembershipPage() {
         setStudentNumber("");
         setFullName("");
         setEmail("");
-        setPaymentRef("");
+        setBirthdate("");
+        setResidence("");
       } else {
         setRegError(data.error || "Failed to submit membership application.");
       }
@@ -227,17 +230,33 @@ export default function MembershipPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Payment Reference / Receipt (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. GCash Ref or USLT Cashier Receipt No."
-                    value={paymentRef}
-                    onChange={(e) => setPaymentRef(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs text-slate-800 focus:outline-none focus:border-[#0A2540] focus:bg-white transition-colors"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Date of Birth *
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={birthdate}
+                      onChange={(e) => setBirthdate(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs text-slate-800 focus:outline-none focus:border-[#0A2540] focus:bg-white transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Place of Birth / City Residence *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Tuguegarao City, Cagayan"
+                      value={residence}
+                      onChange={(e) => setResidence(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs text-slate-800 focus:outline-none focus:border-[#0A2540] focus:bg-white transition-colors"
+                    />
+                  </div>
                 </div>
 
                 {regError && (

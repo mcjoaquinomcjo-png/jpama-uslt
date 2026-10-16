@@ -13,6 +13,8 @@ export interface Member {
   program: DegreeProgram;
   status: MemberStatus;
   created_at: string;
+  birthdate?: string;
+  residence?: string;
   payment_ref?: string;
   avatar_url?: string;
 }
@@ -25,6 +27,7 @@ export interface EventItem {
   description: string;
   full_details?: string;
   event_date: string;
+  event_time?: string;
   location: string;
   max_capacity: number;
   is_published: boolean;
@@ -59,8 +62,62 @@ export interface ResourceItem {
   format: "PDF" | "XLSX" | "MP4 / Stream" | "ZIP Kit";
   size: string;
   author: string;
-  download_url: string;
+  download_url: string; // Direct cloud link / Google Drive / OneDrive
   downloads_count: number;
   description: string;
   updated_at: string;
+}
+
+export interface OfficerItem {
+  id: string;
+  name: string;
+  role: string;
+  category: "Executive Board" | "Faculty Adviser";
+  committee: string;
+  term: string;
+  yearProgram?: string;
+  quote?: string;
+  avatar: string;
+  photo_url?: string; // Optional headshot image URL (admin-uploaded)
+}
+
+export interface PortalSettings {
+  portal_title: string;
+  academic_year: string;
+  advisory_notice: string;
+  official_email: string;
+  facebook_url: string;
+  office_location: string;
+}
+
+export interface AlumniMember {
+  id: string;
+  full_name: string;
+  year_graduated: string;         // e.g. "2024"
+  photo_url?: string;
+  current_company?: string;
+  current_role?: string;
+  work_description?: string;
+  leadership_experiences?: string;
+  badges?: string[];              // e.g. ["CMA", "Dean's Lister"]
+  batch_label?: string;           // e.g. "Batch 2024 – Sihaya"
+  linkedin_url?: string;
+}
+
+export type AchievementCategory =
+  | "CMA Passer"
+  | "CMA Scholar"
+  | "Dean's Lister"
+  | "Award / Recognition"
+  | "Champion"
+  | "Board Passer";
+
+export interface Achievement {
+  id: string;
+  full_name: string;
+  category: AchievementCategory;
+  detail: string;                 // e.g. "IMA CMA Passer – Part 1 & 2, 2025"
+  year: string;
+  photo_url?: string;
+  badge_color?: string;           // tailwind color token e.g. "amber"
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Users,
@@ -12,19 +12,63 @@ import {
   Building,
   GraduationCap,
   ChevronRight,
+  ExternalLink,
 } from "lucide-react";
-import { EXECUTIVE_BOARD, FACULTY_LEADERSHIP } from "@/lib/store";
+import { EXECUTIVE_BOARD } from "@/lib/store";
+import { OfficerItem } from "@/lib/types";
+import { DEFAULT_ABOUT_CONTENT, AboutContent } from "@/lib/siteContent";
 
 export default function AboutPage() {
   const [activeTab, setActiveTab] = useState<"history" | "officers" | "constitution">("history");
   const [selectedCommittee, setSelectedCommittee] = useState<string>("All");
   const [showConstitutionModal, setShowConstitutionModal] = useState<boolean>(false);
+  const [officersList, setOfficersList] = useState<any[]>(EXECUTIVE_BOARD);
+  const [aboutContent, setAboutContent] = useState<AboutContent>(DEFAULT_ABOUT_CONTENT);
 
-  const committees = ["All", "Executive Council", "Academic Wing", "Finance & Audit", "Secretariat"];
+  useEffect(() => {
+    // Load leadership officers
+    fetch("/api/leadership")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+          setOfficersList(data.data);
+        }
+      })
+      .catch((err) => console.error("Error loading leadership:", err));
+
+    // Load dynamic about content from super user configuration
+    try {
+      const savedAbout = localStorage.getItem("jpama_about_content");
+      if (savedAbout) {
+        const parsed = JSON.parse(savedAbout);
+        if (parsed && typeof parsed === "object") {
+          setAboutContent((prev) => ({ ...prev, ...parsed }));
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
+  const committees = ["All", "Executive Council", "Academic Wing", "Finance & Audit", "Secretariat", "Internal Affairs", "External Relations", "Public Relations"];
 
   const filteredBoard = selectedCommittee === "All"
-    ? EXECUTIVE_BOARD
-    : EXECUTIVE_BOARD.filter((m) => m.committee === selectedCommittee);
+    ? officersList.filter((o) => o.category !== "Faculty Adviser")
+    : officersList.filter((m) => m.committee === selectedCommittee || (m.category !== "Faculty Adviser" && selectedCommittee === "All"));
+
+  // Helper for initials
+  const getInitials = (name: string) => {
+    if (!name) return "JP";
+    return name
+      .replace(/Dr\.|Prof\.|Atty\.|CPA|MBA|PhD|CMA|,/gi, "")
+      .trim()
+      .split(" ")
+      .filter((w) => w.length > 0)
+      .slice(0, 2)
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase();
+  };
 
   return (
     <div className="flex flex-col bg-[#F8FAFC] text-slate-800 font-sans min-h-screen">
@@ -33,15 +77,15 @@ export default function AboutPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EAF2FA] text-[#0A2540] text-xs font-semibold">
             <GraduationCap className="w-4 h-4 text-[#C5A059]" />
-            <span>USLT School of Accountancy, Business, and Hospitality (SABH)</span>
+            <span>{aboutContent.header.badge}</span>
           </div>
 
           <h1 className="font-serif text-3xl sm:text-5xl font-bold text-[#0A2540] tracking-tight">
-            About <span className="text-[#C5A059]">JPAMA USLT</span>
+            {aboutContent.header.title} <span className="text-[#C5A059]">{aboutContent.header.title_highlight}</span>
           </h1>
 
           <p className="text-slate-600 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
-            The recognized student organization for the <strong>Bachelor of Science in Management Accounting (BSMA)</strong> at the University of Saint Louis Tuguegarao. Fostering academic rigor, ethical leadership, and professional excellence.
+            {aboutContent.header.description}
           </p>
 
           {/* Compact Tab Switcher */}
@@ -89,25 +133,25 @@ export default function AboutPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#C5A059]">
-                  OUR MISSION
+                  {aboutContent.mission.eyebrow}
                 </span>
                 <h3 className="font-serif font-bold text-lg text-[#0A2540]">
-                  Academic Fortitude & Competence
+                  {aboutContent.mission.title}
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  To cultivate competent, values-driven management accountants by providing intensive curricular review circles, CMA certification guidance, and real-world managerial decision workshops.
+                  {aboutContent.mission.desc}
                 </p>
               </div>
 
               <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#C5A059]">
-                  OUR VISION
+                  {aboutContent.vision.eyebrow}
                 </span>
                 <h3 className="font-serif font-bold text-lg text-[#0A2540]">
-                  Exemplary Louisian Leadership
+                  {aboutContent.vision.title}
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  A premier student association producing ethical, globally certified financial leaders committed to Christian presence, professional integrity, and transformative community service.
+                  {aboutContent.vision.desc}
                 </p>
               </div>
             </div>
@@ -124,29 +168,15 @@ export default function AboutPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
-                  <div className="text-xl font-bold font-serif text-[#0A2540]">2014</div>
-                  <h4 className="font-semibold text-sm text-slate-800">Chapter Foundation</h4>
-                  <p className="text-xs text-slate-600">
-                    Established under SABH to represent the specialized needs of Louisian Management Accounting scholars.
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
-                  <div className="text-xl font-bold font-serif text-[#0A2540]">2020</div>
-                  <h4 className="font-semibold text-sm text-slate-800">CMA Track Integration</h4>
-                  <p className="text-xs text-slate-600">
-                    Direct academic coordination with Institute of Management Accountants (IMA) review programs and mock assessments.
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
-                  <div className="text-xl font-bold font-serif text-[#0A2540]">2026</div>
-                  <h4 className="font-semibold text-sm text-slate-800">Sihaya Era</h4>
-                  <p className="text-xs text-slate-600">
-                    Inaugurating radiant beginnings through digital student portals, interactive review kits, and expanded student welfare.
-                  </p>
-                </div>
+                {aboutContent.milestones.map((ms, idx) => (
+                  <div key={idx} className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
+                    <div className="text-xl font-bold font-serif text-[#0A2540]">{ms.year}</div>
+                    <h4 className="font-semibold text-sm text-slate-800">{ms.title}</h4>
+                    <p className="text-xs text-slate-600">
+                      {ms.desc}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -166,41 +196,83 @@ export default function AboutPage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-1">
-                  <div className="text-[10px] uppercase font-bold text-[#C5A059] tracking-wider">
-                    Chapter Adviser
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                {/* Chapter Adviser */}
+                <div className="flex flex-col items-center text-center p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-3 hover:border-[#C5A059] transition-colors">
+                  <div className="w-20 h-20 rounded-full bg-[#0A2540] flex items-center justify-center text-white font-serif font-bold text-xl shadow-md overflow-hidden flex-shrink-0">
+                    {aboutContent.faculty.adviser_avatar ? (
+                      <img
+                        src={aboutContent.faculty.adviser_avatar}
+                        alt={aboutContent.faculty.adviser_name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span>{getInitials(aboutContent.faculty.adviser_name)}</span>
+                    )}
                   </div>
-                  <h4 className="font-semibold text-sm text-[#0A2540]">
-                    {FACULTY_LEADERSHIP.adviser}
-                  </h4>
-                  <p className="text-xs text-slate-500">
-                    {FACULTY_LEADERSHIP.adviser_title}
-                  </p>
+                  <div className="space-y-1">
+                    <div className="text-[10px] uppercase font-bold text-[#C5A059] tracking-wider">
+                      {aboutContent.faculty.adviser_role}
+                    </div>
+                    <h4 className="font-serif font-bold text-sm text-[#0A2540] leading-snug">
+                      {aboutContent.faculty.adviser_name}
+                    </h4>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      {aboutContent.faculty.adviser_title}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-1">
-                  <div className="text-[10px] uppercase font-bold text-[#C5A059] tracking-wider">
-                    SABH Dean
+                {/* SABH Dean */}
+                <div className="flex flex-col items-center text-center p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-3 hover:border-[#C5A059] transition-colors">
+                  <div className="w-20 h-20 rounded-full bg-[#14487A] flex items-center justify-center text-white font-serif font-bold text-xl shadow-md overflow-hidden flex-shrink-0">
+                    {aboutContent.faculty.dean_avatar ? (
+                      <img
+                        src={aboutContent.faculty.dean_avatar}
+                        alt={aboutContent.faculty.dean_name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span>{getInitials(aboutContent.faculty.dean_name)}</span>
+                    )}
                   </div>
-                  <h4 className="font-semibold text-sm text-[#0A2540]">
-                    {FACULTY_LEADERSHIP.dean}
-                  </h4>
-                  <p className="text-xs text-slate-500">
-                    {FACULTY_LEADERSHIP.dean_title}
-                  </p>
+                  <div className="space-y-1">
+                    <div className="text-[10px] uppercase font-bold text-[#C5A059] tracking-wider">
+                      {aboutContent.faculty.dean_role}
+                    </div>
+                    <h4 className="font-serif font-bold text-sm text-[#0A2540] leading-snug">
+                      {aboutContent.faculty.dean_name}
+                    </h4>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      {aboutContent.faculty.dean_title}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-1">
-                  <div className="text-[10px] uppercase font-bold text-[#C5A059] tracking-wider">
-                    Department Head
+                {/* Department Head */}
+                <div className="flex flex-col items-center text-center p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-3 hover:border-[#C5A059] transition-colors">
+                  <div className="w-20 h-20 rounded-full bg-[#1B3A5C] flex items-center justify-center text-white font-serif font-bold text-xl shadow-md overflow-hidden flex-shrink-0">
+                    {aboutContent.faculty.head_avatar ? (
+                      <img
+                        src={aboutContent.faculty.head_avatar}
+                        alt={aboutContent.faculty.head_name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span>{getInitials(aboutContent.faculty.head_name)}</span>
+                    )}
                   </div>
-                  <h4 className="font-semibold text-sm text-[#0A2540]">
-                    {FACULTY_LEADERSHIP.department_head}
-                  </h4>
-                  <p className="text-xs text-slate-500">
-                    {FACULTY_LEADERSHIP.department_head_title}
-                  </p>
+                  <div className="space-y-1">
+                    <div className="text-[10px] uppercase font-bold text-[#C5A059] tracking-wider">
+                      {aboutContent.faculty.head_role}
+                    </div>
+                    <h4 className="font-serif font-bold text-sm text-[#0A2540] leading-snug">
+                      {aboutContent.faculty.head_name}
+                    </h4>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      {aboutContent.faculty.head_title}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -235,28 +307,39 @@ export default function AboutPage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {filteredBoard.map((officer) => (
-                  <div
-                    key={officer.name}
-                    className="p-4 rounded-lg bg-slate-50 border border-slate-200 hover:border-slate-300 transition-colors space-y-2"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-semibold text-[#0A2540] bg-[#EAF2FA] px-2 py-0.5 rounded">
-                        {officer.committee}
-                      </span>
-                      <span className="text-[10px] text-slate-500">BSMA</span>
+                {filteredBoard.map((officer) => {
+                  const initials = getInitials(officer.name);
+                  return (
+                    <div
+                      key={officer.id || officer.name}
+                      className="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-[#C5A059] transition-colors space-y-3"
+                    >
+                      {/* Photo / Initials Avatar */}
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-lg bg-[#0A2540] flex items-center justify-center text-white font-serif font-bold text-sm shadow-sm overflow-hidden flex-shrink-0">
+                          {officer.avatar ? (
+                            <img src={officer.avatar} alt={officer.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span>{initials}</span>
+                          )}
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-[10px] font-semibold text-[#0A2540] bg-[#EAF2FA] px-2 py-0.5 rounded w-fit">
+                            {officer.committee || "Executive"}
+                          </span>
+                          <span className="text-[10px] text-slate-400 mt-0.5">BSMA</span>
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="font-serif font-bold text-sm text-[#0A2540]">
+                          {officer.name}
+                        </h4>
+                        <p className="text-xs text-slate-600 font-medium">{officer.role}</p>
+                        <p className="text-[11px] text-slate-500 mt-0.5">{officer.yearProgram || officer.term}</p>
+                      </div>
                     </div>
-                    <h4 className="font-serif font-bold text-sm text-[#0A2540]">
-                      {officer.name}
-                    </h4>
-                    <p className="text-xs text-slate-600 font-medium">
-                      {officer.role}
-                    </p>
-                    <p className="text-[11px] text-slate-500">
-                      {officer.yearProgram}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -288,87 +371,65 @@ export default function AboutPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-600 leading-relaxed">
-              <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-1.5">
-                <h4 className="font-semibold text-slate-800 text-sm">Article I: Name & Affiliation</h4>
-                <p>
-                  The organization is officially designated as the Junior Philippine Association of Management Accountants (JPAMA) – USLT Chapter, chartered under SABH.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-1.5">
-                <h4 className="font-semibold text-slate-800 text-sm">Article II: Membership Eligibility</h4>
-                <p>
-                  All bona fide students enrolled in the Bachelor of Science in Management Accounting (BSMA) course at the University of Saint Louis Tuguegarao are entitled to membership.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-1.5">
-                <h4 className="font-semibold text-slate-800 text-sm">Article III: Rights & Privileges</h4>
-                <p>
-                  Members in good standing enjoy access to academic testbanks, voting in executive elections, participation in convocations, and the official donning of chapter pins.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-1.5">
-                <h4 className="font-semibold text-slate-800 text-sm">Article IV: Executive Council</h4>
-                <p>
-                  The executive authority resides in the elected officers, subject to faculty adviser oversight and institutional regulations of USLT.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Constitution Modal */}
-        {showConstitutionModal && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl max-w-2xl w-full p-6 space-y-4 max-h-[85vh] flex flex-col shadow-2xl">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-                <h3 className="font-serif font-bold text-lg text-[#0A2540]">
-                  Constitution & By-Laws of JPAMA USLT
-                </h3>
-                <button
-                  onClick={() => setShowConstitutionModal(false)}
-                  className="text-slate-400 hover:text-slate-600 text-sm font-bold"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="overflow-y-auto space-y-4 text-xs text-slate-600 flex-1 pr-2">
-                <div>
-                  <h4 className="font-bold text-slate-800 text-sm">Preamble</h4>
-                  <p className="mt-1">
-                    We, the Management Accounting students of the University of Saint Louis Tuguegarao, with the aid of Divine Providence, in order to cultivate professional competence, foster integrity, and maintain unity, do ordain and promulgate this Constitution and By-Laws.
+              {aboutContent.constitution_articles.map((art, idx) => (
+                <div key={idx} className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-1.5">
+                  <h4 className="font-semibold text-slate-800 text-sm">{art.article}: {art.title}</h4>
+                  <p>
+                    {art.content}
                   </p>
                 </div>
-                <div>
-                  <h4 className="font-bold text-slate-800 text-sm">Section 1: Course Exclusivity</h4>
-                  <p className="mt-1">
-                    This organization exclusively serves and represents students registered under the Bachelor of Science in Management Accounting (BSMA) curriculum.
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-800 text-sm">Section 2: Academic Integrity</h4>
-                  <p className="mt-1">
-                    All members shall adhere to the Louisian Core Values of Christian Presence, Excellence, and Integrity in all academic reviews and professional pursuits.
-                  </p>
-                </div>
-              </div>
-
-              <div className="border-t border-slate-200 pt-3 flex items-center justify-between">
-                <span className="text-[11px] text-slate-500 font-mono">Document: BYLAWS-BSMA-USLT.pdf</span>
-                <button
-                  onClick={() => setShowConstitutionModal(false)}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md transition-colors"
-                >
-                  Close Document
-                </button>
-              </div>
+              ))}
             </div>
           </div>
         )}
       </section>
+
+      {/* MODAL: FULL CONSTITUTION */}
+      {showConstitutionModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-fadeIn">
+            <div className="p-6 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+              <div>
+                <span className="text-[10px] font-bold text-[#C5A059] uppercase tracking-wider">Official Charter</span>
+                <h3 className="font-serif font-bold text-lg text-[#0A2540]">Constitution & By-Laws of JPAMA USLT</h3>
+              </div>
+              <button
+                onClick={() => setShowConstitutionModal(false)}
+                className="text-slate-400 hover:text-slate-700 font-bold text-lg p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-5 text-xs text-slate-700 leading-relaxed">
+              <p className="font-medium text-slate-800">
+                Preamble: We, the students of the Bachelor of Science in Management Accounting of the University of Saint Louis Tuguegarao, imploring the aid of Divine Providence, do hereby ordain and promulgate this Constitution and By-Laws to foster academic excellence, promote moral leadership, and advance the welfare of the student body.
+              </p>
+
+              {aboutContent.constitution_articles.map((art, idx) => (
+                <div key={idx} className="space-y-1">
+                  <h4 className="font-bold text-sm text-[#0A2540]">{art.article}: {art.title}</h4>
+                  <p className="text-slate-600">{art.content}</p>
+                </div>
+              ))}
+
+              <div className="pt-4 border-t border-slate-200 text-[11px] text-slate-500 flex items-center justify-between">
+                <span>Ratified: Academic Year 2026–2027</span>
+                <span>USLT Student Affairs</span>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-end">
+              <button
+                onClick={() => setShowConstitutionModal(false)}
+                className="px-5 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white text-xs font-semibold rounded-lg"
+              >
+                Close Reader
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

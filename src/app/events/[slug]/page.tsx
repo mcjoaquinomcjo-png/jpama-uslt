@@ -13,6 +13,7 @@ import {
   AlertCircle,
   ShieldCheck,
   Ticket,
+  Download,
 } from "lucide-react";
 import { INITIAL_EVENTS } from "@/lib/store";
 import { EventItem, RSVP } from "@/lib/types";
@@ -126,11 +127,21 @@ export default function EventDetailPage() {
             <span className="px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wider bg-[#EAF2FA] text-[#0A2540]">
               {event.category}
             </span>
-            {event.badge && (
-              <span className="text-xs text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded font-semibold">
-                {event.badge}
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {event.badge && (
+                <span className="text-xs text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded font-semibold">
+                  {event.badge}
+                </span>
+              )}
+              <button
+                onClick={() => window.print()}
+                className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-[#0A2540] border border-slate-300 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors no-print"
+                title="Download or Print Event Program (PDF)"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Program Primer (PDF)</span>
+              </button>
+            </div>
           </div>
 
           <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#0A2540] leading-tight">

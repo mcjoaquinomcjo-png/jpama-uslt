@@ -291,20 +291,37 @@ export default function EventsCalendarPage() {
                       <Link
                         key={event.id}
                         href={`/events/${event.slug}`}
-                        className="block bg-white rounded-xl border border-slate-200 hover:border-[#0A2540] p-5 shadow-sm hover:shadow transition-all group"
+                        className="block bg-white rounded-xl border border-slate-200 hover:border-[#0A2540] shadow-sm hover:shadow transition-all group overflow-hidden"
                       >
-                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                          <div className="space-y-1.5 flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#EAF2FA] text-[#0A2540]">
-                                {event.category}
+                        {/* Event Cover Image — 16:9 banner, gradient fallback */}
+                        <div className="relative w-full h-40 bg-gradient-to-br from-[#0A2540] to-[#14487A] overflow-hidden flex-shrink-0">
+                          {event.image_url ? (
+                            <img
+                              src={event.image_url}
+                              alt={event.title}
+                              className="w-full h-full object-cover object-center opacity-90"
+                            />
+                          ) : (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 space-y-1">
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-[#C5A059]">{event.category}</span>
+                              <span className="font-serif font-bold text-white text-sm leading-snug line-clamp-2">{event.title}</span>
+                              <span className="text-[10px] text-slate-300 font-mono">
+                                {new Date(event.event_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                               </span>
-                              {event.badge && (
-                                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">
-                                  {event.badge}
-                                </span>
-                              )}
                             </div>
+                          )}
+                          {event.badge && (
+                            <span className="absolute top-2 right-2 text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-400/90 text-amber-900">
+                              {event.badge}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="p-5 space-y-1.5 flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                          <div className="space-y-1.5 flex-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#EAF2FA] text-[#0A2540]">
+                              {event.category}
+                            </span>
 
                             <h4 className="font-serif font-bold text-base text-[#0A2540] group-hover:text-[#14487A] transition-colors">
                               {event.title}

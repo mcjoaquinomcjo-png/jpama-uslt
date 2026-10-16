@@ -4,18 +4,13 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Lock,
-  Unlock,
   ShieldCheck,
   BookOpen,
-  FileSpreadsheet,
-  FileText,
-  Download,
-  Search,
   Plus,
-  Pencil,
-  Trash2,
   AlertCircle,
   GraduationCap,
+  ExternalLink,
+  Info,
 } from "lucide-react";
 import { ResourceItem } from "@/lib/types";
 
@@ -36,6 +31,7 @@ export default function ResourcesPage() {
   const [formCategory, setFormCategory] = useState<ResourceItem["category"]>("Academic Reviewer");
   const [formYear, setFormYear] = useState("1st Year");
   const [formFormat, setFormFormat] = useState<ResourceItem["format"]>("PDF");
+  const [formDownloadUrl, setFormDownloadUrl] = useState("https://drive.google.com");
 
   useEffect(() => {
     loadResources();
@@ -97,6 +93,7 @@ export default function ResourcesPage() {
             category: formCategory,
             year_level: formYear,
             format: formFormat,
+            download_url: formDownloadUrl.trim() || "https://drive.google.com",
           }),
         });
         const data = await res.json();
@@ -121,6 +118,7 @@ export default function ResourcesPage() {
             category: formCategory,
             year_level: formYear,
             format: formFormat,
+            download_url: formDownloadUrl.trim() || "https://drive.google.com",
             description: "Departmental reviewer for BS Management Accounting.",
           }),
         });
@@ -134,23 +132,12 @@ export default function ResourcesPage() {
     }
 
     setFormTitle("");
+    setFormDownloadUrl("https://drive.google.com");
     setShowAddModal(false);
   };
 
-  const handleDeleteResource = async (id: string, title: string) => {
-    if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
-
-    try {
-      const res = await fetch(`/api/resources?id=${encodeURIComponent(id)}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        setResources((prev) => prev.filter((r) => r.id !== id));
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  // Students cannot delete — admin-only action handled inside Admin Portal
+  // (handleDeleteResource removed from student view)
 
   const startEdit = (res: ResourceItem) => {
     setEditingItem(res);
@@ -159,6 +146,7 @@ export default function ResourcesPage() {
     setFormCategory(res.category);
     setFormYear(res.year_level);
     setFormFormat(res.format);
+    setFormDownloadUrl(res.download_url || "https://drive.google.com");
     setShowAddModal(true);
   };
 
@@ -263,7 +251,7 @@ export default function ResourcesPage() {
                   className="px-3 py-1.5 bg-[#0A2540] hover:bg-[#14487A] text-white rounded text-xs font-semibold flex items-center gap-1 shadow-sm transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Add Resource</span>
+                  <span>Suggest Resource</span>
                 </button>
                 <button
                   onClick={() => setIsAuthenticated(false)}
@@ -301,35 +289,17 @@ export default function ResourcesPage() {
                 </button>
               </div>
             ) : (
-              /* Resources Grid with Edit & Delete options */
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredResources.map((res) => (
                   <div
                     key={res.id}
-                    className="bg-white rounded-lg border border-slate-200 p-5 shadow-sm space-y-3 relative group"
+                    className="bg-white rounded-lg border border-slate-200 p-5 shadow-sm space-y-3 hover:border-[#0A2540] transition-colors group"
                   >
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-semibold text-[#0A2540] bg-[#EAF2FA] px-2 py-0.5 rounded">
                         {res.category}
                       </span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-slate-400">{res.format}</span>
-                        {/* Edit & Delete Actions */}
-                        <button
-                          onClick={() => startEdit(res)}
-                          className="p-1 text-slate-400 hover:text-[#0A2540] rounded hover:bg-slate-100 transition-colors"
-                          title="Edit Resource"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteResource(res.id, res.title)}
-                          className="p-1 text-slate-400 hover:text-red-600 rounded hover:bg-red-50 transition-colors"
-                          title="Delete Resource"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+                      <span className="font-mono text-slate-400">{res.format}</span>
                     </div>
 
                     <h4 className="font-serif font-bold text-base text-[#0A2540]">
@@ -340,12 +310,14 @@ export default function ResourcesPage() {
 
                     <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                       <span>Subject: {res.subject}</span>
-                      <button
-                        onClick={() => alert(`Downloading ${res.title}...`)}
+                      <a
+                        href={res.download_url && res.download_url !== "#" ? res.download_url : "https://drive.google.com"}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="text-[#0A2540] font-semibold flex items-center gap-1 hover:underline"
                       >
-                        <Download className="w-3.5 h-3.5" /> Download
-                      </button>
+                        <ExternalLink className="w-3.5 h-3.5" /> Access Material ↗
+                      </a>
                     </div>
                   </div>
                 ))}
@@ -354,13 +326,13 @@ export default function ResourcesPage() {
           </div>
         )}
 
-        {/* Add / Edit Resource Modal */}
+        {/* Suggest Resource Modal — students add links, admin reviews/deletes via portal */}
         {showAddModal && (
           <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
             <div className="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-xl">
               <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                 <h3 className="font-serif font-bold text-base text-[#0A2540]">
-                  {editingItem ? "Edit Academic Resource" : "Add Academic Resource"}
+                  Suggest a Resource Link
                 </h3>
                 <button
                   onClick={() => setShowAddModal(false)}
@@ -368,6 +340,20 @@ export default function ResourcesPage() {
                 >
                   ✕
                 </button>
+              </div>
+
+              {/* Notice Banner */}
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex gap-2 text-xs text-amber-800">
+                <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">Student Submission Guidelines</p>
+                  <ul className="mt-1 space-y-0.5 list-disc list-inside">
+                    <li>Provide a valid Google Drive or OneDrive link with <strong>view access enabled</strong></li>
+                    <li>Only BSMA-relevant academic materials are accepted</li>
+                    <li>Do not submit copyrighted content without permission</li>
+                    <li>Editing or removing entries is handled by the <strong>Admin Portal only</strong></li>
+                  </ul>
+                </div>
               </div>
 
               <form onSubmit={handleSaveResource} className="space-y-3 text-xs">
@@ -387,6 +373,21 @@ export default function ResourcesPage() {
 
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
+                    Cloud Link (Google Drive / OneDrive) *
+                  </label>
+                  <input
+                    type="url"
+                    required
+                    placeholder="https://drive.google.com/..."
+                    value={formDownloadUrl}
+                    onChange={(e) => setFormDownloadUrl(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
+                  />
+                  <span className="text-[10px] text-slate-400">Must be set to "Anyone with the link can view"</span>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
                     Subject / Course *
                   </label>
                   <input
@@ -400,9 +401,7 @@ export default function ResourcesPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      Category
-                    </label>
+                    <label className="block font-semibold text-slate-700 mb-1">Category</label>
                     <select
                       value={formCategory}
                       onChange={(e) => setFormCategory(e.target.value as any)}
@@ -416,9 +415,7 @@ export default function ResourcesPage() {
                   </div>
 
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      Format
-                    </label>
+                    <label className="block font-semibold text-slate-700 mb-1">Format</label>
                     <select
                       value={formFormat}
                       onChange={(e) => setFormFormat(e.target.value as any)}
@@ -444,7 +441,7 @@ export default function ResourcesPage() {
                     type="submit"
                     className="px-4 py-1.5 bg-[#0A2540] text-white rounded font-semibold"
                   >
-                    {editingItem ? "Update Resource" : "Save Resource"}
+                    Submit Resource
                   </button>
                 </div>
               </form>

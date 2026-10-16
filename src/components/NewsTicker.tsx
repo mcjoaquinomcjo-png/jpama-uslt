@@ -88,35 +88,25 @@ export default function NewsTicker() {
           </div>
         </div>
 
-        {/* Controls & Link */}
-        <div className="flex items-center gap-3 flex-shrink-0">
-          <div className="hidden sm:flex items-center gap-0.5 text-slate-400">
-            <button
-              onClick={handlePrev}
-              className="p-1 hover:text-white rounded hover:bg-[#14487A]/50 transition-colors"
-              title="Previous Announcement"
-            >
-              <ChevronLeft className="w-3.5 h-3.5" />
-            </button>
-            <span className="text-[10px] font-mono text-slate-400 px-1">
-              {currentIndex + 1}/{ANNOUNCEMENTS.length}
-            </span>
-            <button
-              onClick={handleNext}
-              className="p-1 hover:text-white rounded hover:bg-[#14487A]/50 transition-colors"
-              title="Next Announcement"
-            >
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <Link
-            href={current.link}
-            className="flex items-center gap-1 text-[#E8D8BA] hover:text-white transition-colors text-xs font-semibold group"
+        {/* Controls */}
+        <div className="flex items-center gap-1 text-slate-400 flex-shrink-0">
+          <button
+            onClick={handlePrev}
+            className="p-1 hover:text-white rounded hover:bg-[#14487A]/50 transition-colors"
+            title="Previous Announcement"
           >
-            <span>Details</span>
-            <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-          </Link>
+            <ChevronLeft className="w-3.5 h-3.5" />
+          </button>
+          <span className="text-[10px] font-mono text-slate-400 px-1">
+            {currentIndex + 1}/{ANNOUNCEMENTS.length}
+          </span>
+          <button
+            onClick={handleNext}
+            className="p-1 hover:text-white rounded hover:bg-[#14487A]/50 transition-colors"
+            title="Next Announcement"
+          >
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
     </div>
