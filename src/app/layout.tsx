@@ -20,6 +20,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://jpama-uslt.vercel.app"),
   title: "JPAMA USLT | Junior Philippine Association of Management Accountants - Sihaya",
   description:
     "Official portal of JPAMA Sihaya Chapter at the University of Saint Louis Tuguegarao. Access member registration, upcoming events, academic reviewers, and status lookup.",
