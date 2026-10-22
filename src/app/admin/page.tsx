@@ -2319,13 +2319,7 @@ export default function AdminDashboardPage() {
             TAB 7: ABOUT PAGE MASTER CONTENT EDITOR (Super User only)
             ======================================================== */}
         {activeTab === "about" && userRole === "super_user" && (
-          <AboutPageEditor
-            content={aboutContent}
-            onChange={setAboutContent}
-            onSave={handleSaveAboutContent}
-            isSaved={aboutContentSaved}
-            onReset={() => setAboutContent(DEFAULT_ABOUT_CONTENT)}
-          />
+          <AboutPageEditor onSavedNotify={() => {}} />
         )}
 
         {/* ========================================================
