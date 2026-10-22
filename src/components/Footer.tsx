@@ -19,7 +19,11 @@ export default function Footer() {
           {/* Organization & Affiliation */}
           <div className="md:col-span-2 space-y-4">
             <div className="flex items-center gap-3">
-              <JpamaLogo size="sm" variant="crest" />
+              <img
+                src="/jpama-logo.jpg"
+                alt="JPAMA USLT Official Logo"
+                className="w-11 h-11 object-contain rounded-full shadow-md border border-white/20 flex-shrink-0"
+              />
               <div>
                 <h3 className="font-serif text-lg font-bold text-white tracking-wide">
                   JPAMA USLT

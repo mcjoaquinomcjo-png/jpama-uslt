@@ -885,7 +885,14 @@ export default function AdminDashboardPage() {
     return (
       <div className="min-h-screen bg-[#F8FAFC] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans">
         <div className="sm:mx-auto sm:w-full sm:max-w-md space-y-4 text-center">
-          <JpamaLogo size="xl" variant="crest" withGlow className="mx-auto" />
+          <div className="relative inline-flex items-center justify-center mx-auto">
+            <div className="absolute -inset-2 rounded-full bg-blue-500/10 blur-xl animate-pulse" />
+            <img
+              src="/jpama-logo.jpg"
+              alt="JPAMA USLT Official Logo"
+              className="w-24 h-24 sm:w-28 sm:h-28 object-contain rounded-full shadow-md border-2 border-slate-200 relative z-10 hover:scale-105 transition-transform"
+            />
+          </div>
 
           <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#0A2540]">
             JPAMA Management Portal
@@ -1029,7 +1036,11 @@ export default function AdminDashboardPage() {
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <JpamaLogo size="sm" variant="crest" />
+            <img
+              src="/jpama-logo.jpg"
+              alt="JPAMA USLT Official Logo"
+              className="w-9 h-9 object-contain rounded-full shadow-sm border border-slate-200"
+            />
 
             <div>
               <div className="flex items-center gap-2">

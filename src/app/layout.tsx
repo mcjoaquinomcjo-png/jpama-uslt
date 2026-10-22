@@ -34,11 +34,33 @@ export const metadata: Metadata = {
     "BSMA",
   ],
   authors: [{ name: "JPAMA USLT Chapter" }],
+  icons: {
+    icon: [
+      { url: "/icon.jpg" },
+      { url: "/favicon.ico" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/apple-icon.jpg",
+  },
   openGraph: {
     title: "JPAMA USLT - Sihaya: Radiant Beginnings in Management Accounting",
     description:
       "Empowering Louisian Management Accountants through leadership, ethics, and academic excellence.",
     type: "website",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 800,
+        height: 800,
+        alt: "JPAMA USLT - Sihaya Official Emblem",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "JPAMA USLT | Junior Philippine Association of Management Accountants",
+    description: "Official portal of JPAMA Sihaya Chapter at the University of Saint Louis Tuguegarao.",
+    images: ["/og-image.jpg"],
   },
 };
 

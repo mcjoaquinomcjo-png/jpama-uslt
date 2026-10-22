@@ -38,17 +38,22 @@ export default function Navbar() {
 
           {/* ── LOGO ── fixed-width, never shrinks */}
           <Link href="/" className="flex items-center gap-3 group flex-shrink-0">
-            <JpamaLogo size="md" variant="badge" className="group-hover:scale-[1.02] transition-transform" />
+            <img
+              src="/jpama-logo.jpg"
+              alt="JPAMA USLT Official Logo"
+              className="w-11 h-11 sm:w-12 sm:h-12 object-contain rounded-full shadow-sm border border-slate-200 group-hover:scale-105 transition-transform"
+            />
 
-            {/* Full Title — never truncated */}
-            <div className="hidden md:flex flex-col flex-shrink-0">
-              <span className="font-serif text-[11px] lg:text-[12px] xl:text-[13px] font-bold tracking-tight text-[#0A2540] leading-tight group-hover:text-[#14487A] transition-colors whitespace-nowrap">
-                Junior Philippine Association of Management Accountants
+            {/* Institutional Brand Titles */}
+            <div className="flex flex-col flex-shrink-0">
+              <span className="font-serif text-[12px] sm:text-[13px] font-bold tracking-tight text-[#0A2540] leading-tight group-hover:text-[#14487A] transition-colors whitespace-nowrap">
+                <span className="md:hidden">JPAMA USLT</span>
+                <span className="hidden md:inline">Junior Philippine Association of Management Accountants</span>
               </span>
-              <span className="text-[10px] lg:text-[10.5px] font-semibold text-[#9E7D38] tracking-wide leading-none mt-0.5 whitespace-nowrap">
+              <span className="text-[10px] sm:text-[10.5px] font-semibold text-[#9E7D38] tracking-wide leading-none mt-0.5 whitespace-nowrap">
                 School of Accountancy, Business, and Hospitality (SABH)
               </span>
-              <span className="text-[9.5px] lg:text-[10px] text-slate-500 font-medium tracking-wide mt-0.5">
+              <span className="text-[9.5px] sm:text-[10px] text-slate-500 font-medium tracking-wide mt-0.5">
                 University of Saint Louis Tuguegarao
               </span>
             </div>
