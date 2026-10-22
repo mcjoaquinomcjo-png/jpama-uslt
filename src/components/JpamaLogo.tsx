@@ -351,6 +351,9 @@ export default function JpamaLogo({
         <span className="font-serif font-bold text-[#0A2540] tracking-tight leading-tight whitespace-nowrap">
           Junior Philippine Association of Management Accountants
         </span>
+        <span className="text-[10.5px] text-[#9E7D38] font-semibold tracking-wide leading-snug">
+          School of Accountancy, Business, and Hospitality (SABH)
+        </span>
         <span className="text-[10px] text-slate-500 font-medium tracking-wide">
           University of Saint Louis Tuguegarao
         </span>

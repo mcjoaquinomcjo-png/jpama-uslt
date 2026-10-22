@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { recordDbLog } from "@/lib/dbLogger";
 
 export interface ContactInquiry {
   id: string;
@@ -65,6 +66,14 @@ export async function POST(request: Request) {
 
     inquiries.unshift(newInquiry);
 
+    recordDbLog({
+      action: "NEW_CONTACT_INQUIRY",
+      target: `${name.trim()} (${email.trim()})`,
+      storage: "LocalStore",
+      status: "SUCCESS",
+      details: `Subject: ${subject || "General Inquiry"}`,
+    });
+
     return NextResponse.json({
       success: true,
       message: "Thank you for reaching out! Your message has been routed to the JPAMA Executive Secretariat. We will get back to you shortly.",
@@ -84,6 +93,15 @@ export async function PUT(request: Request) {
       return NextResponse.json({ success: false, error: "Inquiry not found" }, { status: 404 });
     }
     if (status) item.status = status;
+
+    recordDbLog({
+      action: "UPDATE_INQUIRY_STATUS",
+      target: `Inquiry ${id}`,
+      storage: "LocalStore",
+      status: "SUCCESS",
+      details: `Status set to ${status}`,
+    });
+
     return NextResponse.json({ success: true, data: item });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -97,6 +115,12 @@ export async function DELETE(request: Request) {
     const index = inquiries.findIndex((i) => i.id === id);
     if (index !== -1) {
       inquiries.splice(index, 1);
+      recordDbLog({
+        action: "DELETE_INQUIRY",
+        target: `Inquiry ${id}`,
+        storage: "LocalStore",
+        status: "SUCCESS",
+      });
       return NextResponse.json({ success: true });
     }
     return NextResponse.json({ success: false, error: "Inquiry not found" }, { status: 404 });

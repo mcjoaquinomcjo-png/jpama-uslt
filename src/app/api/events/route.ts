@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { dataStore } from "@/lib/store";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { getSupabaseServer, isSupabaseConfigured } from "@/lib/supabase";
+import { recordDbLog } from "@/lib/dbLogger";
 
 export async function GET() {
   try {
-    if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase
+    const client = getSupabaseServer();
+    if (isSupabaseConfigured && client) {
+      const { data, error } = await client
         .from("events")
         .select("*")
         .order("event_date", { ascending: true });
@@ -25,7 +27,8 @@ export async function GET() {
     });
     return NextResponse.json({ success: true, data: enriched });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    const fallback = dataStore.getEvents();
+    return NextResponse.json({ success: true, data: fallback });
   }
 }
 
@@ -50,9 +53,10 @@ export async function POST(request: Request) {
     }
 
     const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now().toString().slice(-4);
+    const client = getSupabaseServer();
 
-    if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase
+    if (isSupabaseConfigured && client) {
+      const { data, error } = await client
         .from("events")
         .insert([
           {
@@ -74,6 +78,15 @@ export async function POST(request: Request) {
         .single();
 
       if (error) throw error;
+
+      recordDbLog({
+        action: "CREATE_EVENT",
+        target: title.trim(),
+        storage: "Supabase",
+        status: "SUCCESS",
+        details: `Assembly scheduled for ${event_date}`,
+      });
+
       return NextResponse.json({ success: true, data });
     }
 
@@ -92,6 +105,13 @@ export async function POST(request: Request) {
       is_published: true,
     });
 
+    recordDbLog({
+      action: "CREATE_EVENT",
+      target: title.trim(),
+      storage: "LocalStore",
+      status: "SUCCESS",
+    });
+
     return NextResponse.json({ success: true, data: newEv });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -107,16 +127,28 @@ export async function PUT(request: Request) {
       return NextResponse.json({ success: false, error: "Event ID is required." }, { status: 400 });
     }
 
-    if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase
+    const client = getSupabaseServer();
+    if (isSupabaseConfigured && client) {
+      const { data, error } = await client
         .from("events")
         .update(updates)
         .eq("id", id)
-        .select()
-        .single();
+        .select();
 
       if (error) throw error;
-      return NextResponse.json({ success: true, data });
+
+      recordDbLog({
+        action: "UPDATE_EVENT",
+        target: `Event ID: ${id}`,
+        storage: "Supabase",
+        status: "SUCCESS",
+      });
+
+      try {
+        dataStore.updateEvent(id, updates);
+      } catch (e) {}
+
+      return NextResponse.json({ success: true, data: data && data[0] ? data[0] : updates });
     }
 
     const updated = dataStore.updateEvent(id, updates);
@@ -135,9 +167,19 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, error: "Event ID is required." }, { status: 400 });
     }
 
-    if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from("events").delete().eq("id", id);
+    const client = getSupabaseServer();
+    if (isSupabaseConfigured && client) {
+      const { data, error } = await client.from("events").delete().eq("id", id).select();
       if (error) throw error;
+
+      recordDbLog({
+        action: "DELETE_EVENT",
+        target: `Event ID: ${id}`,
+        storage: "Supabase",
+        status: "SUCCESS",
+      });
+
+      dataStore.deleteEvent(id);
       return NextResponse.json({ success: true, message: "Event deleted successfully." });
     }
 

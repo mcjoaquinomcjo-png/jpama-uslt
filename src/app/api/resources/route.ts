@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { dataStore } from "@/lib/store";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { getSupabaseServer, isSupabaseConfigured } from "@/lib/supabase";
+import { recordDbLog } from "@/lib/dbLogger";
 
 export async function GET() {
   try {
-    if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase
+    const client = getSupabaseServer();
+    if (isSupabaseConfigured && client) {
+      const { data, error } = await client
         .from("resources")
         .select("*")
         .order("created_at", { ascending: false });
@@ -17,7 +19,8 @@ export async function GET() {
     const resources = dataStore.getResources();
     return NextResponse.json({ success: true, data: resources });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    const fallback = dataStore.getResources();
+    return NextResponse.json({ success: true, data: fallback });
   }
 }
 
@@ -38,8 +41,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "Title and Subject are required." }, { status: 400 });
     }
 
-    if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase
+    const client = getSupabaseServer();
+    if (isSupabaseConfigured && client) {
+      const { data, error } = await client
         .from("resources")
         .insert([
           {
@@ -57,6 +61,14 @@ export async function POST(request: Request) {
         .single();
 
       if (error) throw error;
+
+      recordDbLog({
+        action: "ADD_RESOURCE",
+        target: title.trim(),
+        storage: "Supabase",
+        status: "SUCCESS",
+      });
+
       return NextResponse.json({ success: true, data });
     }
 
@@ -70,6 +82,13 @@ export async function POST(request: Request) {
       author: "Academic Committee",
       download_url: download_url ? download_url.trim() : "https://drive.google.com",
       description: description || "Departmental reviewer for BS Management Accounting.",
+    });
+
+    recordDbLog({
+      action: "ADD_RESOURCE",
+      target: title.trim(),
+      storage: "LocalStore",
+      status: "SUCCESS",
     });
 
     return NextResponse.json({ success: true, data: newRes });
@@ -87,16 +106,28 @@ export async function PUT(request: Request) {
       return NextResponse.json({ success: false, error: "Resource ID is required." }, { status: 400 });
     }
 
-    if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase
+    const client = getSupabaseServer();
+    if (isSupabaseConfigured && client) {
+      const { data, error } = await client
         .from("resources")
         .update(updates)
         .eq("id", id)
-        .select()
-        .single();
+        .select();
 
       if (error) throw error;
-      return NextResponse.json({ success: true, data });
+
+      recordDbLog({
+        action: "UPDATE_RESOURCE",
+        target: `Resource ID: ${id}`,
+        storage: "Supabase",
+        status: "SUCCESS",
+      });
+
+      try {
+        dataStore.updateResource(id, updates);
+      } catch (e) {}
+
+      return NextResponse.json({ success: true, data: data && data[0] ? data[0] : updates });
     }
 
     const updated = dataStore.updateResource(id, updates);
@@ -115,9 +146,19 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, error: "Resource ID is required." }, { status: 400 });
     }
 
-    if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from("resources").delete().eq("id", id);
+    const client = getSupabaseServer();
+    if (isSupabaseConfigured && client) {
+      const { error } = await client.from("resources").delete().eq("id", id);
       if (error) throw error;
+
+      recordDbLog({
+        action: "DELETE_RESOURCE",
+        target: `Resource ID: ${id}`,
+        storage: "Supabase",
+        status: "SUCCESS",
+      });
+
+      dataStore.deleteResource(id);
       return NextResponse.json({ success: true, message: "Resource deleted successfully." });
     }
 

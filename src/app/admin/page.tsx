@@ -31,6 +31,10 @@ import {
   UserCheck,
   Download,
   GraduationCap,
+  ChevronRight,
+  ChevronDown,
+  User,
+  Sparkles,
 } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge";
 import { Member, EventItem, ResourceItem, OfficerItem, PortalSettings, YearLevel, MemberStatus } from "@/lib/types";
@@ -38,6 +42,7 @@ import OverviewContentEditor from "@/components/admin/OverviewContentEditor";
 import AboutPageEditor from "@/components/admin/AboutPageEditor";
 import FacultyAdvisersModal from "@/components/admin/FacultyAdvisersModal";
 import AccessControlManager from "@/components/admin/AccessControlManager";
+import DatabaseManager from "@/components/admin/DatabaseManager";
 import JpamaLogo from "@/components/JpamaLogo";
 import {
   DEFAULT_OVERVIEW_CONTENT,
@@ -54,11 +59,16 @@ type UserRole = "super_user" | "content_admin" | null;
 
 export default function AdminDashboardPage() {
   const [passcode, setPasscode] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [authMode, setAuthMode] = useState<"passcode" | "credentials">("passcode");
+  const [authLoading, setAuthLoading] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [authError, setAuthError] = useState("");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const [activeTab, setActiveTab] = useState<
-    "members" | "events" | "resources" | "leadership" | "system" | "overview" | "about" | "contact" | "security"
+    "members" | "events" | "resources" | "leadership" | "system" | "overview" | "about" | "contact" | "security" | "database"
   >("members");
   const [overviewContent, setOverviewContent] = useState<OverviewContent>(DEFAULT_OVERVIEW_CONTENT);
   const [aboutContent, setAboutContent] = useState<AboutContent>(DEFAULT_ABOUT_CONTENT);
@@ -128,6 +138,25 @@ export default function AdminDashboardPage() {
         if (parsed && typeof parsed === "object") {
           setContactContent((prev) => ({ ...prev, ...parsed }));
         }
+      }
+
+      // Check existing authenticated session
+      const token = sessionStorage.getItem("jpama_admin_token") || localStorage.getItem("jpama_admin_token");
+      if (token) {
+        fetch("/api/auth/verify", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((r) => r.json())
+          .then((res) => {
+            if (res.success && res.role) {
+              setUserRole(res.role);
+              loadAllData();
+            } else {
+              sessionStorage.removeItem("jpama_admin_token");
+              localStorage.removeItem("jpama_admin_token");
+            }
+          })
+          .catch(() => {});
       }
     } catch (e) {
       // ignore
@@ -295,23 +324,72 @@ export default function AdminDashboardPage() {
   const [offQuote, setOffQuote] = useState("");
   const [offAvatar, setOffAvatar] = useState("https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80");
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanPass = passcode.trim();
-    const superTarget = accessConfig.security.super_passcode || "super2026";
-    const officerTarget = accessConfig.security.officer_passcode || "sihaya2026";
+    setAuthLoading(true);
+    setAuthError("");
 
-    if (cleanPass === superTarget || cleanPass === "super2026" || cleanPass === "superadmin") {
-      setUserRole("super_user");
-      setAuthError("");
-      loadAllData();
-    } else if (cleanPass === officerTarget || cleanPass === "sihaya2026" || cleanPass === "admin") {
-      setUserRole("content_admin");
-      setAuthError("");
-      loadAllData();
-    } else {
-      setAuthError("Invalid Passcode. Access is restricted to authorized USLT chapter officers.");
+    try {
+      const payload: Record<string, string> = {};
+      if (authMode === "passcode") {
+        if (!passcode.trim()) {
+          setAuthError("Please enter your chapter access passcode.");
+          setAuthLoading(false);
+          return;
+        }
+        payload.passcode = passcode.trim();
+      } else {
+        if (!username.trim() || !password.trim()) {
+          setAuthError("Please enter both username and password.");
+          setAuthLoading(false);
+          return;
+        }
+        payload.username = username.trim();
+        payload.password = password.trim();
+      }
+
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const contentType = res.headers.get("content-type") || "";
+      const data = contentType.includes("application/json") ? await res.json() : null;
+
+      if (res.ok && data?.success) {
+        setUserRole(data.role);
+        if (data.token) {
+          sessionStorage.setItem("jpama_admin_token", data.token);
+          localStorage.setItem("jpama_admin_token", data.token);
+        }
+        setPasscode("");
+        setPassword("");
+        setAuthError("");
+        loadAllData();
+      } else {
+        setAuthError(data?.error || `Authentication failed (${res.status}). Please check credentials.`);
+      }
+    } catch (err: any) {
+      setAuthError(err.message || "Authentication error occurred.");
+    } finally {
+      setAuthLoading(false);
     }
+  };
+
+  const handleSignOut = () => {
+    const token = sessionStorage.getItem("jpama_admin_token") || localStorage.getItem("jpama_admin_token");
+    if (token) {
+      fetch("/api/auth/verify", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => {});
+    }
+    sessionStorage.removeItem("jpama_admin_token");
+    localStorage.removeItem("jpama_admin_token");
+    setUserRole(null);
+    setPasscode("");
+    setPassword("");
   };
 
   const loadAllData = async () => {
@@ -431,11 +509,19 @@ export default function AdminDashboardPage() {
       const res = await fetch(`/api/members?id=${encodeURIComponent(id)}`, {
         method: "DELETE",
       });
-      if (res.ok) {
-        setMembers((prev) => prev.filter((m) => m.id !== id));
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setMembers((prev) => prev.filter((m) => m.id !== id && m.student_number !== id));
+        if (data.warning) {
+          alert(`Database Notice: ${data.warning}`);
+        }
+        loadAllData();
+      } else {
+        alert(data.error || "Failed to delete student record.");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      alert("Failed to delete student: " + err.message);
     }
   };
 
@@ -804,33 +890,102 @@ export default function AdminDashboardPage() {
           <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#0A2540]">
             JPAMA Management Portal
           </h1>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[#9E7D38] font-semibold tracking-wide">
+            School of Accountancy, Business, and Hospitality (SABH)
+          </p>
+          <p className="text-[11px] text-slate-500">
             BS Management Accounting • University of Saint Louis Tuguegarao
           </p>
         </div>
 
         <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md">
-          <div className="bg-white py-8 px-6 sm:px-10 shadow-sm border border-slate-200 rounded-xl space-y-5">
+          <div className="bg-white py-8 px-6 sm:px-10 shadow-sm border border-slate-200 rounded-2xl space-y-5">
+            {/* Auth Mode Toggle */}
+            <div className="flex p-1 bg-slate-100 rounded-xl text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => { setAuthMode("passcode"); setAuthError(""); }}
+                className={`flex-1 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                  authMode === "passcode"
+                    ? "bg-white text-[#0A2540] shadow-sm font-bold"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>Passcode</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setAuthMode("credentials"); setAuthError(""); }}
+                className={`flex-1 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                  authMode === "credentials"
+                    ? "bg-white text-[#0A2540] shadow-sm font-bold"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <User className="w-3.5 h-3.5" />
+                <span>Username & Password</span>
+              </button>
+            </div>
+
             <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Enter Officer or Super User Passcode
-                </label>
-                <div className="relative">
-                  <input
-                    type="password"
-                    required
-                    placeholder="Enter Passcode..."
-                    value={passcode}
-                    onChange={(e) => setPasscode(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-[#0A2540] focus:bg-white transition-colors"
-                  />
-                  <KeyRound className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+              {authMode === "passcode" ? (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Enter Officer or Super User Passcode
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="password"
+                      required
+                      placeholder="Enter Passcode..."
+                      value={passcode}
+                      onChange={(e) => setPasscode(e.target.value)}
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-[#0A2540] focus:bg-white transition-colors"
+                    />
+                    <KeyRound className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Account Username
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. superadmin or officer"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-[#0A2540] focus:bg-white transition-colors"
+                      />
+                      <User className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Account Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="password"
+                        required
+                        placeholder="Enter password..."
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-[#0A2540] focus:bg-white transition-colors"
+                      />
+                      <Lock className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {authError && (
-                <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 flex items-start gap-2">
+                <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 flex items-start gap-2 animate-fadeIn">
                   <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
                   <span>{authError}</span>
                 </div>
@@ -838,19 +993,29 @@ export default function AdminDashboardPage() {
 
               <button
                 type="submit"
+                disabled={authLoading}
                 className="w-full py-2.5 bg-[#0A2540] hover:bg-[#14487A] text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition-all flex items-center justify-center gap-2"
               >
-                <Unlock className="w-4 h-4" />
-                <span>Sign In to Dashboard</span>
+                {authLoading ? (
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Verifying Credentials...</span>
+                  </span>
+                ) : (
+                  <>
+                    <Unlock className="w-4 h-4" />
+                    <span>Sign In to Dashboard</span>
+                  </>
+                )}
               </button>
             </form>
 
             <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
               <span className="flex items-center gap-1.5 font-medium">
                 <Lock className="w-3.5 h-3.5 text-[#0A2540]" />
-                <span>Authorized USLT Chapter Access</span>
+                <span>Protected Server Authentication</span>
               </span>
-              <span className="text-slate-400 font-mono">SABH • 2026</span>
+              <span className="text-[#9E7D38] font-bold">SABH • USLT</span>
             </div>
           </div>
         </div>
@@ -882,7 +1047,7 @@ export default function AdminDashboardPage() {
                 )}
               </div>
               <span className="text-[11px] text-slate-500">
-                BS Management Accounting • University of Saint Louis Tuguegarao
+                BS Management Accounting • <strong className="text-[#9E7D38] font-semibold">School of Accountancy, Business, and Hospitality (SABH)</strong> • University of Saint Louis Tuguegarao
               </span>
             </div>
           </div>
@@ -898,10 +1063,7 @@ export default function AdminDashboardPage() {
             </Link>
 
             <button
-              onClick={() => {
-                setUserRole(null);
-                setPasscode("");
-              }}
+              onClick={handleSignOut}
               className={`px-3 py-1.5 text-xs font-semibold rounded-md border transition-colors ${
                 userRole === "super_user"
                   ? "text-red-700 hover:text-white hover:bg-red-600 border-red-300 bg-red-50"
@@ -914,193 +1076,456 @@ export default function AdminDashboardPage() {
         </div>
       </header>
 
-      {/* 2. Main Portal Body */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-1 space-y-6">
-        {/* Navigation Tabs Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-3">
-          <div className="flex flex-wrap items-center gap-2">
-            {(userRole === "super_user" || accessConfig.officerPermissions.members.view) && (
-              <button
-                onClick={() => setActiveTab("members")}
-                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                  activeTab === "members"
-                    ? "bg-[#0A2540] text-white shadow-sm"
-                    : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-                }`}
-              >
-                <span>Students & Members ({members.length})</span>
-                {pendingMembers.length > 0 && (
-                  <span className="px-1.5 py-0.5 rounded-full bg-amber-400 text-[#0A2540] font-bold text-[10px] animate-pulse">
-                    {pendingMembers.length} PENDING
-                  </span>
-                )}
-              </button>
-            )}
-
-            {(userRole === "super_user" || accessConfig.officerPermissions.events.view) && (
-              <button
-                onClick={() => setActiveTab("events")}
-                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
-                  activeTab === "events"
-                    ? "bg-[#0A2540] text-white shadow-sm"
-                    : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-                }`}
-              >
-                Assemblies & Calendar ({events.length})
-              </button>
-            )}
-
-            {(userRole === "super_user" || accessConfig.officerPermissions.resources.view) && (
-              <button
-                onClick={() => setActiveTab("resources")}
-                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
-                  activeTab === "resources"
-                    ? "bg-[#0A2540] text-white shadow-sm"
-                    : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-                }`}
-              >
-                Academic Resources ({resources.length})
-              </button>
-            )}
-
-            {(userRole === "super_user" || accessConfig.officerPermissions.leadership.view) && (
-              <button
-                onClick={() => setActiveTab("leadership")}
-                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
-                  activeTab === "leadership"
-                    ? "bg-[#0A2540] text-white shadow-sm"
-                    : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-                }`}
-              >
-                Leadership & Faculty ({officers.length})
-              </button>
-            )}
-
-            {userRole === "super_user" && (
-              <>
-                <button
-                  onClick={() => setActiveTab("system")}
-                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                    activeTab === "system"
-                      ? "bg-[#C5A059] text-[#0A2540] font-bold shadow-sm"
-                      : "bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-300"
-                  }`}
-                >
-                  <Crown className="w-3.5 h-3.5" />
-                  <span>Portal & Settings</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("overview")}
-                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                    activeTab === "overview"
-                      ? "bg-[#C5A059] text-[#0A2540] font-bold shadow-sm"
-                      : "bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-300"
-                  }`}
-                >
-                  <Settings className="w-3.5 h-3.5" />
-                  <span>Overview Sections</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("about")}
-                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                    activeTab === "about"
-                      ? "bg-[#C5A059] text-[#0A2540] font-bold shadow-sm"
-                      : "bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-300"
-                  }`}
-                >
-                  <Award className="w-3.5 h-3.5" />
-                  <span>About Page Editor</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("security")}
-                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                    activeTab === "security"
-                      ? "bg-[#C5A059] text-[#0A2540] font-bold shadow-sm"
-                      : "bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-300"
-                  }`}
-                >
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>Access & Security</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("contact")}
-                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                    activeTab === "contact"
-                      ? "bg-[#C5A059] text-[#0A2540] font-bold shadow-sm"
-                      : "bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-300"
-                  }`}
-                >
-                  <Mail className="w-3.5 h-3.5" />
-                  <span>Contact Desk</span>
-                  {contactInquiries.filter((m) => m.status === "Unread").length > 0 && (
-                    <span className="px-1.5 py-0.5 rounded-full bg-blue-600 text-white font-bold text-[10px]">
-                      {contactInquiries.filter((m) => m.status === "Unread").length}
-                    </span>
-                  )}
-                </button>
-              </>
-            )}
+      {/* 2. Main Portal Body: Phone-Settings Inspired Two-Column Layout */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-1 space-y-6">
+        
+        {/* Mobile Section Switcher Header (Compact for mobile phones) */}
+        <div className="lg:hidden bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-slate-500">Active Section:</span>
+            <span className="text-xs font-bold text-[#0A2540] capitalize">{activeTab}</span>
           </div>
+          <button
+            onClick={() => setMobileNavOpen(!mobileNavOpen)}
+            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-[#0A2540] flex items-center gap-1 transition-colors"
+          >
+            <span>Switch Section</span>
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${mobileNavOpen ? "rotate-180" : ""}`} />
+          </button>
+        </div>
 
-          <div>
-            {activeTab === "members" && (userRole === "super_user" || accessConfig.officerPermissions.members.add) && (
-              <button
-                onClick={openAddMember}
-                className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Add Student Member</span>
-              </button>
-            )}
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
+          
+          {/* ========================================================
+              LEFT COLUMN: Phone Settings Vertical Navigation Sidebar
+              ======================================================== */}
+          <aside className={`w-full lg:w-72 xl:w-80 flex-shrink-0 ${mobileNavOpen ? "block" : "hidden lg:block"}`}>
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden sticky top-20">
+              
+              {/* Sidebar Header */}
+              <div className="p-4 bg-gradient-to-r from-slate-50 to-slate-100/60 border-b border-slate-200 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                    Settings & Sections
+                  </span>
+                  <span className="text-xs font-bold text-[#0A2540]">
+                    {userRole === "super_user" ? "Super User Workspace" : "Chapter Officer Workspace"}
+                  </span>
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#0A2540] text-white">
+                  SABH
+                </span>
+              </div>
 
-            {activeTab === "events" && (userRole === "super_user" || accessConfig.officerPermissions.events.add) && (
-              <button
-                onClick={openAddEvent}
-                className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Create Assembly</span>
-              </button>
-            )}
+              {/* Vertical Section Groups (Phone Settings Style) */}
+              <div className="p-2 space-y-4 max-h-[calc(100vh-180px)] overflow-y-auto">
+                
+                {/* GROUP 1: DIRECTORY & ACTIVITIES */}
+                <div>
+                  <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Directory & Activities
+                  </div>
+                  <div className="space-y-1">
+                    {(userRole === "super_user" || accessConfig.officerPermissions.members.view) && (
+                      <button
+                        onClick={() => { setActiveTab("members"); setMobileNavOpen(false); }}
+                        className={`w-full px-3 py-2.5 rounded-xl text-left transition-all flex items-center justify-between gap-2.5 ${
+                          activeTab === "members"
+                            ? "bg-[#0A2540] text-white shadow-sm font-semibold"
+                            : "hover:bg-slate-50 text-slate-700"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                            activeTab === "members" ? "bg-white/20 text-white" : "bg-indigo-50 text-indigo-600"
+                          }`}>
+                            <Users className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold truncate">Students & Members</div>
+                            <div className={`text-[10.5px] truncate ${activeTab === "members" ? "text-slate-300" : "text-slate-500"}`}>
+                              {members.length} registered
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          {pendingMembers.length > 0 && (
+                            <span className="px-1.5 py-0.5 rounded-full bg-amber-400 text-[#0A2540] font-bold text-[9px] animate-pulse">
+                              {pendingMembers.length} PENDING
+                            </span>
+                          )}
+                          <ChevronRight className={`w-3.5 h-3.5 ${activeTab === "members" ? "text-white" : "text-slate-400"}`} />
+                        </div>
+                      </button>
+                    )}
 
-            {activeTab === "resources" && (userRole === "super_user" || accessConfig.officerPermissions.resources.add) && (
-              <button
-                onClick={openAddRes}
-                className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Upload Resource Link</span>
-              </button>
-            )}
+                    {(userRole === "super_user" || accessConfig.officerPermissions.events.view) && (
+                      <button
+                        onClick={() => { setActiveTab("events"); setMobileNavOpen(false); }}
+                        className={`w-full px-3 py-2.5 rounded-xl text-left transition-all flex items-center justify-between gap-2.5 ${
+                          activeTab === "events"
+                            ? "bg-[#0A2540] text-white shadow-sm font-semibold"
+                            : "hover:bg-slate-50 text-slate-700"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                            activeTab === "events" ? "bg-white/20 text-white" : "bg-blue-50 text-blue-600"
+                          }`}>
+                            <Calendar className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold truncate">Assemblies & Calendar</div>
+                            <div className={`text-[10.5px] truncate ${activeTab === "events" ? "text-slate-300" : "text-slate-500"}`}>
+                              {events.length} convocations
+                            </div>
+                          </div>
+                        </div>
+                        <ChevronRight className={`w-3.5 h-3.5 ${activeTab === "events" ? "text-white" : "text-slate-400"}`} />
+                      </button>
+                    )}
 
-            {activeTab === "leadership" && (
-              <div className="flex items-center gap-2">
-                {(userRole === "super_user" || accessConfig.officerPermissions.leadership.edit) && (
-                  <>
-                    <button
-                      onClick={() => setShowFacultyModal(true)}
-                      className="px-4 py-2 bg-[#C5A059] hover:bg-[#E8C97A] text-[#0A2540] rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                      <span>Edit Faculty Advisers</span>
-                    </button>
-                    <button
-                      onClick={openAddOfficer}
-                      className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Add Officer / Faculty</span>
-                    </button>
-                  </>
+                    {(userRole === "super_user" || accessConfig.officerPermissions.resources.view) && (
+                      <button
+                        onClick={() => { setActiveTab("resources"); setMobileNavOpen(false); }}
+                        className={`w-full px-3 py-2.5 rounded-xl text-left transition-all flex items-center justify-between gap-2.5 ${
+                          activeTab === "resources"
+                            ? "bg-[#0A2540] text-white shadow-sm font-semibold"
+                            : "hover:bg-slate-50 text-slate-700"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                            activeTab === "resources" ? "bg-white/20 text-white" : "bg-emerald-50 text-emerald-600"
+                          }`}>
+                            <BookOpen className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold truncate">Academic Resources</div>
+                            <div className={`text-[10.5px] truncate ${activeTab === "resources" ? "text-slate-300" : "text-slate-500"}`}>
+                              {resources.length} study kits
+                            </div>
+                          </div>
+                        </div>
+                        <ChevronRight className={`w-3.5 h-3.5 ${activeTab === "resources" ? "text-white" : "text-slate-400"}`} />
+                      </button>
+                    )}
+
+                    {(userRole === "super_user" || accessConfig.officerPermissions.leadership.view) && (
+                      <button
+                        onClick={() => { setActiveTab("leadership"); setMobileNavOpen(false); }}
+                        className={`w-full px-3 py-2.5 rounded-xl text-left transition-all flex items-center justify-between gap-2.5 ${
+                          activeTab === "leadership"
+                            ? "bg-[#0A2540] text-white shadow-sm font-semibold"
+                            : "hover:bg-slate-50 text-slate-700"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                            activeTab === "leadership" ? "bg-white/20 text-white" : "bg-purple-50 text-purple-600"
+                          }`}>
+                            <GraduationCap className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold truncate">Leadership & Faculty</div>
+                            <div className={`text-[10.5px] truncate ${activeTab === "leadership" ? "text-slate-300" : "text-slate-500"}`}>
+                              {officers.length} council officers
+                            </div>
+                          </div>
+                        </div>
+                        <ChevronRight className={`w-3.5 h-3.5 ${activeTab === "leadership" ? "text-white" : "text-slate-400"}`} />
+                      </button>
+                    )}
+
+                    {(userRole === "super_user" || accessConfig.officerPermissions.members.view) && (
+                      <button
+                        onClick={() => { setActiveTab("contact"); setMobileNavOpen(false); }}
+                        className={`w-full px-3 py-2.5 rounded-xl text-left transition-all flex items-center justify-between gap-2.5 ${
+                          activeTab === "contact"
+                            ? "bg-[#0A2540] text-white shadow-sm font-semibold"
+                            : "hover:bg-slate-50 text-slate-700"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                            activeTab === "contact" ? "bg-white/20 text-white" : "bg-cyan-50 text-cyan-600"
+                          }`}>
+                            <Mail className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold truncate">Contact & Helpdesk</div>
+                            <div className={`text-[10.5px] truncate ${activeTab === "contact" ? "text-slate-300" : "text-slate-500"}`}>
+                              Bulwagang San Jacinto Desk
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          {contactInquiries.filter((m) => m.status === "Unread").length > 0 && (
+                            <span className="px-1.5 py-0.5 rounded-full bg-blue-600 text-white font-bold text-[9px]">
+                              {contactInquiries.filter((m) => m.status === "Unread").length} NEW
+                            </span>
+                          )}
+                          <ChevronRight className={`w-3.5 h-3.5 ${activeTab === "contact" ? "text-white" : "text-slate-400"}`} />
+                        </div>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* GROUP 2: PORTAL CUSTOMIZATION (SUPER USER ONLY) */}
+                {userRole === "super_user" && (
+                  <div>
+                    <div className="px-3 py-1 text-[10px] font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1">
+                      <Crown className="w-3 h-3 text-amber-600" />
+                      <span>Portal Customization</span>
+                    </div>
+                    <div className="space-y-1">
+                      <button
+                        onClick={() => { setActiveTab("system"); setMobileNavOpen(false); }}
+                        className={`w-full px-3 py-2.5 rounded-xl text-left transition-all flex items-center justify-between gap-2.5 ${
+                          activeTab === "system"
+                            ? "bg-[#0A2540] text-white shadow-sm font-semibold"
+                            : "hover:bg-slate-50 text-slate-700"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                            activeTab === "system" ? "bg-white/20 text-white" : "bg-amber-50 text-amber-600"
+                          }`}>
+                            <Crown className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold truncate">Portal Settings</div>
+                            <div className={`text-[10.5px] truncate ${activeTab === "system" ? "text-slate-300" : "text-slate-500"}`}>
+                              Academic year & advisories
+                            </div>
+                          </div>
+                        </div>
+                        <ChevronRight className={`w-3.5 h-3.5 ${activeTab === "system" ? "text-white" : "text-slate-400"}`} />
+                      </button>
+
+                      <button
+                        onClick={() => { setActiveTab("overview"); setMobileNavOpen(false); }}
+                        className={`w-full px-3 py-2.5 rounded-xl text-left transition-all flex items-center justify-between gap-2.5 ${
+                          activeTab === "overview"
+                            ? "bg-[#0A2540] text-white shadow-sm font-semibold"
+                            : "hover:bg-slate-50 text-slate-700"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                            activeTab === "overview" ? "bg-white/20 text-white" : "bg-orange-50 text-orange-600"
+                          }`}>
+                            <Settings className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold truncate">Overview Sections</div>
+                            <div className={`text-[10.5px] truncate ${activeTab === "overview" ? "text-slate-300" : "text-slate-500"}`}>
+                              Home order & focus pillars
+                            </div>
+                          </div>
+                        </div>
+                        <ChevronRight className={`w-3.5 h-3.5 ${activeTab === "overview" ? "text-white" : "text-slate-400"}`} />
+                      </button>
+
+                      <button
+                        onClick={() => { setActiveTab("about"); setMobileNavOpen(false); }}
+                        className={`w-full px-3 py-2.5 rounded-xl text-left transition-all flex items-center justify-between gap-2.5 ${
+                          activeTab === "about"
+                            ? "bg-[#0A2540] text-white shadow-sm font-semibold"
+                            : "hover:bg-slate-50 text-slate-700"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                            activeTab === "about" ? "bg-white/20 text-white" : "bg-rose-50 text-rose-600"
+                          }`}>
+                            <Award className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold truncate">About Page Editor</div>
+                            <div className={`text-[10.5px] truncate ${activeTab === "about" ? "text-slate-300" : "text-slate-500"}`}>
+                              Advisory, history & constitution
+                            </div>
+                          </div>
+                        </div>
+                        <ChevronRight className={`w-3.5 h-3.5 ${activeTab === "about" ? "text-white" : "text-slate-400"}`} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* GROUP 3: SECURITY & DATABASE */}
+                {userRole === "super_user" && (
+                  <div>
+                    <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      Security & Database
+                    </div>
+                    <div className="space-y-1">
+                      <button
+                        onClick={() => { setActiveTab("security"); setMobileNavOpen(false); }}
+                        className={`w-full px-3 py-2.5 rounded-xl text-left transition-all flex items-center justify-between gap-2.5 ${
+                          activeTab === "security"
+                            ? "bg-[#0A2540] text-white shadow-sm font-semibold"
+                            : "hover:bg-slate-50 text-slate-700"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                            activeTab === "security" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-700"
+                          }`}>
+                            <ShieldCheck className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold truncate">Access & Security</div>
+                            <div className={`text-[10.5px] truncate ${activeTab === "security" ? "text-slate-300" : "text-slate-500"}`}>
+                              Permissions matrix & toggles
+                            </div>
+                          </div>
+                        </div>
+                        <ChevronRight className={`w-3.5 h-3.5 ${activeTab === "security" ? "text-white" : "text-slate-400"}`} />
+                      </button>
+
+                      <button
+                        onClick={() => { setActiveTab("database"); setMobileNavOpen(false); }}
+                        className={`w-full px-3 py-2.5 rounded-xl text-left transition-all flex items-center justify-between gap-2.5 ${
+                          activeTab === "database"
+                            ? "bg-[#0A2540] text-white shadow-sm font-semibold"
+                            : "hover:bg-slate-50 text-slate-700"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                            activeTab === "database" ? "bg-white/20 text-white" : "bg-teal-50 text-teal-600"
+                          }`}>
+                            <Database className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold truncate">Database & Supabase</div>
+                            <div className={`text-[10.5px] truncate ${activeTab === "database" ? "text-slate-300" : "text-slate-500"}`}>
+                              Diagnostics, RLS fix & logs
+                            </div>
+                          </div>
+                        </div>
+                        <ChevronRight className={`w-3.5 h-3.5 ${activeTab === "database" ? "text-white" : "text-slate-400"}`} />
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
-            )}
-          </div>
-        </div>
+
+              {/* Bottom Session Box */}
+              <div className="p-3 bg-slate-50/80 border-t border-slate-200">
+                <button
+                  onClick={handleSignOut}
+                  className="w-full py-2 px-3 text-xs font-semibold rounded-xl text-red-700 hover:bg-red-50 hover:text-red-800 border border-red-200 transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>{userRole === "super_user" ? "Sign Out (Super User)" : "Lock Session"}</span>
+                </button>
+              </div>
+            </div>
+          </aside>
+
+          {/* ========================================================
+              RIGHT COLUMN: Active Section Header & Full Views
+              ======================================================== */}
+          <div className="flex-1 w-full min-w-0 space-y-6">
+            
+            {/* Contextual Header with direct action buttons */}
+            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#9E7D38]">
+                    JPAMA SABH Management
+                  </span>
+                  <span className="text-slate-300">•</span>
+                  <span className="text-[10px] font-semibold text-slate-500 capitalize">
+                    {activeTab}
+                  </span>
+                </div>
+                <h2 className="font-serif font-bold text-xl text-[#0A2540] mt-0.5">
+                  {activeTab === "members" && "BSMA Students & Chapter Membership Directory"}
+                  {activeTab === "events" && "Assemblies, Convocations & Academic Calendar"}
+                  {activeTab === "resources" && "Academic Reviewers & Study Materials Library"}
+                  {activeTab === "leadership" && "Executive Council & Faculty Advisers"}
+                  {activeTab === "contact" && "Official Chapter Helpdesk & Inquiries Desk"}
+                  {activeTab === "system" && "Portal & Chapter Configuration Settings"}
+                  {activeTab === "overview" && "Homepage Section Order & Display Manager"}
+                  {activeTab === "about" && "About Page & Constitution Editorial Suite"}
+                  {activeTab === "security" && "Super User Access Control & Permissions Suite"}
+                  {activeTab === "database" && "Database & Supabase Subsystem Diagnostics"}
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {activeTab === "members" && "Review registered Louisian scholars, verify pending registrations, and manage status."}
+                  {activeTab === "events" && "Schedule chapter convocations, view agendas, and monitor attendee RSVPs."}
+                  {activeTab === "resources" && "Manage curated course reviewers, departmental handouts, and cloud study materials."}
+                  {activeTab === "leadership" && "Directory of chapter executive officers, committees, and department faculty."}
+                  {activeTab === "contact" && "Secretariat consultation hours, office location, official channels, and student messages."}
+                  {activeTab === "system" && "Configure live announcements, academic year, and general contact details."}
+                  {activeTab === "overview" && "Reorder homepage blocks, toggle visibility, and update core BSMA pillars."}
+                  {activeTab === "about" && "Edit faculty adviser profiles, chapter history milestones, and achievements."}
+                  {activeTab === "security" && "Configure role permissions, access control, and public portal feature toggles."}
+                  {activeTab === "database" && "Inspect Supabase connection health, view live row counters, and apply RLS permissions fix."}
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {activeTab === "members" && (userRole === "super_user" || accessConfig.officerPermissions.members.add) && (
+                  <button
+                    onClick={openAddMember}
+                    className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Student</span>
+                  </button>
+                )}
+
+                {activeTab === "events" && (userRole === "super_user" || accessConfig.officerPermissions.events.add) && (
+                  <button
+                    onClick={openAddEvent}
+                    className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Create Assembly</span>
+                  </button>
+                )}
+
+                {activeTab === "resources" && (userRole === "super_user" || accessConfig.officerPermissions.resources.add) && (
+                  <button
+                    onClick={openAddRes}
+                    className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Upload Resource Link</span>
+                  </button>
+                )}
+
+                {activeTab === "leadership" && (
+                  <div className="flex items-center gap-2">
+                    {(userRole === "super_user" || accessConfig.officerPermissions.leadership.edit) && (
+                      <>
+                        <button
+                          onClick={() => setShowFacultyModal(true)}
+                          className="px-4 py-2 bg-[#C5A059] hover:bg-[#E8C97A] text-[#0A2540] rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                          <span>Edit Faculty Advisers</span>
+                        </button>
+                        <button
+                          onClick={openAddOfficer}
+                          className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Add Officer</span>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
 
         {/* ========================================================
             TAB 1: MEMBERS DIRECTORY
@@ -2186,6 +2611,13 @@ export default function AdminDashboardPage() {
             </div>
           </div>
         )}
+
+        {/* ========================================================
+            TAB 10: DATABASE & SUPABASE SUBSYSTEM
+            ======================================================== */}
+        {activeTab === "database" && <DatabaseManager />}
+          </div>
+        </div>
       </main>
 
       {/* ========================================================

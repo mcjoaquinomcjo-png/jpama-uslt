@@ -114,18 +114,74 @@ CREATE TABLE IF NOT EXISTS public.resources (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Allow public read & writes
-ALTER TABLE public.members ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.rsvps ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.resources ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.officers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
+-- =========================================================
+-- 7. CONTACT INQUIRIES TABLE
+-- =========================================================
+CREATE TABLE IF NOT EXISTS public.contact_inquiries (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(150) NOT NULL,
+    email VARCHAR(150) NOT NULL,
+    subject VARCHAR(200) NOT NULL,
+    message TEXT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'Unread' CHECK (status IN ('Unread', 'Read', 'Resolved')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
 
-CREATE POLICY "Public read all" ON public.members FOR SELECT USING (true);
-CREATE POLICY "Public insert members" ON public.members FOR INSERT WITH CHECK (true);
-CREATE POLICY "Public read events" ON public.events FOR SELECT USING (true);
-CREATE POLICY "Public read resources" ON public.resources FOR SELECT USING (true);
-CREATE POLICY "Public read officers" ON public.officers FOR SELECT USING (true);
-CREATE POLICY "Public read settings" ON public.settings FOR SELECT USING (true);
+-- =========================================================
+-- ROW LEVEL SECURITY (RLS) & FULL PERMISSIONS
+-- To allow smooth CRUD interaction from both public portal & admin:
+-- Option A: Drop existing restrictive policies and create full access policies
+-- =========================================================
+
+-- Members Table Policies
+ALTER TABLE public.members ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public read all" ON public.members;
+DROP POLICY IF EXISTS "Public insert members" ON public.members;
+DROP POLICY IF EXISTS "Public update members" ON public.members;
+DROP POLICY IF EXISTS "Public delete members" ON public.members;
+DROP POLICY IF EXISTS "Allow all on members" ON public.members;
+CREATE POLICY "Allow all on members" ON public.members FOR ALL USING (true) WITH CHECK (true);
+
+-- Events Table Policies
+ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public read events" ON public.events;
+DROP POLICY IF EXISTS "Allow all on events" ON public.events;
+CREATE POLICY "Allow all on events" ON public.events FOR ALL USING (true) WITH CHECK (true);
+
+-- RSVPs Table Policies
+ALTER TABLE public.rsvps ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow all on rsvps" ON public.rsvps;
+CREATE POLICY "Allow all on rsvps" ON public.rsvps FOR ALL USING (true) WITH CHECK (true);
+
+-- Resources Table Policies
+ALTER TABLE public.resources ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public read resources" ON public.resources;
+DROP POLICY IF EXISTS "Allow all on resources" ON public.resources;
+CREATE POLICY "Allow all on resources" ON public.resources FOR ALL USING (true) WITH CHECK (true);
+
+-- Officers Table Policies
+ALTER TABLE public.officers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public read officers" ON public.officers;
+DROP POLICY IF EXISTS "Allow all on officers" ON public.officers;
+CREATE POLICY "Allow all on officers" ON public.officers FOR ALL USING (true) WITH CHECK (true);
+
+-- Settings Table Policies
+ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public read settings" ON public.settings;
+DROP POLICY IF EXISTS "Allow all on settings" ON public.settings;
+CREATE POLICY "Allow all on settings" ON public.settings FOR ALL USING (true) WITH CHECK (true);
+
+-- Contact Inquiries Table Policies
+ALTER TABLE public.contact_inquiries ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow all on contact_inquiries" ON public.contact_inquiries;
+CREATE POLICY "Allow all on contact_inquiries" ON public.contact_inquiries FOR ALL USING (true) WITH CHECK (true);
+
+-- (Optional) If you prefer completely open access without RLS filtering:
+-- ALTER TABLE public.members DISABLE ROW LEVEL SECURITY;
+-- ALTER TABLE public.events DISABLE ROW LEVEL SECURITY;
+-- ALTER TABLE public.rsvps DISABLE ROW LEVEL SECURITY;
+-- ALTER TABLE public.resources DISABLE ROW LEVEL SECURITY;
+-- ALTER TABLE public.officers DISABLE ROW LEVEL SECURITY;
+-- ALTER TABLE public.settings DISABLE ROW LEVEL SECURITY;
+-- ALTER TABLE public.contact_inquiries DISABLE ROW LEVEL SECURITY;
 

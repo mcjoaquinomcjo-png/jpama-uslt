@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { dataStore } from "@/lib/store";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { getSupabaseServer, isSupabaseConfigured } from "@/lib/supabase";
+import { recordDbLog } from "@/lib/dbLogger";
 
 export async function POST(request: Request) {
   try {
@@ -15,9 +16,10 @@ export async function POST(request: Request) {
     }
 
     const cleanStudentNumber = student_number.trim();
+    const client = getSupabaseServer();
 
-    if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase
+    if (isSupabaseConfigured && client) {
+      const { data, error } = await client
         .from("rsvps")
         .insert([
           {
@@ -40,6 +42,14 @@ export async function POST(request: Request) {
         throw error;
       }
 
+      recordDbLog({
+        action: "RSVP_CONFIRMED",
+        target: `Student ${cleanStudentNumber}`,
+        storage: "Supabase",
+        status: "SUCCESS",
+        details: `Reserved seat for event ID: ${event_id}`,
+      });
+
       return NextResponse.json({
         success: true,
         message: "RSVP Confirmed! Your seat has been reserved.",
@@ -48,6 +58,13 @@ export async function POST(request: Request) {
     }
 
     const rsvp = dataStore.addRSVP(event_id, cleanStudentNumber, notes);
+
+    recordDbLog({
+      action: "RSVP_CONFIRMED",
+      target: `${rsvp.full_name} (${cleanStudentNumber})`,
+      storage: "LocalStore",
+      status: "SUCCESS",
+    });
 
     return NextResponse.json({
       success: true,

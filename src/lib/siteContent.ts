@@ -306,8 +306,8 @@ export interface MasterAccessConfig {
 
 export const DEFAULT_ACCESS_CONFIG: MasterAccessConfig = {
   security: {
-    super_passcode: "super2026",
-    officer_passcode: "sihaya2026",
+    super_passcode: "",
+    officer_passcode: "",
   },
   officerPermissions: {
     members: { view: true, add: true, edit: true, delete: false },

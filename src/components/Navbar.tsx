@@ -45,7 +45,10 @@ export default function Navbar() {
               <span className="font-serif text-[11px] lg:text-[12px] xl:text-[13px] font-bold tracking-tight text-[#0A2540] leading-tight group-hover:text-[#14487A] transition-colors whitespace-nowrap">
                 Junior Philippine Association of Management Accountants
               </span>
-              <span className="text-[10px] text-slate-500 font-medium tracking-wide mt-0.5">
+              <span className="text-[10px] lg:text-[10.5px] font-semibold text-[#9E7D38] tracking-wide leading-none mt-0.5 whitespace-nowrap">
+                School of Accountancy, Business, and Hospitality (SABH)
+              </span>
+              <span className="text-[9.5px] lg:text-[10px] text-slate-500 font-medium tracking-wide mt-0.5">
                 University of Saint Louis Tuguegarao
               </span>
             </div>
