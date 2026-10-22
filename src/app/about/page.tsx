@@ -31,9 +31,11 @@ import { EXECUTIVE_BOARD, FACULTY_LEADERSHIP } from "@/lib/store";
 import {
   DEFAULT_JPAMA_CONFIG,
   getStoredJpamaConfig,
+  fetchServerJpamaConfig,
   JpamaSectionConfig,
   HeritageItem,
   ByLawArticle,
+  PurposeItem,
   PublicationContent,
 } from "@/config/jpamaSettings";
 import PublicationModal from "@/components/about/PublicationModal";
@@ -43,6 +45,7 @@ import FullGazetteReaderModal from "@/components/about/FullGazetteReaderModal";
 // Icon mapping helper for Article III Purpose Cards
 const ICON_MAP = {
   GraduationCap,
+
   Users,
   ShieldCheck,
   Sparkles,
@@ -81,6 +84,9 @@ export default function AboutPage() {
     isFaculty?: boolean;
   } | null>(null);
 
+  // Pop-up modal state for Article III Core Purposes (One-Liner Drill-down)
+  const [selectedPurposeModal, setSelectedPurposeModal] = useState<PurposeItem | null>(null);
+
   // Faculty Stewardship roster
   const facultyMembers = useMemo(
     () => [
@@ -117,11 +123,18 @@ export default function AboutPage() {
 
   // Load dynamic configuration & officers
   useEffect(() => {
-    // 1. Load config from localStorage CMS store
+    // 1. Initial cached config
     const stored = getStoredJpamaConfig();
     setConfig(stored);
 
-    // 2. Load latest officers from API
+    // 2. Fetch server-persisted config across all sessions and roles
+    fetchServerJpamaConfig()
+      .then((serverCfg) => {
+        if (serverCfg) setConfig(serverCfg);
+      })
+      .catch((err) => console.error("Error syncing server config:", err));
+
+    // 3. Load latest officers from API
     fetch("/api/leadership")
       .then((res) => res.json())
       .then((data) => {
@@ -131,6 +144,7 @@ export default function AboutPage() {
       })
       .catch((err) => console.error("Error loading leadership:", err));
   }, []);
+
 
   // Filtered By-Laws search
   const filteredBylaws = useMemo(() => {
@@ -235,11 +249,11 @@ export default function AboutPage() {
           </div>
 
           <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#0A2540] tracking-tight">
-            About JPAMA <span className="text-[#C5A059] font-normal">Sihaya Chapter</span>
+            About <span className="text-[#C5A059]">JPAMA</span>
           </h1>
 
           <p className="text-slate-600 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
-            The recognized academic body of the Bachelor of Science in Management Accounting at the University of Saint Louis Tuguegarao, upholding Christian excellence, scholastic distinction, and ethical governance.
+            Junior Philippine Association of Management Accountants • University of Saint Louis Tuguegarao Chapter. Upholding Christian excellence, scholastic distinction, and ethical governance under SABH.
           </p>
 
           {/* Dynamic Tab Switcher */}
@@ -296,10 +310,36 @@ export default function AboutPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.25 }}
-              className="space-y-16"
+              className="space-y-12 sm:space-y-16"
             >
-              {/* 1. Dynamic Mission & Core Purposes Block (Article III Mandate) */}
-              <section className="space-y-6">
+              {/* Contextual Banner: The Sihaya Chapter Era for A.Y. 2026–2027 */}
+              <section className="p-6 sm:p-7 rounded-2xl bg-gradient-to-r from-[#0A2540] via-[#10345b] to-[#14487A] text-white shadow-md border border-[#0A2540] relative overflow-hidden">
+                <div className="absolute right-0 top-0 w-64 h-64 bg-radial from-amber-400/10 via-transparent to-transparent pointer-events-none" />
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative z-10">
+                  <div className="space-y-2 max-w-2xl">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/20 text-[#E8C97A] text-xs font-semibold border border-amber-300/30">
+                      <Sparkles className="w-3.5 h-3.5 text-[#C5A059]" />
+                      <span>Academic Year 2026–2027 Administration</span>
+                    </div>
+                    <h2 className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-white">
+                      The "Sihaya" Chapter Era (A.Y. 2026–2027)
+                    </h2>
+                    <p className="text-slate-200 text-xs sm:text-sm leading-relaxed">
+                      <strong>Sihaya</strong> (translating to dawn, light, and revival) is the official chapter governance name designated specifically for the <strong>2026–2027 Executive Term</strong>. While JPAMA represents the overarching student organization of the BS Management Accounting program, each academic term carries a unique governance identity.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab("leadership")}
+                    className="px-4 py-2.5 rounded-xl bg-[#C5A059] hover:bg-[#d4b06a] text-[#0A2540] font-bold text-xs flex items-center gap-1.5 transition-colors shadow-sm flex-shrink-0 self-start md:self-center"
+                  >
+                    <span>View Sihaya Leadership</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </section>
+
+              {/* 1. Dynamic Mission & Core Purposes Block (Article III Mandate - Clean Compact One-Liners) */}
+              <section className="space-y-5">
                 <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-slate-200 pb-4">
                   <div>
                     <div className="flex items-center gap-2 text-xs font-bold text-[#9E7D38] tracking-wider uppercase">
@@ -311,44 +351,44 @@ export default function AboutPage() {
                     </h2>
                   </div>
                   <p className="text-xs sm:text-sm text-slate-500 max-w-md">
-                    Formally enacted in the chapter Constitution to guide every academic, professional, and civic pursuit.
+                    Click any provision to inspect its official verbatim constitutional mandate.
                   </p>
                 </div>
 
-                {/* 2-Column Dynamic Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+                {/* Compact One-Liner Interactive Rows */}
+                <div className="space-y-3">
                   {config.chapterOverview.purposes.map((purpose) => {
                     const IconComponent = ICON_MAP[purpose.icon as keyof typeof ICON_MAP] || Sparkles;
                     return (
                       <div
                         key={purpose.id}
-                        className="group bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/90 hover:border-amber-300 hover:shadow-lg transition-all duration-300 flex flex-col justify-between relative overflow-hidden"
+                        onClick={() => setSelectedPurposeModal(purpose)}
+                        className="group cursor-pointer bg-white px-5 py-4 rounded-xl border border-slate-200/90 hover:border-[#C5A059] hover:shadow-md transition-all duration-200 flex items-center justify-between gap-4"
                       >
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-amber-500/5 to-transparent rounded-bl-full pointer-events-none" />
-
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <div className="w-11 h-11 rounded-xl bg-[#EAF2FA] group-hover:bg-[#0A2540] flex items-center justify-center transition-colors">
-                              <IconComponent className="w-5 h-5 text-[#0A2540] group-hover:text-[#C5A059] transition-colors" />
-                            </div>
-                            <span className="text-[11px] font-bold text-[#9E7D38] tracking-wide px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200/60">
+                        <div className="flex items-center gap-3.5 min-w-0">
+                          <div className="w-9 h-9 rounded-lg bg-[#EAF2FA] group-hover:bg-[#0A2540] flex items-center justify-center flex-shrink-0 transition-colors">
+                            <IconComponent className="w-4 h-4 text-[#0A2540] group-hover:text-[#C5A059] transition-colors" />
+                          </div>
+                          <div className="flex items-center gap-2.5 min-w-0 flex-wrap sm:flex-nowrap">
+                            <span className="text-[10px] font-bold text-[#9E7D38] tracking-wider uppercase px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200/60 flex-shrink-0">
                               {purpose.articleClause}
                             </span>
+                            <h3 className="font-serif text-sm sm:text-base font-bold text-[#0A2540] group-hover:text-[#14487A] transition-colors truncate">
+                              {purpose.title}
+                            </h3>
                           </div>
+                        </div>
 
-                          <h3 className="font-serif text-lg font-bold text-[#0A2540] group-hover:text-[#14487A] transition-colors">
-                            {purpose.title}
-                          </h3>
-
-                          <p className="text-slate-600 text-sm leading-relaxed text-justify">
-                            {purpose.description}
-                          </p>
+                        <div className="flex items-center gap-1.5 text-xs font-semibold text-[#0A2540] group-hover:text-[#C5A059] transition-colors flex-shrink-0">
+                          <span className="hidden sm:inline text-[11px]">View Clause</span>
+                          <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                         </div>
                       </div>
                     );
                   })}
                 </div>
               </section>
+
 
               {/* 2. Chapter Heritage (Dynamic Timeline & Publication Reader) */}
               <section className="space-y-6">
@@ -912,7 +952,98 @@ export default function AboutPage() {
             </motion.div>
           </div>
         )}
+
+        {/* 5. Pop-Up Modal for Article III Core Purposes (One-Liner Drill-down) */}
+        {selectedPurposeModal && (
+          <div
+            className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/65 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setSelectedPurposeModal(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.94, y: 15 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between px-6 py-4 bg-[#0A2540] text-white flex-shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-amber-400/20 flex items-center justify-center">
+                    <Scale className="w-4 h-4 text-[#C5A059]" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold tracking-wider uppercase text-[#E8C97A] block">
+                      Constitutional Mandate
+                    </span>
+                    <span className="text-xs font-semibold text-slate-200">
+                      {selectedPurposeModal.articleClause}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPurposeModal(null)}
+                  className="p-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 sm:p-8 space-y-6">
+                <div>
+                  <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200/80 mb-2 uppercase tracking-wide">
+                    {selectedPurposeModal.articleClause}
+                  </span>
+                  <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#0A2540] leading-snug">
+                    {selectedPurposeModal.title}
+                  </h3>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-slate-50 border-l-4 border-[#C5A059] border-y border-r border-slate-200/80 space-y-2">
+                  <span className="text-[10.5px] font-bold text-[#9E7D38] uppercase tracking-wider block">
+                    Verbatim Clause Provision
+                  </span>
+                  <p className="text-slate-800 text-sm sm:text-base leading-relaxed font-serif">
+                    "{selectedPurposeModal.description}"
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-blue-50/60 border border-blue-100 flex items-start gap-2.5 text-xs text-slate-600">
+                  <ShieldCheck className="w-4 h-4 text-[#0A2540] flex-shrink-0 mt-0.5" />
+                  <p className="leading-relaxed">
+                    Formally promulgated in Article III (Declaration of Principles, Purposes, and Mandate) of the Official JPAMA Constitution & By-Laws. Governed by the School of Accountancy, Business, and Hospitality (SABH), University of Saint Louis Tuguegarao.
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPurposeModal(null)}
+                    className="w-full sm:w-1/2 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors"
+                  >
+                    Close Provision
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedPurposeModal(null);
+                      setActiveTab("constitution");
+                    }}
+                    className="w-full sm:w-1/2 py-2.5 rounded-xl bg-[#0A2540] hover:bg-[#14487A] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+                  >
+                    <span>View All 11 By-Law Articles</span>
+                    <ChevronRight className="w-4 h-4 text-[#C5A059]" />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
       </AnimatePresence>
     </div>
   );
 }
+

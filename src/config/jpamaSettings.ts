@@ -578,12 +578,22 @@ export function getStoredJpamaConfig(): JpamaSectionConfig {
     const parsed = JSON.parse(raw);
     return {
       chapterOverview: {
-        purposes: parsed?.chapterOverview?.purposes?.length ? parsed.chapterOverview.purposes : DEFAULT_JPAMA_CONFIG.chapterOverview.purposes,
-        heritage: parsed?.chapterOverview?.heritage?.length ? parsed.chapterOverview.heritage : DEFAULT_JPAMA_CONFIG.chapterOverview.heritage,
-        achievements: parsed?.chapterOverview?.achievements?.length ? parsed.chapterOverview.achievements : DEFAULT_JPAMA_CONFIG.chapterOverview.achievements,
+        purposes: Array.isArray(parsed?.chapterOverview?.purposes)
+          ? parsed.chapterOverview.purposes
+          : DEFAULT_JPAMA_CONFIG.chapterOverview.purposes,
+        heritage: Array.isArray(parsed?.chapterOverview?.heritage)
+          ? parsed.chapterOverview.heritage
+          : DEFAULT_JPAMA_CONFIG.chapterOverview.heritage,
+        achievements: Array.isArray(parsed?.chapterOverview?.achievements)
+          ? parsed.chapterOverview.achievements
+          : DEFAULT_JPAMA_CONFIG.chapterOverview.achievements,
       },
-      bylaws: parsed?.bylaws?.length ? parsed.bylaws : DEFAULT_JPAMA_CONFIG.bylaws,
-      customTabs: Array.isArray(parsed?.customTabs) ? parsed.customTabs : DEFAULT_JPAMA_CONFIG.customTabs,
+      bylaws: Array.isArray(parsed?.bylaws) && parsed.bylaws.length > 0
+        ? parsed.bylaws
+        : DEFAULT_JPAMA_CONFIG.bylaws,
+      customTabs: Array.isArray(parsed?.customTabs)
+        ? parsed.customTabs
+        : DEFAULT_JPAMA_CONFIG.customTabs,
     };
   } catch (e) {
     console.error("Failed to parse JPAMA config from localStorage:", e);
@@ -599,3 +609,35 @@ export function saveStoredJpamaConfig(config: JpamaSectionConfig): void {
     console.error("Failed to save JPAMA config to localStorage:", e);
   }
 }
+
+export async function fetchServerJpamaConfig(): Promise<JpamaSectionConfig> {
+  try {
+    const res = await fetch("/api/settings/about");
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success && json.data) {
+        saveStoredJpamaConfig(json.data);
+        return json.data;
+      }
+    }
+  } catch (err) {
+    console.warn("Could not fetch server JPAMA config, using local cache:", err);
+  }
+  return getStoredJpamaConfig();
+}
+
+export async function saveServerJpamaConfig(config: JpamaSectionConfig): Promise<boolean> {
+  saveStoredJpamaConfig(config);
+  try {
+    const res = await fetch("/api/settings/about", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(config),
+    });
+    return res.ok;
+  } catch (err) {
+    console.error("Failed to save JPAMA config to server:", err);
+    return false;
+  }
+}
+

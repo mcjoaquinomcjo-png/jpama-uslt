@@ -226,13 +226,25 @@ export default function AdminDashboardPage() {
   };
 
   const handleDeleteInquiry = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this inquiry message?")) return;
+    if (!confirm("Are you sure you want to permanently delete this inquiry message?")) return;
     try {
       const res = await fetch(`/api/contact?id=${encodeURIComponent(id)}`, { method: "DELETE" });
-      if (res.ok) {
+      const data = await res.json().catch(() => ({ success: res.ok }));
+      if (res.ok && data.success) {
         setContactInquiries((prev) => prev.filter((inq) => inq.id !== id));
+        try {
+          const storedDeleted = JSON.parse(localStorage.getItem("jpama_deleted_inquiries") || "[]");
+          if (!storedDeleted.includes(id)) {
+            storedDeleted.push(id);
+            localStorage.setItem("jpama_deleted_inquiries", JSON.stringify(storedDeleted));
+          }
+        } catch (e) {}
+      } else {
+        alert(data.error || "Failed to delete inquiry.");
       }
-    } catch (e) {}
+    } catch (e: any) {
+      alert("Error deleting inquiry: " + e.message);
+    }
   };
 
   const handleBatchApprovePending = async () => {
@@ -1283,14 +1295,14 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
 
-                {/* GROUP 2: PORTAL CUSTOMIZATION (SUPER USER ONLY) */}
-                {userRole === "super_user" && (
-                  <div>
-                    <div className="px-3 py-1 text-[10px] font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1">
-                      <Crown className="w-3 h-3 text-amber-600" />
-                      <span>Portal Customization</span>
-                    </div>
-                    <div className="space-y-1">
+                {/* GROUP 2: CMS CONTENT & SECTIONS */}
+                <div>
+                  <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                    <Settings className="w-3 h-3 text-[#C5A059]" />
+                    <span>Content & Page Editors</span>
+                  </div>
+                  <div className="space-y-1">
+                    {userRole === "super_user" && (
                       <button
                         onClick={() => { setActiveTab("system"); setMobileNavOpen(false); }}
                         className={`w-full px-3 py-2.5 rounded-xl text-left transition-all flex items-center justify-between gap-2.5 ${
@@ -1314,57 +1326,58 @@ export default function AdminDashboardPage() {
                         </div>
                         <ChevronRight className={`w-3.5 h-3.5 ${activeTab === "system" ? "text-white" : "text-slate-400"}`} />
                       </button>
+                    )}
 
-                      <button
-                        onClick={() => { setActiveTab("overview"); setMobileNavOpen(false); }}
-                        className={`w-full px-3 py-2.5 rounded-xl text-left transition-all flex items-center justify-between gap-2.5 ${
-                          activeTab === "overview"
-                            ? "bg-[#0A2540] text-white shadow-sm font-semibold"
-                            : "hover:bg-slate-50 text-slate-700"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                            activeTab === "overview" ? "bg-white/20 text-white" : "bg-orange-50 text-orange-600"
-                          }`}>
-                            <Settings className="w-4 h-4" />
-                          </div>
-                          <div className="min-w-0">
-                            <div className="text-xs font-bold truncate">Overview Sections</div>
-                            <div className={`text-[10.5px] truncate ${activeTab === "overview" ? "text-slate-300" : "text-slate-500"}`}>
-                              Home order & focus pillars
-                            </div>
+                    <button
+                      onClick={() => { setActiveTab("overview"); setMobileNavOpen(false); }}
+                      className={`w-full px-3 py-2.5 rounded-xl text-left transition-all flex items-center justify-between gap-2.5 ${
+                        activeTab === "overview"
+                          ? "bg-[#0A2540] text-white shadow-sm font-semibold"
+                          : "hover:bg-slate-50 text-slate-700"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                          activeTab === "overview" ? "bg-white/20 text-white" : "bg-orange-50 text-orange-600"
+                        }`}>
+                          <Settings className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold truncate">Overview Sections</div>
+                          <div className={`text-[10.5px] truncate ${activeTab === "overview" ? "text-slate-300" : "text-slate-500"}`}>
+                            Home order & focus pillars
                           </div>
                         </div>
-                        <ChevronRight className={`w-3.5 h-3.5 ${activeTab === "overview" ? "text-white" : "text-slate-400"}`} />
-                      </button>
+                      </div>
+                      <ChevronRight className={`w-3.5 h-3.5 ${activeTab === "overview" ? "text-white" : "text-slate-400"}`} />
+                    </button>
 
-                      <button
-                        onClick={() => { setActiveTab("about"); setMobileNavOpen(false); }}
-                        className={`w-full px-3 py-2.5 rounded-xl text-left transition-all flex items-center justify-between gap-2.5 ${
-                          activeTab === "about"
-                            ? "bg-[#0A2540] text-white shadow-sm font-semibold"
-                            : "hover:bg-slate-50 text-slate-700"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                            activeTab === "about" ? "bg-white/20 text-white" : "bg-rose-50 text-rose-600"
-                          }`}>
-                            <Award className="w-4 h-4" />
-                          </div>
-                          <div className="min-w-0">
-                            <div className="text-xs font-bold truncate">About Page Editor</div>
-                            <div className={`text-[10.5px] truncate ${activeTab === "about" ? "text-slate-300" : "text-slate-500"}`}>
-                              Advisory, history & constitution
-                            </div>
+                    <button
+                      onClick={() => { setActiveTab("about"); setMobileNavOpen(false); }}
+                      className={`w-full px-3 py-2.5 rounded-xl text-left transition-all flex items-center justify-between gap-2.5 ${
+                        activeTab === "about"
+                          ? "bg-[#0A2540] text-white shadow-sm font-semibold"
+                          : "hover:bg-slate-50 text-slate-700"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                          activeTab === "about" ? "bg-white/20 text-white" : "bg-rose-50 text-rose-600"
+                        }`}>
+                          <Award className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold truncate">About Page Editor</div>
+                          <div className={`text-[10.5px] truncate ${activeTab === "about" ? "text-slate-300" : "text-slate-500"}`}>
+                            Advisory, history & constitution
                           </div>
                         </div>
-                        <ChevronRight className={`w-3.5 h-3.5 ${activeTab === "about" ? "text-white" : "text-slate-400"}`} />
-                      </button>
-                    </div>
+                      </div>
+                      <ChevronRight className={`w-3.5 h-3.5 ${activeTab === "about" ? "text-white" : "text-slate-400"}`} />
+                    </button>
                   </div>
-                )}
+                </div>
+
 
                 {/* GROUP 3: SECURITY & DATABASE */}
                 {userRole === "super_user" && (
@@ -2592,20 +2605,35 @@ export default function AdminDashboardPage() {
                                 </button>
                               )}
                               <a
-                                href={`mailto:${inq.email}?subject=RE: ${encodeURIComponent(inq.subject)}`}
-                                className="px-2 py-1 rounded bg-[#0A2540] hover:bg-[#14487A] text-white text-[11px] font-semibold transition-colors inline-block"
-                                title="Reply via Email"
+                                href={`mailto:${inq.email}?subject=RE: ${encodeURIComponent(inq.subject)}&body=${encodeURIComponent(
+                                  `Dear ${inq.name},\n\nThank you for reaching out to the JPAMA Executive Secretariat regarding "${inq.subject}".\n\n[Type your response here]\n\nBest regards,\nExecutive Secretariat\nJunior Philippine Association of Management Accountants (JPAMA)\nSchool of Accountancy, Business, and Hospitality • University of Saint Louis Tuguegarao`
+                                )}`}
+                                className="px-2 py-1 rounded bg-[#0A2540] hover:bg-[#14487A] text-white text-[11px] font-semibold transition-colors inline-flex items-center gap-1 shadow-xs"
+                                title="Reply via Default Email Client (Outlook / Mail)"
                               >
-                                Reply
+                                <Mail className="w-3 h-3" />
+                                <span>Reply</span>
+                              </a>
+                              <a
+                                href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(inq.email)}&su=${encodeURIComponent(`RE: ${inq.subject}`)}&body=${encodeURIComponent(
+                                  `Dear ${inq.name},\n\nThank you for reaching out to the JPAMA Executive Secretariat regarding "${inq.subject}".\n\n[Type your response here]\n\nBest regards,\nExecutive Secretariat\nJunior Philippine Association of Management Accountants (JPAMA)\nSchool of Accountancy, Business, and Hospitality • University of Saint Louis Tuguegarao`
+                                )}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-2 py-1 rounded bg-red-600 hover:bg-red-700 text-white text-[11px] font-semibold transition-colors inline-block shadow-xs"
+                                title="Reply directly via Gmail Web"
+                              >
+                                Gmail
                               </a>
                               <button
                                 onClick={() => handleDeleteInquiry(inq.id)}
                                 className="p-1 text-slate-400 hover:text-red-500 rounded hover:bg-red-50 transition-colors"
-                                title="Delete Inquiry"
+                                title="Permanently Delete Inquiry"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             </div>
+
                           </td>
                         </tr>
                       ))

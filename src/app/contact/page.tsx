@@ -223,19 +223,28 @@ export default function ContactPage() {
                   </div>
 
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      Email Address *
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block font-semibold text-slate-700">
+                        Official Email Address *
+                      </label>
+                      <span className="text-[10px] text-[#9E7D38] font-bold">
+                        Required for response
+                      </span>
+                    </div>
                     <input
                       type="email"
                       required
-                      placeholder="e.g. student@uslt.edu.ph"
+                      placeholder="e.g. name@uslt.edu.ph (or Gmail/Outlook)"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540] focus:bg-white transition-colors"
                     />
+                    <span className="block text-[10.5px] text-slate-500 mt-1">
+                      Our Secretariat responds directly to this address via Outlook / Gmail.
+                    </span>
                   </div>
                 </div>
+
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>

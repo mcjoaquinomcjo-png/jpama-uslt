@@ -1,0 +1,20 @@
+[
+  {
+    "id": "inq-01",
+    "name": "Christian Emmanuel Paguirigan",
+    "email": "c.paguirigan@uslt.edu.ph",
+    "subject": "Membership & Pinning Ceremony Schedule",
+    "message": "Good day, Secretariat. May I ask when the scheduled donning of pins will be for 4th year graduating students? Thank you.",
+    "status": "Unread",
+    "created_at": "2026-10-22T09:49:39.925Z"
+  },
+  {
+    "id": "inq-02",
+    "name": "Sophia Reign Agcaoili",
+    "email": "sophia.agcaoili@uslt.edu.ph",
+    "subject": "Academic Testbank Download Access",
+    "message": "Hello po, I submitted my membership registration this morning. Can I already download the MAS midterm reviewers once approved?",
+    "status": "Read",
+    "created_at": "2026-10-21T17:49:39.925Z"
+  }
+]
