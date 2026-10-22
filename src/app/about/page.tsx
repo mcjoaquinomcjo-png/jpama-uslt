@@ -25,6 +25,7 @@ import {
   Printer,
   Bookmark,
   CheckCircle2,
+  X,
 } from "lucide-react";
 import { EXECUTIVE_BOARD, FACULTY_LEADERSHIP } from "@/lib/store";
 import {
@@ -68,6 +69,51 @@ export default function AboutPage() {
 
   const [isFullGazetteOpen, setIsFullGazetteOpen] = useState(false);
   const [gazetteFocusArticleId, setGazetteFocusArticleId] = useState<string>("all");
+
+  // Mini Pop-Up modal state for faculty & officers
+  const [selectedLeaderModal, setSelectedLeaderModal] = useState<{
+    name: string;
+    role: string;
+    badge: string;
+    avatar: string;
+    affiliation?: string;
+    bioOrQuote: string;
+    isFaculty?: boolean;
+  } | null>(null);
+
+  // Faculty Stewardship roster
+  const facultyMembers = useMemo(
+    () => [
+      {
+        id: "dean",
+        name: FACULTY_LEADERSHIP.dean,
+        role: FACULTY_LEADERSHIP.dean_title,
+        badge: "SABH Collegiate Dean",
+        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
+        bio: "Supervising executive compliance, collegiate curriculum integrity, and academic excellence under the School of Accountancy, Business, and Hospitality.",
+        affiliation: "School of Accountancy, Business, and Hospitality • University of Saint Louis Tuguegarao",
+      },
+      {
+        id: "dept-head",
+        name: FACULTY_LEADERSHIP.department_head,
+        role: FACULTY_LEADERSHIP.department_head_title,
+        badge: "Department Head",
+        avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80",
+        bio: "Directing BSMA curriculum alignment, academic reviewer programs, and professional CMA accreditation pathways.",
+        affiliation: "Department of Accountancy, SABH • University of Saint Louis Tuguegarao",
+      },
+      {
+        id: "adviser",
+        name: FACULTY_LEADERSHIP.adviser,
+        role: FACULTY_LEADERSHIP.adviser_title,
+        badge: "Chapter Faculty Adviser",
+        avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80",
+        bio: FACULTY_LEADERSHIP.adviser_bio,
+        affiliation: "School of Accountancy, Business, and Hospitality • University of Saint Louis Tuguegarao",
+      },
+    ],
+    []
+  );
 
   // Load dynamic configuration & officers
   useEffect(() => {
@@ -440,59 +486,54 @@ export default function AboutPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Dean */}
-                  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-                    <div className="w-12 h-12 rounded-xl bg-[#0A2540] text-[#C5A059] flex items-center justify-center font-serif text-lg font-bold">
-                      SABH
-                    </div>
-                    <div>
-                      <h3 className="font-serif font-bold text-base text-[#0A2540]">
-                        {FACULTY_LEADERSHIP.dean}
-                      </h3>
-                      <p className="text-xs font-semibold text-[#9E7D38] mt-0.5">
-                        {FACULTY_LEADERSHIP.dean_title}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-2">
-                        Supervising executive compliance and academic excellence under USLT SABH.
-                      </p>
-                    </div>
-                  </div>
+                  {facultyMembers.map((fac) => (
+                    <div
+                      key={fac.id}
+                      onClick={() =>
+                        setSelectedLeaderModal({
+                          name: fac.name,
+                          role: fac.role,
+                          badge: fac.badge,
+                          avatar: fac.avatar,
+                          affiliation: fac.affiliation,
+                          bioOrQuote: fac.bio,
+                          isFaculty: true,
+                        })
+                      }
+                      className="group bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 hover:border-[#C5A059] hover:shadow-lg transition-all duration-300 flex flex-col justify-between cursor-pointer"
+                    >
+                      <div className="space-y-3 text-center">
+                        <div className="relative w-20 h-20 mx-auto rounded-full overflow-hidden border-2 border-slate-100 group-hover:border-[#C5A059] transition-colors shadow-sm">
+                          <img
+                            src={fac.avatar}
+                            alt={fac.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
 
-                  {/* Department Head */}
-                  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-                    <div className="w-12 h-12 rounded-xl bg-[#0A2540] text-[#C5A059] flex items-center justify-center font-serif text-lg font-bold">
-                      BSMA
-                    </div>
-                    <div>
-                      <h3 className="font-serif font-bold text-base text-[#0A2540]">
-                        {FACULTY_LEADERSHIP.department_head}
-                      </h3>
-                      <p className="text-xs font-semibold text-[#9E7D38] mt-0.5">
-                        {FACULTY_LEADERSHIP.department_head_title}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-2">
-                        Directing curriculum alignment and professional CMA accreditation pathways.
-                      </p>
-                    </div>
-                  </div>
+                        <div>
+                          <h4 className="font-serif font-bold text-sm sm:text-base text-[#0A2540] leading-snug group-hover:text-[#14487A] transition-colors">
+                            {fac.name}
+                          </h4>
+                          <p className="text-xs font-bold text-[#9E7D38] mt-0.5">
+                            {fac.role}
+                          </p>
+                          <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-600 font-medium">
+                            {fac.badge}
+                          </span>
+                        </div>
 
-                  {/* Chapter Adviser */}
-                  <div className="bg-white p-6 rounded-2xl border-2 border-amber-300 shadow-sm space-y-3 relative overflow-hidden">
-                    <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200 text-[#0A2540] flex items-center justify-center font-serif text-lg font-bold">
-                      ADV
+                        <p className="text-xs text-slate-500 italic px-2 line-clamp-3">
+                          "{fac.bio}"
+                        </p>
+                      </div>
+
+                      <div className="pt-3 mt-3 border-t border-slate-100 text-[11px] text-[#0A2540] font-semibold text-center flex items-center justify-center gap-1 group-hover:text-[#C5A059] transition-colors">
+                        <span>View Stewardship Profile</span>
+                        <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-serif font-bold text-base text-[#0A2540]">
-                        {FACULTY_LEADERSHIP.adviser}
-                      </h3>
-                      <p className="text-xs font-semibold text-[#9E7D38] mt-0.5">
-                        {FACULTY_LEADERSHIP.adviser_title}
-                      </p>
-                      <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                        {FACULTY_LEADERSHIP.adviser_bio}
-                      </p>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </section>
 
@@ -532,7 +573,20 @@ export default function AboutPage() {
                   {filteredOfficers.map((officer, idx) => (
                     <div
                       key={officer.name || idx}
-                      className="group bg-white p-5 rounded-2xl border border-slate-200/90 hover:border-[#C5A059] hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
+                      onClick={() =>
+                        setSelectedLeaderModal({
+                          name: officer.name,
+                          role: officer.role,
+                          badge: officer.committee || "Executive Council",
+                          avatar:
+                            officer.avatar ||
+                            "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
+                          affiliation: `${officer.term || "A.Y. 2026–2027"} • ${officer.yearProgram || "BSMA"}`,
+                          bioOrQuote: officer.quote || "Dedicated to elevating the JPAMA student body.",
+                          isFaculty: false,
+                        })
+                      }
+                      className="group bg-white p-5 rounded-2xl border border-slate-200/90 hover:border-[#C5A059] hover:shadow-lg transition-all duration-300 flex flex-col justify-between cursor-pointer"
                     >
                       <div className="space-y-3 text-center">
                         <div className="relative w-20 h-20 mx-auto rounded-full overflow-hidden border-2 border-slate-100 group-hover:border-[#C5A059] transition-colors shadow-sm">
@@ -774,6 +828,91 @@ export default function AboutPage() {
         articles={config.bylaws}
         initialArticleId={gazetteFocusArticleId}
       />
+
+      {/* 4. Mini Pop-Up Profile Modal for Faculty & Council Leadership */}
+      <AnimatePresence>
+        {selectedLeaderModal && (
+          <div
+            className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setSelectedLeaderModal(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.94, y: 15 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col"
+            >
+              {/* Top Banner */}
+              <div className="flex items-center justify-between px-6 py-4 bg-[#0A2540] text-white flex-shrink-0">
+                <div className="flex items-center gap-2">
+                  {selectedLeaderModal.isFaculty ? (
+                    <GraduationCap className="w-4 h-4 text-[#C5A059]" />
+                  ) : (
+                    <Users className="w-4 h-4 text-[#C5A059]" />
+                  )}
+                  <span className="text-xs font-bold tracking-wider uppercase text-[#E8C97A]">
+                    {selectedLeaderModal.isFaculty ? "Collegiate Stewardship Profile" : "Council Officer Profile"}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedLeaderModal(null)}
+                  className="p-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Profile Details */}
+              <div className="p-6 sm:p-7 space-y-4 text-center">
+                <div className="relative w-24 h-24 mx-auto rounded-full overflow-hidden border-2 border-[#C5A059] shadow-md">
+                  <img
+                    src={selectedLeaderModal.avatar}
+                    alt={selectedLeaderModal.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                <div>
+                  <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200/80 mb-1.5 uppercase tracking-wide">
+                    {selectedLeaderModal.badge}
+                  </span>
+                  <h3 className="font-serif text-lg sm:text-xl font-bold text-[#0A2540]">
+                    {selectedLeaderModal.name}
+                  </h3>
+                  <p className="text-xs font-bold text-[#9E7D38] mt-0.5">
+                    {selectedLeaderModal.role}
+                  </p>
+                  {selectedLeaderModal.affiliation && (
+                    <p className="text-[11px] text-slate-500 mt-1 font-medium">
+                      {selectedLeaderModal.affiliation}
+                    </p>
+                  )}
+                </div>
+
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 text-left space-y-1.5">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                    {selectedLeaderModal.isFaculty ? "Stewardship & Guidance Note" : "Executive Quote"}
+                  </span>
+                  <p className="text-slate-700 text-xs sm:text-sm leading-relaxed italic">
+                    "{selectedLeaderModal.bioOrQuote}"
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedLeaderModal(null)}
+                  className="w-full py-2.5 rounded-xl bg-[#0A2540] hover:bg-[#14487A] text-white text-xs font-bold transition-colors shadow-sm"
+                >
+                  Close Profile
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
