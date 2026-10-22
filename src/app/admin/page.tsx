@@ -227,25 +227,46 @@ export default function AdminDashboardPage() {
 
   const handleDeleteInquiry = async (id: string) => {
     if (!confirm("Are you sure you want to permanently delete this inquiry message?")) return;
+    
+    // 1. Immediately remove from local UI state
+    setContactInquiries((prev) => prev.filter((inq) => inq.id !== id));
+    
+    // 2. Mark permanently in localStorage
     try {
-      const res = await fetch(`/api/contact?id=${encodeURIComponent(id)}`, { method: "DELETE" });
-      const data = await res.json().catch(() => ({ success: res.ok }));
-      if (res.ok && data.success) {
-        setContactInquiries((prev) => prev.filter((inq) => inq.id !== id));
-        try {
-          const storedDeleted = JSON.parse(localStorage.getItem("jpama_deleted_inquiries") || "[]");
-          if (!storedDeleted.includes(id)) {
-            storedDeleted.push(id);
-            localStorage.setItem("jpama_deleted_inquiries", JSON.stringify(storedDeleted));
-          }
-        } catch (e) {}
-      } else {
-        alert(data.error || "Failed to delete inquiry.");
+      const storedDeleted = JSON.parse(localStorage.getItem("jpama_deleted_inquiries") || "[]");
+      if (!storedDeleted.includes(id)) {
+        storedDeleted.push(id);
       }
+      localStorage.setItem("jpama_deleted_inquiries", JSON.stringify(storedDeleted));
+    } catch (e) {}
+
+    // 3. Delete from backend file storage
+    try {
+      await fetch(`/api/contact?id=${encodeURIComponent(id)}&_t=${Date.now()}`, { method: "DELETE" });
     } catch (e: any) {
-      alert("Error deleting inquiry: " + e.message);
+      console.warn("Delete request error:", e);
     }
   };
+
+  const handleClearAllInquiries = async () => {
+    if (!confirm("Are you sure you want to permanently delete all inquiry messages from this inbox?")) return;
+    
+    const allIds = contactInquiries.map((i) => i.id);
+    setContactInquiries([]);
+
+    try {
+      const storedDeleted = JSON.parse(localStorage.getItem("jpama_deleted_inquiries") || "[]");
+      const updated = Array.from(new Set([...storedDeleted, ...allIds, "inq-01", "inq-02"]));
+      localStorage.setItem("jpama_deleted_inquiries", JSON.stringify(updated));
+    } catch (e) {}
+
+    try {
+      await fetch(`/api/contact?id=all&_t=${Date.now()}`, { method: "DELETE" });
+    } catch (e: any) {
+      console.warn("Clear all error:", e);
+    }
+  };
+
 
   const handleBatchApprovePending = async () => {
     const pendingList = members.filter((m) => m.status === "Pending");
@@ -413,7 +434,7 @@ export default function AdminDashboardPage() {
         fetch("/api/resources").then((r) => r.json()),
         fetch("/api/leadership").then((r) => r.json()),
         fetch("/api/settings").then((r) => r.json()),
-        fetch("/api/contact").then((r) => r.json()).catch(() => ({ success: false })),
+        fetch(`/api/contact?_t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).catch(() => ({ success: false })),
       ]);
 
       if (resMem.success && Array.isArray(resMem.data)) setMembers(resMem.data);
@@ -421,7 +442,18 @@ export default function AdminDashboardPage() {
       if (resRes.success && Array.isArray(resRes.data)) setResources(resRes.data);
       if (resOff.success && Array.isArray(resOff.data)) setOfficers(resOff.data);
       if (resSet.success && resSet.data) setSettings(resSet.data);
-      if (resCont.success && Array.isArray(resCont.data)) setContactInquiries(resCont.data);
+      if (resCont.success && Array.isArray(resCont.data)) {
+        let deletedLocal: string[] = ["inq-01", "inq-02"];
+        try {
+          const parsed = JSON.parse(localStorage.getItem("jpama_deleted_inquiries") || "[]");
+          if (Array.isArray(parsed)) {
+            deletedLocal = Array.from(new Set([...deletedLocal, ...parsed]));
+          }
+        } catch (e) {}
+        const liveInquiries = resCont.data.filter((inq: any) => !deletedLocal.includes(inq.id));
+        setContactInquiries(liveInquiries);
+      }
+
     } catch (e) {
       console.error(e);
     } finally {
@@ -2529,7 +2561,20 @@ export default function AdminDashboardPage() {
                     Messages submitted by students and visitors via the public Contact page form.
                   </p>
                 </div>
+
+                {contactInquiries.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleClearAllInquiries}
+                    className="px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
+                    title="Permanently wipe all inquiries"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Clear All Inquiries</span>
+                  </button>
+                )}
               </div>
+
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">

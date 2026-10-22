@@ -3,6 +3,9 @@ import fs from "fs";
 import path from "path";
 import { recordDbLog } from "@/lib/dbLogger";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export interface ContactInquiry {
   id: string;
   name: string;
@@ -17,26 +20,8 @@ const DATA_DIR = path.join(process.cwd(), "src", "data");
 const INQUIRIES_FILE = path.join(DATA_DIR, "inquiries.json");
 const DELETED_FILE = path.join(DATA_DIR, "deleted_inquiries.json");
 
-const INITIAL_INQUIRIES: ContactInquiry[] = [
-  {
-    id: "inq-01",
-    name: "Christian Emmanuel Paguirigan",
-    email: "c.paguirigan@uslt.edu.ph",
-    subject: "Membership & Pinning Ceremony Schedule",
-    message: "Good day, Secretariat. May I ask when the scheduled donning of pins will be for 4th year graduating students? Thank you.",
-    status: "Unread",
-    created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-  },
-  {
-    id: "inq-02",
-    name: "Sophia Reign Agcaoili",
-    email: "sophia.agcaoili@uslt.edu.ph",
-    subject: "Academic Testbank Download Access",
-    message: "Hello po, I submitted my membership registration this morning. Can I already download the MAS midterm reviewers once approved?",
-    status: "Read",
-    created_at: new Date(Date.now() - 3600000 * 18).toISOString(),
-  },
-];
+// No mock inquiries: only real submitted messages from students
+const INITIAL_INQUIRIES: ContactInquiry[] = [];
 
 function readData(): { inquiries: ContactInquiry[]; deletedIds: string[] } {
   try {
@@ -44,13 +29,16 @@ function readData(): { inquiries: ContactInquiry[]; deletedIds: string[] } {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
 
-    let deletedIds: string[] = [];
+    let deletedIds: string[] = ["inq-01", "inq-02"];
     if (fs.existsSync(DELETED_FILE)) {
       try {
         const rawDel = fs.readFileSync(DELETED_FILE, "utf-8");
-        deletedIds = JSON.parse(rawDel);
+        const parsed = JSON.parse(rawDel);
+        if (Array.isArray(parsed)) {
+          deletedIds = Array.from(new Set([...deletedIds, ...parsed]));
+        }
       } catch (e) {
-        deletedIds = [];
+        // ignore
       }
     }
 
@@ -58,21 +46,24 @@ function readData(): { inquiries: ContactInquiry[]; deletedIds: string[] } {
     if (fs.existsSync(INQUIRIES_FILE)) {
       try {
         const rawInq = fs.readFileSync(INQUIRIES_FILE, "utf-8");
-        inquiries = JSON.parse(rawInq);
+        const parsed = JSON.parse(rawInq);
+        if (Array.isArray(parsed)) {
+          inquiries = parsed;
+        }
       } catch (e) {
-        inquiries = [...INITIAL_INQUIRIES];
+        inquiries = [];
       }
     } else {
-      inquiries = [...INITIAL_INQUIRIES];
+      inquiries = [];
       fs.writeFileSync(INQUIRIES_FILE, JSON.stringify(inquiries, null, 2), "utf-8");
     }
 
-    // Filter out any inquiries that have been permanently deleted
+    // Filter out permanently deleted inquiries
     const filtered = inquiries.filter((inq) => !deletedIds.includes(inq.id));
     return { inquiries: filtered, deletedIds };
   } catch (err) {
     console.error("Error reading inquiry data:", err);
-    return { inquiries: [...INITIAL_INQUIRIES], deletedIds: [] };
+    return { inquiries: [], deletedIds: ["inq-01", "inq-02"] };
   }
 }
 
@@ -90,7 +81,16 @@ function writeData(inquiries: ContactInquiry[], deletedIds: string[]) {
 
 export async function GET() {
   const { inquiries } = readData();
-  return NextResponse.json({ success: true, data: inquiries });
+  return NextResponse.json(
+    { success: true, data: inquiries },
+    {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    }
+  );
 }
 
 export async function POST(request: Request) {
@@ -98,9 +98,9 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name, email, subject, message } = body;
 
-    if (!name || !email || !message) {
+    if (!name || !email || !subject || !message) {
       return NextResponse.json(
-        { success: false, error: "Please fill in all required fields." },
+        { success: false, error: "All contact fields are required." },
         { status: 400 }
       );
     }
@@ -111,7 +111,7 @@ export async function POST(request: Request) {
       id: "inq-" + Math.random().toString(36).substring(2, 9),
       name: name.trim(),
       email: email.trim(),
-      subject: (subject || "General Inquiry").trim(),
+      subject: subject.trim(),
       message: message.trim(),
       status: "Unread",
       created_at: new Date().toISOString(),
@@ -122,17 +122,12 @@ export async function POST(request: Request) {
 
     recordDbLog({
       action: "NEW_CONTACT_INQUIRY",
-      target: `${name.trim()} (${email.trim()})`,
+      target: `Inquiry from ${newInquiry.name}`,
       storage: "LocalStore",
       status: "SUCCESS",
-      details: `Subject: ${subject || "General Inquiry"}`,
     });
 
-    return NextResponse.json({
-      success: true,
-      message: "Thank you for reaching out! Your message has been routed to the JPAMA Executive Secretariat. We will get back to you shortly.",
-      data: newInquiry,
-    });
+    return NextResponse.json({ success: true, data: newInquiry }, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
@@ -157,7 +152,6 @@ export async function PUT(request: Request) {
       target: `Inquiry ${id}`,
       storage: "LocalStore",
       status: "SUCCESS",
-      details: `Status set to ${status}`,
     });
 
     return NextResponse.json({ success: true, data: item });
@@ -175,9 +169,26 @@ export async function DELETE(request: Request) {
     }
 
     const { inquiries, deletedIds } = readData();
+
+    if (id === "all") {
+      const allIds = inquiries.map((i) => i.id);
+      const updatedDeleted = Array.from(new Set([...deletedIds, ...allIds, "inq-01", "inq-02"]));
+      writeData([], updatedDeleted);
+
+      recordDbLog({
+        action: "DELETE_ALL_INQUIRIES",
+        target: "All inquiries inbox",
+        storage: "LocalStore",
+        status: "SUCCESS",
+        details: "Cleared all received inquiries.",
+      });
+
+      return NextResponse.json({ success: true, message: "All inquiries cleared" });
+    }
+
+    // Single item delete
     const index = inquiries.findIndex((i) => i.id === id);
 
-    // Track as permanently deleted
     if (!deletedIds.includes(id)) {
       deletedIds.push(id);
     }
