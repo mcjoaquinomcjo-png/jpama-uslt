@@ -8,6 +8,14 @@ export interface OverviewContent {
     description: string;
     tagline_dept: string;
     tagline_loc: string;
+    btn_primary_text?: string;
+    btn_primary_link?: string;
+    btn_secondary_text?: string;
+    btn_secondary_link?: string;
+    stat_scholars?: string;
+    stat_convocations?: string;
+    stat_passers?: string;
+    stat_partners?: string;
   };
   pillars: {
     section_eyebrow: string;
@@ -22,12 +30,20 @@ export interface OverviewContent {
   events: {
     section_eyebrow: string;
     section_title: string;
+    section_desc?: string;
+    btn_text?: string;
   };
   resources: {
     badge: string;
     title: string;
     description: string;
     tags: string[];
+    btn_text: string;
+  };
+  leadership?: {
+    section_eyebrow: string;
+    section_title: string;
+    section_desc: string;
     btn_text: string;
   };
   contact: {
@@ -49,6 +65,14 @@ export const DEFAULT_OVERVIEW_CONTENT: OverviewContent = {
       "Welcome to the official web portal of the Junior Philippine Association of Management Accountants (JPAMA) – University of Saint Louis Tuguegarao Chapter. Your dedicated hub for chapter events, academic reviewers, and student membership.",
     tagline_dept: "School of Accountancy, Business, and Hospitality",
     tagline_loc: "USLT Tuguegarao City",
+    btn_primary_text: "Explore Convocations",
+    btn_primary_link: "/events",
+    btn_secondary_text: "Access Review Vault",
+    btn_secondary_link: "/resources",
+    stat_scholars: "250+ Active Scholars",
+    stat_convocations: "12+ Annual Assemblies",
+    stat_passers: "100% CMA Passing Rate",
+    stat_partners: "8 Top Accounting Firms",
   },
   pillars: {
     section_eyebrow: "ACADEMIC FOCUS",
@@ -283,6 +307,9 @@ export interface RolePermissions {
   events: { view: boolean; add: boolean; edit: boolean; delete: boolean };
   resources: { view: boolean; add: boolean; edit: boolean; delete: boolean };
   leadership: { view: boolean; edit: boolean };
+  alumni: { view: boolean; add: boolean; edit: boolean; delete: boolean };
+  overview: { view: boolean; edit: boolean };
+  about: { view: boolean; edit: boolean };
 }
 
 export interface PortalFeatures {
@@ -314,6 +341,9 @@ export const DEFAULT_ACCESS_CONFIG: MasterAccessConfig = {
     events: { view: true, add: true, edit: true, delete: false },
     resources: { view: true, add: true, edit: true, delete: false },
     leadership: { view: true, edit: false },
+    alumni: { view: true, add: true, edit: true, delete: false },
+    overview: { view: true, edit: true },
+    about: { view: true, edit: true },
   },
   features: {
     publicLookup: true,

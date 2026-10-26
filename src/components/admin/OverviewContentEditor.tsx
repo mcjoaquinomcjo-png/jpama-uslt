@@ -15,6 +15,7 @@ import {
   MapPin,
   Clock,
   GraduationCap,
+  Users,
 } from "lucide-react";
 import { OverviewContent, DEFAULT_OVERVIEW_CONTENT } from "@/lib/siteContent";
 
@@ -94,6 +95,19 @@ export default function OverviewContentEditor({
     });
   };
 
+  const updateLeadership = (field: "section_eyebrow" | "section_title" | "section_desc" | "btn_text", value: string) => {
+    onChange({
+      ...content,
+      leadership: {
+        section_eyebrow: content.leadership?.section_eyebrow || "EXECUTIVE STEWARDSHIP",
+        section_title: content.leadership?.section_title || "Chapter Council & Faculty Advisers",
+        section_desc: content.leadership?.section_desc || "Dedicated Louisian leaders driving academic excellence and professional distinction.",
+        btn_text: content.leadership?.btn_text || "Meet the Leaders",
+        [field]: value,
+      },
+    });
+  };
+
   const updateContact = (field: keyof OverviewContent["contact"], value: string) => {
     onChange({
       ...content,
@@ -105,10 +119,11 @@ export default function OverviewContentEditor({
   };
 
   const tabs = [
-    { id: "hero", label: "Hero Banner" },
+    { id: "hero", label: "Hero Banner & Stats" },
     { id: "pillars", label: "BSMA Pillars" },
     { id: "events", label: "Events Spotlight" },
     { id: "resources", label: "Resources Banner" },
+    { id: "leadership", label: "Leadership Spotlight" },
     { id: "contact", label: "Contact & Office" },
   ];
 
@@ -124,7 +139,7 @@ export default function OverviewContentEditor({
             </h3>
           </div>
           <p className="text-xs text-slate-500 mt-0.5">
-            Customize the headlines, descriptions, and text shown on the public homepage.
+            Customize every headline, stat counter, and description rendered on the public homepage.
           </p>
         </div>
 
@@ -153,7 +168,7 @@ export default function OverviewContentEditor({
       </div>
 
       {/* Tab navigation */}
-      <div className="px-5 pt-3 border-b border-slate-200 flex gap-2 overflow-x-auto bg-slate-50/50">
+      <div className="px-5 pt-3 border-b border-slate-200 flex gap-2 overflow-x-auto bg-slate-50/50 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -171,7 +186,7 @@ export default function OverviewContentEditor({
 
       {/* Editor Body */}
       <div className="p-6 space-y-5">
-        {/* TAB 1: HERO */}
+        {/* TAB 1: HERO & STATS */}
         {selectedTab === "hero" && (
           <div className="space-y-4">
             <div>
@@ -247,6 +262,97 @@ export default function OverviewContentEditor({
                   onChange={(e) => updateHero("tagline_loc", e.target.value)}
                   className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white"
                 />
+              </div>
+            </div>
+
+            {/* Live Counter Stats Configuration */}
+            <div className="pt-3 border-t border-slate-200 space-y-3">
+              <h4 className="font-semibold text-xs text-[#0A2540] uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#C5A059]" />
+                <span>Homepage Key Metric Counters</span>
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                    Scholars Metric
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="250+ Active Scholars"
+                    value={content.hero.stat_scholars || ""}
+                    onChange={(e) => updateHero("stat_scholars", e.target.value)}
+                    className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                    Assemblies Metric
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="12+ Annual Assemblies"
+                    value={content.hero.stat_convocations || ""}
+                    onChange={(e) => updateHero("stat_convocations", e.target.value)}
+                    className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                    CMA Passing Metric
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="100% CMA Passing Rate"
+                    value={content.hero.stat_passers || ""}
+                    onChange={(e) => updateHero("stat_passers", e.target.value)}
+                    className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                    Partner Firms Metric
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="8 Top Accounting Firms"
+                    value={content.hero.stat_partners || ""}
+                    onChange={(e) => updateHero("stat_partners", e.target.value)}
+                    className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Call to Action Buttons */}
+            <div className="pt-3 border-t border-slate-200 space-y-3">
+              <h4 className="font-semibold text-xs text-[#0A2540] uppercase tracking-wider">
+                Hero Call to Action Buttons
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                    Primary CTA Label
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Explore Convocations"
+                    value={content.hero.btn_primary_text || ""}
+                    onChange={(e) => updateHero("btn_primary_text", e.target.value)}
+                    className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                    Secondary CTA Label
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Access Review Vault"
+                    value={content.hero.btn_secondary_text || ""}
+                    onChange={(e) => updateHero("btn_secondary_text", e.target.value)}
+                    className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540]"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -365,8 +471,34 @@ export default function OverviewContentEditor({
                 className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white font-serif font-bold text-[#0A2540]"
               />
             </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Section Description
+              </label>
+              <input
+                type="text"
+                placeholder="Stay updated with our official chapter schedule and academic milestones."
+                value={content.events.section_desc || ""}
+                onChange={(e) => updateEvents("section_desc", e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                View Calendar Button Label
+              </label>
+              <input
+                type="text"
+                placeholder="View Academic Calendar"
+                value={content.events.btn_text || ""}
+                onChange={(e) => updateEvents("btn_text", e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white"
+              />
+            </div>
             <p className="text-xs text-slate-500 italic">
-              Note: The events themselves (dates, titles, speakers, agenda) are managed under the &ldquo;Assemblies &amp; Calendar&rdquo; tab.
+              Note: Individual assemblies (dates, speakers, venues, agendas) are managed under the &ldquo;Assemblies &amp; Calendar&rdquo; directory.
             </p>
           </div>
         )}
@@ -441,7 +573,63 @@ export default function OverviewContentEditor({
           </div>
         )}
 
-        {/* TAB 5: CONTACT & OFFICE */}
+        {/* TAB 5: LEADERSHIP SPOTLIGHT */}
+        {selectedTab === "leadership" && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Section Eyebrow
+              </label>
+              <input
+                type="text"
+                value={content.leadership?.section_eyebrow || "EXECUTIVE STEWARDSHIP"}
+                onChange={(e) => updateLeadership("section_eyebrow", e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Section Headline
+              </label>
+              <input
+                type="text"
+                value={content.leadership?.section_title || "Chapter Council & Faculty Advisers"}
+                onChange={(e) => updateLeadership("section_title", e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white font-serif font-bold text-[#0A2540]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Section Description
+              </label>
+              <textarea
+                rows={2}
+                value={content.leadership?.section_desc || "Dedicated Louisian leaders driving academic excellence, chapter governance, and professional distinction."}
+                onChange={(e) => updateLeadership("section_desc", e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white leading-relaxed"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Button Text
+              </label>
+              <input
+                type="text"
+                value={content.leadership?.btn_text || "Meet the Leaders"}
+                onChange={(e) => updateLeadership("btn_text", e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white"
+              />
+            </div>
+            <p className="text-xs text-slate-500 italic">
+              Note: Council officers and faculty posts are managed under the &ldquo;Leadership &amp; Faculty&rdquo; directory.
+            </p>
+          </div>
+        )}
+
+        {/* TAB 6: CONTACT & OFFICE */}
         {selectedTab === "contact" && (
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -37,7 +37,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge";
-import { Member, EventItem, ResourceItem, OfficerItem, PortalSettings, YearLevel, MemberStatus } from "@/lib/types";
+import { Member, EventItem, ResourceItem, OfficerItem, PortalSettings, YearLevel, MemberStatus, AlumniMember } from "@/lib/types";
 import OverviewContentEditor from "@/components/admin/OverviewContentEditor";
 import AboutPageEditor from "@/components/admin/AboutPageEditor";
 import FacultyAdvisersModal from "@/components/admin/FacultyAdvisersModal";
@@ -68,7 +68,7 @@ export default function AdminDashboardPage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const [activeTab, setActiveTab] = useState<
-    "members" | "events" | "resources" | "leadership" | "system" | "overview" | "about" | "contact" | "security" | "database"
+    "members" | "events" | "resources" | "leadership" | "alumni" | "system" | "overview" | "about" | "contact" | "security" | "database"
   >("members");
   const [overviewContent, setOverviewContent] = useState<OverviewContent>(DEFAULT_OVERVIEW_CONTENT);
   const [aboutContent, setAboutContent] = useState<AboutContent>(DEFAULT_ABOUT_CONTENT);
@@ -87,6 +87,23 @@ export default function AdminDashboardPage() {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [resources, setResources] = useState<ResourceItem[]>([]);
   const [officers, setOfficers] = useState<OfficerItem[]>([]);
+
+  // Alumni Directory state
+  const [alumniList, setAlumniList] = useState<AlumniMember[]>([]);
+  const [alumniSearch, setAlumniSearch] = useState("");
+  const [alumniBatchFilter, setAlumniBatchFilter] = useState("All");
+  const [showAlumniModal, setShowAlumniModal] = useState(false);
+  const [editingAlumni, setEditingAlumni] = useState<AlumniMember | null>(null);
+  const [alumFullName, setAlumFullName] = useState("");
+  const [alumYearGrad, setAlumYearGrad] = useState(new Date().getFullYear().toString());
+  const [alumBatchLabel, setAlumBatchLabel] = useState("");
+  const [alumCompany, setAlumCompany] = useState("");
+  const [alumRole, setAlumRole] = useState("");
+  const [alumWorkDesc, setAlumWorkDesc] = useState("");
+  const [alumLeadership, setAlumLeadership] = useState("");
+  const [alumBadges, setAlumBadges] = useState<string[]>(["Dean's Lister"]);
+  const [alumLinkedin, setAlumLinkedin] = useState("");
+  const [alumPhoto, setAlumPhoto] = useState("");
 
   // Overview section order/visibility (super user only)
   const defaultOverviewSections = [
@@ -163,16 +180,30 @@ export default function AdminDashboardPage() {
     }
   }, []);
 
-  const updateOverviewSections = (newSections: typeof defaultOverviewSections) => {
+  const updateOverviewSections = async (newSections: typeof defaultOverviewSections) => {
     setOverviewSections(newSections);
     try {
       localStorage.setItem("jpama_overview_sections", JSON.stringify(newSections));
     } catch (e) {}
+    try {
+      await fetch("/api/settings/overview", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sections: newSections, content: overviewContent }),
+      });
+    } catch (e) {}
   };
 
-  const handleSaveOverviewContent = () => {
+  const handleSaveOverviewContent = async () => {
     try {
       localStorage.setItem("jpama_overview_content", JSON.stringify(overviewContent));
+    } catch (e) {}
+    try {
+      await fetch("/api/settings/overview", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sections: overviewSections, content: overviewContent }),
+      });
       setOverviewContentSaved(true);
       setTimeout(() => setOverviewContentSaved(false), 3000);
     } catch (e) {}
@@ -428,13 +459,15 @@ export default function AdminDashboardPage() {
   const loadAllData = async () => {
     setLoading(true);
     try {
-      const [resMem, resEv, resRes, resOff, resSet, resCont] = await Promise.all([
+      const [resMem, resEv, resRes, resOff, resSet, resCont, resAlum, resOverview] = await Promise.all([
         fetch("/api/members").then((r) => r.json()),
         fetch("/api/events").then((r) => r.json()),
         fetch("/api/resources").then((r) => r.json()),
         fetch("/api/leadership").then((r) => r.json()),
         fetch("/api/settings").then((r) => r.json()),
         fetch(`/api/contact?_t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).catch(() => ({ success: false })),
+        fetch(`/api/alumni?_t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).catch(() => ({ success: false })),
+        fetch(`/api/settings/overview?_t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).catch(() => ({ success: false })),
       ]);
 
       if (resMem.success && Array.isArray(resMem.data)) setMembers(resMem.data);
@@ -442,6 +475,11 @@ export default function AdminDashboardPage() {
       if (resRes.success && Array.isArray(resRes.data)) setResources(resRes.data);
       if (resOff.success && Array.isArray(resOff.data)) setOfficers(resOff.data);
       if (resSet.success && resSet.data) setSettings(resSet.data);
+      if (resAlum?.success && Array.isArray(resAlum.data)) setAlumniList(resAlum.data);
+      if (resOverview?.success && resOverview.data) {
+        if (Array.isArray(resOverview.data.sections)) setOverviewSections(resOverview.data.sections);
+        if (resOverview.data.content) setOverviewContent(resOverview.data.content);
+      }
       if (resCont.success && Array.isArray(resCont.data)) {
         let deletedLocal: string[] = ["inq-01", "inq-02"];
         try {
@@ -892,6 +930,107 @@ export default function AdminDashboardPage() {
     }
   };
 
+  // ALUMNI DIRECTORY CRUD
+  const openAddAlumni = () => {
+    setEditingAlumni(null);
+    setAlumFullName("");
+    setAlumYearGrad(new Date().getFullYear().toString());
+    setAlumBatchLabel("");
+    setAlumCompany("");
+    setAlumRole("");
+    setAlumWorkDesc("");
+    setAlumLeadership("");
+    setAlumBadges(["Dean's Lister"]);
+    setAlumLinkedin("");
+    setAlumPhoto("");
+    setShowAlumniModal(true);
+  };
+
+  const openEditAlumni = (a: AlumniMember) => {
+    setEditingAlumni(a);
+    setAlumFullName(a.full_name);
+    setAlumYearGrad(a.year_graduated);
+    setAlumBatchLabel(a.batch_label || `Batch ${a.year_graduated}`);
+    setAlumCompany(a.current_company || "");
+    setAlumRole(a.current_role || "");
+    setAlumWorkDesc(a.work_description || "");
+    setAlumLeadership(a.leadership_experiences || "");
+    setAlumBadges(Array.isArray(a.badges) ? [...a.badges] : []);
+    setAlumLinkedin(a.linkedin_url || "");
+    setAlumPhoto(a.photo_url || "");
+    setShowAlumniModal(true);
+  };
+
+  const handleSaveAlumni = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!alumFullName.trim() || !alumYearGrad.trim()) return;
+
+    const payload = {
+      full_name: alumFullName.trim(),
+      year_graduated: alumYearGrad.trim(),
+      batch_label: alumBatchLabel.trim() || `Batch ${alumYearGrad.trim()}`,
+      current_company: alumCompany.trim(),
+      current_role: alumRole.trim(),
+      work_description: alumWorkDesc.trim(),
+      leadership_experiences: alumLeadership.trim(),
+      badges: alumBadges,
+      linkedin_url: alumLinkedin.trim(),
+      photo_url: alumPhoto.trim(),
+    };
+
+    if (editingAlumni) {
+      try {
+        const res = await fetch("/api/alumni", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: editingAlumni.id, ...payload }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          setAlumniList((prev) =>
+            prev.map((a) => (a.id === editingAlumni.id ? { ...a, ...data.data } : a))
+          );
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    } else {
+      try {
+        const res = await fetch("/api/alumni", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          setAlumniList((prev) => [data.data, ...prev]);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    setShowAlumniModal(false);
+  };
+
+  const handleDeleteAlumni = async (id: string, name: string) => {
+    if (userRole !== "super_user" && !accessConfig.officerPermissions.alumni?.delete) {
+      alert("Permission restricted. Deleting alumni records requires super user approval.");
+      return;
+    }
+    if (!confirm(`Are you sure you want to delete alumni profile: "${name}"?`)) return;
+
+    try {
+      const res = await fetch(`/api/alumni?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setAlumniList((prev) => prev.filter((a) => a.id !== id));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   // SYSTEM SETTINGS (Super User only)
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1322,6 +1461,32 @@ export default function AdminDashboardPage() {
                           )}
                           <ChevronRight className={`w-3.5 h-3.5 ${activeTab === "contact" ? "text-white" : "text-slate-400"}`} />
                         </div>
+                      </button>
+                    )}
+
+                    {(userRole === "super_user" || (accessConfig.officerPermissions.alumni?.view ?? true)) && (
+                      <button
+                        onClick={() => { setActiveTab("alumni"); setMobileNavOpen(false); }}
+                        className={`w-full px-3 py-2.5 rounded-xl text-left transition-all flex items-center justify-between gap-2.5 ${
+                          activeTab === "alumni"
+                            ? "bg-[#0A2540] text-white shadow-sm font-semibold"
+                            : "hover:bg-slate-50 text-slate-700"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                            activeTab === "alumni" ? "bg-white/20 text-white" : "bg-teal-50 text-teal-600"
+                          }`}>
+                            <Award className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold truncate">Alumni Directory</div>
+                            <div className={`text-[10.5px] truncate ${activeTab === "alumni" ? "text-slate-300" : "text-slate-500"}`}>
+                              {alumniList.length} graduates
+                            </div>
+                          </div>
+                        </div>
+                        <ChevronRight className={`w-3.5 h-3.5 ${activeTab === "alumni" ? "text-white" : "text-slate-400"}`} />
                       </button>
                     )}
                   </div>

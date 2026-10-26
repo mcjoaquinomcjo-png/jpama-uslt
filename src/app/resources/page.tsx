@@ -201,7 +201,7 @@ export default function ResourcesPage() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. 2023-01042 or 'demo'"
+                  placeholder="Enter your ID number (e.g. 2023-01042)"
                   value={studentIdInput}
                   onChange={(e) => setStudentIdInput(e.target.value)}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs text-slate-800 focus:outline-none focus:border-[#0A2540] focus:bg-white transition-colors"

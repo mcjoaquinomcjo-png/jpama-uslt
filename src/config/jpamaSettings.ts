@@ -612,7 +612,10 @@ export function saveStoredJpamaConfig(config: JpamaSectionConfig): void {
 
 export async function fetchServerJpamaConfig(): Promise<JpamaSectionConfig> {
   try {
-    const res = await fetch("/api/settings/about");
+    const res = await fetch(`/api/settings/about?_t=${Date.now()}`, {
+      cache: "no-store",
+      headers: { "Cache-Control": "no-cache" },
+    });
     if (res.ok) {
       const json = await res.json();
       if (json.success && json.data) {

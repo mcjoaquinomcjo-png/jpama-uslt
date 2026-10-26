@@ -7,6 +7,7 @@ import {
   Facebook,
   ExternalLink,
   ShieldCheck,
+  UserPlus,
 } from "lucide-react";
 import JpamaLogo from "@/components/JpamaLogo";
 
@@ -96,8 +97,9 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/membership" className="hover:text-white transition-colors">
-                  Apply for Membership
+                <Link href="/membership" className="flex items-center gap-1.5 text-slate-300 hover:text-white transition-colors">
+                  <UserPlus className="w-3.5 h-3.5 text-[#C5A059]" />
+                  <span>Apply for Membership</span>
                 </Link>
               </li>
               <li>

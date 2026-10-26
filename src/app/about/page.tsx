@@ -350,9 +350,6 @@ export default function AboutPage() {
                       JPAMA Core Purposes & Mandate
                     </h2>
                   </div>
-                  <p className="text-xs sm:text-sm text-slate-500 max-w-md">
-                    Click any provision to inspect its official verbatim constitutional mandate.
-                  </p>
                 </div>
 
                 {/* Compact One-Liner Interactive Rows */}
@@ -402,9 +399,6 @@ export default function AboutPage() {
                       Chapter Heritage & Historical Timeline
                     </h2>
                   </div>
-                  <span className="text-xs text-slate-500 font-medium">
-                    Click any milestone card to open the <strong className="text-[#0A2540]">Gazette Reader Edition</strong>.
-                  </span>
                 </div>
 
                 {/* Dynamic Milestones Grid */}

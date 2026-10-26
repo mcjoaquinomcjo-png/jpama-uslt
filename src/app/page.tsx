@@ -45,6 +45,25 @@ export default function HomePage() {
   const [content, setContent] = useState<OverviewContent>(DEFAULT_OVERVIEW_CONTENT);
 
   useEffect(() => {
+    // 1. Fetch live overview configuration from server
+    fetch(`/api/settings/overview?_t=${Date.now()}`, { cache: "no-store" })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && json.data) {
+          if (Array.isArray(json.data.sections)) {
+            const visibleIds = json.data.sections.filter((s: any) => s.visible).map((s: any) => s.id);
+            if (visibleIds.length > 0) {
+              setSectionsOrder(visibleIds);
+            }
+          }
+          if (json.data.content) {
+            setContent((prev) => ({ ...prev, ...json.data.content }));
+          }
+        }
+      })
+      .catch(() => {});
+
+    // 2. Check local storage fallback
     try {
       const savedSections = localStorage.getItem("jpama_overview_sections");
       if (savedSections) {
@@ -132,10 +151,10 @@ export default function HomePage() {
 
                     <div className="pt-2 flex flex-wrap items-center gap-3">
                       <Link
-                        href="/membership"
+                        href={content.hero.btn_primary_link || "/membership"}
                         className="px-6 py-3 rounded-lg bg-[#C5A059] hover:bg-[#E8C97A] text-[#0A2540] font-bold text-sm shadow-md transition-all flex items-center gap-2"
                       >
-                        <span>Join Membership</span>
+                        <span>{content.hero.btn_primary_text || "Join Membership"}</span>
                         <ArrowRight className="w-4 h-4" />
                       </Link>
 
@@ -147,16 +166,46 @@ export default function HomePage() {
                       </Link>
 
                       <Link
-                        href="/resources"
+                        href={content.hero.btn_secondary_link || "/resources"}
                         className="px-6 py-3 rounded-lg bg-blue-900/40 hover:bg-blue-900/60 text-blue-200 border border-blue-400/30 font-semibold text-sm transition-all flex items-center gap-2"
                       >
                         <BookOpen className="w-4 h-4 text-[#C5A059]" />
-                        <span>Academic Resources</span>
+                        <span>{content.hero.btn_secondary_text || "Academic Resources"}</span>
                       </Link>
                     </div>
 
+                    {/* Metric Counters */}
+                    {(content.hero.stat_scholars || content.hero.stat_convocations || content.hero.stat_passers || content.hero.stat_partners) && (
+                      <div className="pt-3 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        {content.hero.stat_scholars && (
+                          <div className="bg-white/5 backdrop-blur-xs p-2.5 rounded-xl border border-white/10">
+                            <span className="block font-bold text-base text-[#C5A059]">{content.hero.stat_scholars.split(" ")[0]}</span>
+                            <span className="text-[10px] text-blue-200">{content.hero.stat_scholars.split(" ").slice(1).join(" ")}</span>
+                          </div>
+                        )}
+                        {content.hero.stat_convocations && (
+                          <div className="bg-white/5 backdrop-blur-xs p-2.5 rounded-xl border border-white/10">
+                            <span className="block font-bold text-base text-[#C5A059]">{content.hero.stat_convocations.split(" ")[0]}</span>
+                            <span className="text-[10px] text-blue-200">{content.hero.stat_convocations.split(" ").slice(1).join(" ")}</span>
+                          </div>
+                        )}
+                        {content.hero.stat_passers && (
+                          <div className="bg-white/5 backdrop-blur-xs p-2.5 rounded-xl border border-white/10">
+                            <span className="block font-bold text-base text-[#C5A059]">{content.hero.stat_passers.split(" ")[0]}</span>
+                            <span className="text-[10px] text-blue-200">{content.hero.stat_passers.split(" ").slice(1).join(" ")}</span>
+                          </div>
+                        )}
+                        {content.hero.stat_partners && (
+                          <div className="bg-white/5 backdrop-blur-xs p-2.5 rounded-xl border border-white/10">
+                            <span className="block font-bold text-base text-[#C5A059]">{content.hero.stat_partners.split(" ")[0]}</span>
+                            <span className="text-[10px] text-blue-200">{content.hero.stat_partners.split(" ").slice(1).join(" ")}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* Institutional Tagline */}
-                    <div className="pt-4 flex items-center gap-4 text-xs text-blue-300 border-t border-white/10">
+                    <div className="pt-3 flex items-center gap-4 text-xs text-blue-300 border-t border-white/10">
                       <span>{content.hero.tagline_dept}</span>
                       <span>•</span>
                       <span>{content.hero.tagline_loc}</span>

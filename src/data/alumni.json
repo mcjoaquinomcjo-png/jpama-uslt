@@ -1,0 +1,67 @@
+[
+  {
+    "id": "alum-01",
+    "full_name": "Maria Kristina R. Dela Peña",
+    "year_graduated": "2024",
+    "batch_label": "Batch 2024 – Sihaya",
+    "current_company": "SGV & Co. (EY Philippines)",
+    "current_role": "Junior Associate – Assurance",
+    "work_description": "Engaged in external audit and financial statement review for corporate clients across manufacturing and financial services sectors.",
+    "leadership_experiences": "JPAMA President A.Y. 2023–2024 | Best Chapter President – Region 2 Convention",
+    "badges": ["CMA Passer", "Dean's Lister"],
+    "photo_url": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80",
+    "linkedin_url": "https://linkedin.com"
+  },
+  {
+    "id": "alum-02",
+    "full_name": "Jose Mari T. Fontanilla",
+    "year_graduated": "2024",
+    "batch_label": "Batch 2024 – Sihaya",
+    "current_company": "BDO Unibank",
+    "current_role": "Management Trainee – Finance Group",
+    "work_description": "Rotational management trainee program covering controllership, treasury, and internal audit functions.",
+    "leadership_experiences": "JPAMA VP for Finance A.Y. 2023–2024 | USLT SABH Best Student Leader 2024",
+    "badges": ["Dean's Lister"],
+    "photo_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
+    "linkedin_url": "https://linkedin.com"
+  },
+  {
+    "id": "alum-03",
+    "full_name": "Andrea Nicole V. Paguirigan",
+    "year_graduated": "2023",
+    "batch_label": "Batch 2023 – Lumina",
+    "current_company": "KPMG R.G. Manabat & Co.",
+    "current_role": "Tax Associate",
+    "work_description": "Provides tax compliance and advisory services, specializing in corporate income tax and transfer pricing engagements.",
+    "leadership_experiences": "JPAMA Academic Committee Chair A.Y. 2022–2023 | Region 2 Quiz Bee Champion",
+    "badges": ["CMA Scholar", "Champion"],
+    "photo_url": "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80",
+    "linkedin_url": "https://linkedin.com"
+  },
+  {
+    "id": "alum-04",
+    "full_name": "Patrick Leon G. Battad",
+    "year_graduated": "2023",
+    "batch_label": "Batch 2023 – Lumina",
+    "current_company": "CPA Board Exam Preparation",
+    "current_role": "CPA Reviewee",
+    "work_description": "Preparing for the CPA Licensure Examination with distinction.",
+    "leadership_experiences": "JPAMA Secretary A.Y. 2022–2023",
+    "badges": ["Dean's Lister", "Board Passer"],
+    "photo_url": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
+    "linkedin_url": "https://linkedin.com"
+  },
+  {
+    "id": "alum-05",
+    "full_name": "Clarisse Mae O. Baloran",
+    "year_graduated": "2022",
+    "batch_label": "Batch 2022 – Aurora",
+    "current_company": "Philippine Navy Finance Service",
+    "current_role": "Financial Management Specialist",
+    "work_description": "Government finance specialist handling military budget allocation, procurement compliance, and public sector audit reporting.",
+    "leadership_experiences": "JPAMA External Relations Officer A.Y. 2021–2022",
+    "badges": ["Award / Recognition"],
+    "photo_url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
+    "linkedin_url": "https://linkedin.com"
+  }
+]

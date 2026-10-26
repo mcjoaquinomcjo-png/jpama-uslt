@@ -54,7 +54,7 @@ export default function AccessControlManager({
   };
 
   const updateOfficerPerm = (
-    module: "members" | "events" | "resources" | "leadership",
+    module: keyof MasterAccessConfig["officerPermissions"],
     action: string,
     val: boolean
   ) => {
@@ -63,7 +63,7 @@ export default function AccessControlManager({
       officerPermissions: {
         ...config.officerPermissions,
         [module]: {
-          ...(config.officerPermissions as any)[module],
+          ...((config.officerPermissions as any)[module] || {}),
           [action]: val,
         },
       },
@@ -352,6 +352,93 @@ export default function AccessControlManager({
                     className="w-4 h-4 rounded text-[#0A2540]"
                   />
                   <span>Allow Officers to Edit Officers & Faculty Posts</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Module 5: Alumni Directory */}
+            <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/60 space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="w-4 h-4 text-[#0A2540]" />
+                  <span className="font-serif font-bold text-sm text-[#0A2540]">
+                    5. Alumni Directory Access
+                  </span>
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <span className="text-xs font-semibold text-slate-600">Tab Visible to Officers</span>
+                  <input
+                    type="checkbox"
+                    checked={config.officerPermissions.alumni?.view ?? true}
+                    onChange={(e) => updateOfficerPerm("alumni", "view", e.target.checked)}
+                    className="w-4 h-4 rounded text-[#0A2540] focus:ring-0"
+                  />
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1">
+                <label className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-slate-200 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={config.officerPermissions.alumni?.add ?? true}
+                    onChange={(e) => updateOfficerPerm("alumni", "add", e.target.checked)}
+                    className="w-4 h-4 rounded text-[#0A2540]"
+                  />
+                  <span>Allow Adding Alumni Profiles</span>
+                </label>
+
+                <label className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-slate-200 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={config.officerPermissions.alumni?.edit ?? true}
+                    onChange={(e) => updateOfficerPerm("alumni", "edit", e.target.checked)}
+                    className="w-4 h-4 rounded text-[#0A2540]"
+                  />
+                  <span>Allow Editing Alumni Profiles</span>
+                </label>
+
+                <label className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-slate-200 cursor-pointer text-red-700">
+                  <input
+                    type="checkbox"
+                    checked={config.officerPermissions.alumni?.delete ?? false}
+                    onChange={(e) => updateOfficerPerm("alumni", "delete", e.target.checked)}
+                    className="w-4 h-4 rounded text-red-600"
+                  />
+                  <span>Allow Deleting Alumni Profiles</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Module 6: CMS Page & Overview Editors */}
+            <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/60 space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-[#C5A059]" />
+                  <span className="font-serif font-bold text-sm text-[#0A2540]">
+                    6. CMS Page & Content Editors (Overview & About)
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
+                <label className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-slate-200 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={config.officerPermissions.overview?.edit ?? true}
+                    onChange={(e) => updateOfficerPerm("overview", "edit", e.target.checked)}
+                    className="w-4 h-4 rounded text-[#0A2540]"
+                  />
+                  <span>Allow Officers to Edit & Reorder Homepage Sections</span>
+                </label>
+
+                <label className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-slate-200 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={config.officerPermissions.about?.edit ?? true}
+                    onChange={(e) => updateOfficerPerm("about", "edit", e.target.checked)}
+                    className="w-4 h-4 rounded text-[#0A2540]"
+                  />
+                  <span>Allow Officers to Edit About Page, By-Laws & Heritage</span>
                 </label>
               </div>
             </div>

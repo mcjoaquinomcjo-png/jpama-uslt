@@ -13,6 +13,7 @@ import {
   Award,
   Trophy,
   Building2,
+  Lock,
 } from "lucide-react";
 import { AlumniMember } from "@/lib/types";
 
@@ -88,10 +89,48 @@ const SEED_ALUMNI: AlumniMember[] = [
 const BADGE_STYLE = "bg-slate-100 text-slate-600 border-slate-200";
 
 export default function AlumniPage() {
-  const [alumni] = useState<AlumniMember[]>(SEED_ALUMNI);
+  const [alumni, setAlumni] = useState<AlumniMember[]>(SEED_ALUMNI);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState("All");
   const [selectedBadge, setSelectedBadge] = useState("All");
+
+  // Student ID Auth Gate (same pattern as Resources)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [studentIdInput, setStudentIdInput] = useState<string>("");
+  const [authError, setAuthError] = useState<string>("");
+  const [isVerifying, setIsVerifying] = useState<boolean>(false);
+
+  const handleVerifyAccess = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!studentIdInput.trim()) return;
+    setIsVerifying(true);
+    setAuthError("");
+    try {
+      const res = await fetch(`/api/members/${encodeURIComponent(studentIdInput.trim())}`);
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setIsAuthenticated(true);
+      } else {
+        setAuthError("Student ID not found in the active BSMA member directory. Only registered students may access the alumni directory.");
+      }
+    } catch {
+      // Fallback: allow if API is unreachable
+      setIsAuthenticated(true);
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetch(`/api/alumni?_t=${Date.now()}`, { cache: "no-store" })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setAlumni(json.data);
+        }
+      })
+      .catch((err) => console.warn("Could not fetch alumni, using seed:", err));
+  }, []);
 
   const years = [
     "All",
@@ -180,6 +219,52 @@ export default function AlumniPage() {
         </div>
       </section>
 
+      {/* Auth Gate OR Content */}
+      {!isAuthenticated ? (
+        <section className="py-12 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex items-center justify-center">
+          <div className="bg-white rounded-xl border border-slate-200 p-8 sm:p-10 shadow-sm max-w-xl w-full text-center space-y-5">
+            <div className="w-12 h-12 rounded-full bg-[#EAF2FA] text-[#0A2540] flex items-center justify-center mx-auto">
+              <Lock className="w-6 h-6 text-[#0A2540]" />
+            </div>
+            <div className="space-y-1">
+              <h2 className="font-serif font-bold text-xl text-[#0A2540]">
+                BSMA Student Access Required
+              </h2>
+              <p className="text-xs text-slate-600 max-w-sm mx-auto leading-relaxed">
+                The alumni directory is accessible to registered BSMA students only. Enter your student ID number to continue.
+              </p>
+            </div>
+            <form onSubmit={handleVerifyAccess} className="space-y-3 max-w-sm mx-auto pt-2 text-left">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Enter Your Student ID Number
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Enter your ID number (e.g. 2023-01042)"
+                  value={studentIdInput}
+                  onChange={(e) => setStudentIdInput(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs text-slate-800 focus:outline-none focus:border-[#0A2540] focus:bg-white transition-colors"
+                />
+              </div>
+              {authError && (
+                <div className="p-2.5 rounded bg-amber-50 border border-amber-200 text-xs text-amber-800">
+                  {authError}
+                </div>
+              )}
+              <button
+                type="submit"
+                disabled={isVerifying}
+                className="w-full py-2.5 bg-[#0A2540] hover:bg-[#14487A] text-white text-xs font-bold uppercase tracking-wider rounded-md shadow-sm transition-colors disabled:opacity-50"
+              >
+                {isVerifying ? "Verifying..." : "Access Alumni Directory"}
+              </button>
+            </form>
+          </div>
+        </section>
+      ) : (
+        <>
       {/* Filters */}
       <section className="py-5 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-3">
@@ -395,6 +480,8 @@ export default function AlumniPage() {
           </p>
         </div>
       </section>
+      </>
+      )}
     </div>
   );
 }

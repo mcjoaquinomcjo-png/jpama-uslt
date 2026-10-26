@@ -4,6 +4,9 @@ import path from "path";
 import { DEFAULT_JPAMA_CONFIG, JpamaSectionConfig } from "@/config/jpamaSettings";
 import { recordDbLog } from "@/lib/dbLogger";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const DATA_DIR = path.join(process.cwd(), "src", "data");
 const ABOUT_CONFIG_FILE = path.join(DATA_DIR, "about_config.json");
 
@@ -45,7 +48,16 @@ function writeConfig(config: JpamaSectionConfig): boolean {
 
 export async function GET() {
   const config = readConfig();
-  return NextResponse.json({ success: true, data: config });
+  return NextResponse.json(
+    { success: true, data: config },
+    {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    }
+  );
 }
 
 export async function PUT(req: Request) {
