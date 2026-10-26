@@ -62,17 +62,19 @@ export default function OverviewContentEditor({
 
   const updatePillarItem = (index: number, field: "title" | "desc" | "tag", value: string) => {
     const items = [...content.pillars.items];
-    items[index] = {
-      ...items[index],
-      [field]: value,
-    };
-    onChange({
-      ...content,
-      pillars: {
-        ...content.pillars,
-        items,
-      },
-    });
+    items[index] = { ...items[index], [field]: value };
+    onChange({ ...content, pillars: { ...content.pillars, items } });
+  };
+
+  const addPillarItem = () => {
+    const items = [...content.pillars.items, { title: "New Pillar", desc: "Describe this academic focus area.", tag: "Focus Area" }];
+    onChange({ ...content, pillars: { ...content.pillars, items } });
+  };
+
+  const removePillarItem = (index: number) => {
+    if (content.pillars.items.length <= 1) return;
+    const items = content.pillars.items.filter((_, i) => i !== index);
+    onChange({ ...content, pillars: { ...content.pillars, items } });
   };
 
   const updateEvents = (field: keyof OverviewContent["events"], value: string) => {
@@ -125,6 +127,11 @@ export default function OverviewContentEditor({
     { id: "resources", label: "Resources Banner" },
     { id: "leadership", label: "Leadership Spotlight" },
     { id: "contact", label: "Contact & Office" },
+    // Custom sections added from Section Manager
+    ...Object.entries(content.custom_sections || {}).map(([id, sec]) => ({
+      id,
+      label: sec.label || id,
+    })),
   ];
 
   return (
@@ -399,45 +406,52 @@ export default function OverviewContentEditor({
             </div>
 
             <div className="pt-3 border-t border-slate-200 space-y-4">
-              <h4 className="font-semibold text-xs text-[#0A2540] uppercase tracking-wider">
-                The 3 Program Pillars
-              </h4>
+              <div className="flex items-center justify-between">
+                <h4 className="font-semibold text-xs text-[#0A2540] uppercase tracking-wider">
+                  Program Pillars ({content.pillars.items.length})
+                </h4>
+                <button
+                  type="button"
+                  onClick={addPillarItem}
+                  className="px-3 py-1.5 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-[11px] font-bold flex items-center gap-1 transition-colors"
+                >
+                  + Add Pillar
+                </button>
+              </div>
 
               {content.pillars.items.map((pillar, idx) => (
                 <div key={idx} className="p-4 rounded-xl border border-slate-200 bg-slate-50/60 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-[#0A2540]">Pillar #{idx + 1}</span>
-                    <input
-                      type="text"
-                      placeholder="Tag (e.g. Core Academic)"
-                      value={pillar.tag}
-                      onChange={(e) => updatePillarItem(idx, "tag", e.target.value)}
-                      className="px-2.5 py-1 text-[11px] font-semibold bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
-                    />
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        placeholder="Tag (e.g. Core Academic)"
+                        value={pillar.tag}
+                        onChange={(e) => updatePillarItem(idx, "tag", e.target.value)}
+                        className="px-2.5 py-1 text-[11px] font-semibold bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
+                      />
+                      {content.pillars.items.length > 1 && (
+                        <button type="button" onClick={() => removePillarItem(idx)}
+                          className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Remove pillar">
+                          ✕
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                      Pillar Title
-                    </label>
-                    <input
-                      type="text"
-                      value={pillar.title}
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">Pillar Title</label>
+                    <input type="text" value={pillar.title}
                       onChange={(e) => updatePillarItem(idx, "title", e.target.value)}
-                      className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
-                    />
+                      className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]" />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                      Pillar Description
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={pillar.desc}
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">Pillar Description</label>
+                    <textarea rows={2} value={pillar.desc}
                       onChange={(e) => updatePillarItem(idx, "desc", e.target.value)}
-                      className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]"
-                    />
+                      className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540]" />
                   </div>
                 </div>
               ))}
@@ -711,6 +725,85 @@ export default function OverviewContentEditor({
             </div>
           </div>
         )}
+
+        {/* CUSTOM SECTION EDITOR: Slideshow / Text / Cards */}
+        {selectedTab.startsWith("custom_") && (() => {
+          const secData = content.custom_sections?.[selectedTab] || { type: "custom", label: selectedTab, images: [], title: "", body: "" };
+          const updateCustomSec = (patch: Partial<typeof secData>) => {
+            onChange({
+              ...content,
+              custom_sections: {
+                ...(content.custom_sections || {}),
+                [selectedTab]: { ...secData, ...patch },
+              },
+            });
+          };
+          return (
+            <div className="space-y-4">
+              <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-700">
+                <strong>{secData.label}</strong> — Type: <code className="bg-blue-100 px-1 rounded">{secData.type}</code>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Section Heading (Optional)</label>
+                <input type="text" value={secData.title || ""} onChange={(e) => updateCustomSec({ title: e.target.value })}
+                  placeholder="e.g. CMA Passers 2025"
+                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white" />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Description / Body Text (Optional)</label>
+                <textarea rows={2} value={secData.body || ""} onChange={(e) => updateCustomSec({ body: e.target.value })}
+                  placeholder="Optional short description shown above the content."
+                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white" />
+              </div>
+
+              {(secData.type === "slideshow" || secData.type === "custom") && (
+                <div className="space-y-3 pt-2 border-t border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-[#0A2540] uppercase tracking-wider">
+                      Slideshow Images ({(secData.images || []).length})
+                    </label>
+                    <button type="button"
+                      onClick={() => updateCustomSec({ images: [...(secData.images || []), ""] })}
+                      className="px-3 py-1.5 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-[11px] font-bold transition-colors">
+                      + Add Image URL
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Paste any public image URL or a Google Drive shareable image link. Drive links: open the image, click &ldquo;Share&rdquo; and set to &ldquo;Anyone with the link&rdquo;, then copy the link.
+                  </p>
+                  {(secData.images || []).map((url, imgIdx) => (
+                    <div key={imgIdx} className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono text-slate-400 w-5 text-right flex-shrink-0">{imgIdx + 1}</span>
+                      <input type="url" value={url}
+                        onChange={(e) => {
+                          const imgs = [...(secData.images || [])];
+                          imgs[imgIdx] = e.target.value;
+                          updateCustomSec({ images: imgs });
+                        }}
+                        placeholder="https://... or Google Drive share URL"
+                        className="flex-1 px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] font-mono" />
+                      <button type="button"
+                        onClick={() => {
+                          const imgs = (secData.images || []).filter((_, i) => i !== imgIdx);
+                          updateCustomSec({ images: imgs });
+                        }}
+                        className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors">
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                  {(secData.images || []).length === 0 && (
+                    <p className="text-xs text-slate-400 italic text-center py-4 border-2 border-dashed border-slate-200 rounded-xl">
+                      No images yet. Click &ldquo;+ Add Image URL&rdquo; to add unlimited images to this slideshow.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Footer controls */}
         <div className="pt-4 border-t border-slate-100 flex items-center justify-between">

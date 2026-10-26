@@ -78,6 +78,9 @@ export interface JpamaSectionConfig {
   };
   bylaws: ByLawArticle[];
   customTabs: CustomTabConfig[];
+  // Gazette Edition display mode
+  gazette_use_pdf?: boolean;         // true = show PDF viewer, false = show article reader
+  gazette_pdf_url?: string;          // Google Drive /preview or direct PDF link
 }
 
 export const DEFAULT_JPAMA_CONFIG: JpamaSectionConfig = {

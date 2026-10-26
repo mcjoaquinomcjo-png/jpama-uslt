@@ -1670,6 +1670,7 @@ export default function AdminDashboardPage() {
                   {activeTab === "events" && "Assemblies, Convocations & Academic Calendar"}
                   {activeTab === "resources" && "Academic Reviewers & Study Materials Library"}
                   {activeTab === "leadership" && "Executive Council & Faculty Advisers"}
+                  {activeTab === "alumni" && "JPAMA USLT Alumni Directory"}
                   {activeTab === "contact" && "Official Chapter Helpdesk & Inquiries Desk"}
                   {activeTab === "system" && "Portal & Chapter Configuration Settings"}
                   {activeTab === "overview" && "Homepage Section Order & Display Manager"}
@@ -1682,6 +1683,7 @@ export default function AdminDashboardPage() {
                   {activeTab === "events" && "Schedule chapter convocations, view agendas, and monitor attendee RSVPs."}
                   {activeTab === "resources" && "Manage curated course reviewers, departmental handouts, and cloud study materials."}
                   {activeTab === "leadership" && "Directory of chapter executive officers, committees, and department faculty."}
+                  {activeTab === "alumni" && "Manage profiles of JPAMA USLT graduates. Visible only to registered BSMA student members."}
                   {activeTab === "contact" && "Secretariat consultation hours, office location, official channels, and student messages."}
                   {activeTab === "system" && "Configure live announcements, academic year, and general contact details."}
                   {activeTab === "overview" && "Reorder homepage blocks, toggle visibility, and update core BSMA pillars."}
@@ -1744,6 +1746,16 @@ export default function AdminDashboardPage() {
                       </>
                     )}
                   </div>
+                )}
+
+                {activeTab === "alumni" && (userRole === "super_user" || accessConfig.officerPermissions.alumni?.add !== false) && (
+                  <button
+                    onClick={openAddAlumni}
+                    className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Alumni Profile</span>
+                  </button>
                 )}
               </div>
             </div>
@@ -2262,6 +2274,118 @@ export default function AdminDashboardPage() {
         )}
 
         {/* ========================================================
+            TAB: ALUMNI DIRECTORY
+            ======================================================== */}
+        {activeTab === "alumni" && (
+          <div className="space-y-4">
+            {/* Search & Batch Filter */}
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center gap-3">
+              <div className="relative flex-1 w-full sm:w-auto">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search alumni by name or company..."
+                  value={alumniSearch}
+                  onChange={(e) => setAlumniSearch(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white"
+                />
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Batch:</span>
+                {["All", ...Array.from(new Set(alumniList.map((a) => a.year_graduated))).sort((a, b) => Number(b) - Number(a))].map((y) => (
+                  <button
+                    key={y}
+                    onClick={() => setAlumniBatchFilter(y)}
+                    className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors ${alumniBatchFilter === y ? "bg-[#0A2540] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                  >
+                    {y}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Alumni Table */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                      <th className="py-3.5 px-4">Name</th>
+                      <th className="py-3.5 px-4">Batch Year</th>
+                      <th className="py-3.5 px-4">Current Role & Company</th>
+                      <th className="py-3.5 px-4">JPAMA Leadership</th>
+                      <th className="py-3.5 px-4">Badges</th>
+                      <th className="py-3.5 px-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {alumniList
+                      .filter((a) => {
+                        const matchBatch = alumniBatchFilter === "All" || a.year_graduated === alumniBatchFilter;
+                        const matchSearch =
+                          !alumniSearch ||
+                          a.full_name.toLowerCase().includes(alumniSearch.toLowerCase()) ||
+                          (a.current_company || "").toLowerCase().includes(alumniSearch.toLowerCase());
+                        return matchBatch && matchSearch;
+                      })
+                      .map((a) => (
+                        <tr key={a.id} className="hover:bg-slate-50/70 transition-colors">
+                          <td className="py-3.5 px-4">
+                            <div className="font-semibold text-[#0A2540]">{a.full_name}</div>
+                            {a.batch_label && <div className="text-[10px] text-slate-400 mt-0.5">{a.batch_label}</div>}
+                          </td>
+                          <td className="py-3.5 px-4 font-mono text-slate-700">{a.year_graduated}</td>
+                          <td className="py-3.5 px-4">
+                            <div className="font-semibold text-[#0A2540]">{a.current_role || <span className="text-slate-400 italic font-normal">Not set</span>}</div>
+                            <div className="text-[10px] text-slate-500 mt-0.5">{a.current_company}</div>
+                          </td>
+                          <td className="py-3.5 px-4 text-slate-600 max-w-xs">
+                            <span className="line-clamp-2 text-[11px]">{a.leadership_experiences || <span className="text-slate-400 italic">—</span>}</span>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <div className="flex flex-wrap gap-1">
+                              {(a.badges || []).map((b) => (
+                                <span key={b} className="px-1.5 py-0.5 bg-amber-50 border border-amber-200 text-amber-800 rounded text-[10px] font-semibold">{b}</span>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-4 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                onClick={() => openEditAlumni(a)}
+                                className="p-1 text-slate-400 hover:text-[#0A2540] rounded hover:bg-slate-100 transition-colors"
+                                title="Edit Alumni"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </button>
+                              {(userRole === "super_user" || accessConfig.officerPermissions.alumni?.delete) && (
+                                <button
+                                  onClick={() => handleDeleteAlumni(a.id, a.full_name)}
+                                  className="p-1 text-slate-400 hover:text-red-600 rounded hover:bg-red-50 transition-colors"
+                                  title="Delete Alumni"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    {alumniList.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="py-12 text-center text-slate-400 italic text-xs">
+                          No alumni records yet. Click &ldquo;Add Alumni Profile&rdquo; to begin building the directory.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================
             TAB 5: SYSTEM & PORTAL SETTINGS (Super User)
             ======================================================== */}
         {activeTab === "system" && userRole === "super_user" && (
@@ -2466,6 +2590,21 @@ export default function AdminDashboardPage() {
                       <span>{editingOverviewSection === sec.id ? "Editing..." : "Edit Content"}</span>
                     </button>
 
+                    {/* Remove custom sections */}
+                    {!defaultOverviewSections.some((d) => d.id === sec.id) && (
+                      <button
+                        onClick={() => {
+                          if (confirm(`Remove section "${sec.label}"?`)) {
+                            updateOverviewSections(overviewSections.filter((s) => s.id !== sec.id));
+                          }
+                        }}
+                        className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete this custom section"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+
                     {/* Toggle switch */}
                     <label className="flex items-center gap-2 cursor-pointer select-none">
                       <span className={`text-xs font-semibold ${sec.visible ? "text-emerald-700" : "text-slate-400"}`}>
@@ -2494,18 +2633,61 @@ export default function AdminDashboardPage() {
               ))}
             </div>
 
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-              <p>
-                <span className="font-semibold text-amber-700">⚠ Super User Only</span> — Section order and visibility are saved and reflected on the homepage.
-              </p>
-              <button
-                onClick={() => {
-                  updateOverviewSections(defaultOverviewSections);
-                }}
-                className="px-3 py-1.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold transition-colors"
-              >
-                Reset to Default
-              </button>
+            <div className="pt-4 border-t border-slate-100 space-y-4">
+              {/* Add custom section */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
+                <p className="text-xs font-bold text-[#0A2540]">+ Add a New Custom Section</p>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    type="text"
+                    id="new-section-label"
+                    placeholder="Section name (e.g. CMA Passers Slideshow)"
+                    className="flex-1 px-3 py-2 text-xs bg-white border border-blue-200 rounded-lg focus:outline-none focus:border-[#0A2540]"
+                  />
+                  <select
+                    id="new-section-type"
+                    className="px-3 py-2 text-xs bg-white border border-blue-200 rounded-lg focus:outline-none focus:border-[#0A2540]"
+                    defaultValue="custom"
+                  >
+                    <option value="custom">General Section</option>
+                    <option value="slideshow">Photo Slideshow (Image URLs)</option>
+                    <option value="text">Text / Announcement</option>
+                    <option value="cards">Cards Grid</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const labelInput = document.getElementById("new-section-label") as HTMLInputElement;
+                      const typeSelect = document.getElementById("new-section-type") as HTMLSelectElement;
+                      const label = labelInput?.value.trim();
+                      const type = typeSelect?.value || "custom";
+                      if (!label) { alert("Please enter a section name."); return; }
+                      const newId = `custom_${Date.now()}`;
+                      const newSection = { id: newId, label: `${label} (${type})`, visible: true, type };
+                      updateOverviewSections([...overviewSections, newSection as any]);
+                      if (labelInput) labelInput.value = "";
+                    }}
+                    className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold whitespace-nowrap transition-colors"
+                  >
+                    Add Section
+                  </button>
+                </div>
+                <p className="text-[10px] text-blue-600">
+                  <strong>Photo Slideshow</strong>: Add unlimited image links via the &ldquo;Edit Content&rdquo; button after creating the section. Images load from any public URL or Google Drive share link.
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between text-xs text-slate-500">
+                <p>
+                  <span className="font-semibold text-amber-700">⚠ Super User Only</span> — Section order and visibility are saved and reflected on the homepage.
+                </p>
+                <button
+                  onClick={() => updateOverviewSections(defaultOverviewSections)}
+                  className="px-3 py-1.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold transition-colors"
+                >
+                  Reset to Default
+                </button>
+              </div>
             </div>
 
             {/* Detailed Content Editor for Overview Section */}

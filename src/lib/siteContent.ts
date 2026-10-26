@@ -54,6 +54,14 @@ export interface OverviewContent {
     hours_title: string;
     hours_desc: string;
   };
+  // Dynamically added custom sections (slideshow images, text blocks, etc.)
+  custom_sections?: Record<string, {
+    type: string;
+    label: string;
+    title?: string;
+    body?: string;
+    images?: string[];   // For slideshow: array of image URLs
+  }>;
 }
 
 export const DEFAULT_OVERVIEW_CONTENT: OverviewContent = {

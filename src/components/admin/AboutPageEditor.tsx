@@ -49,7 +49,7 @@ interface AboutPageEditorProps {
 export default function AboutPageEditor({ onSavedNotify }: AboutPageEditorProps) {
   const [config, setConfig] = useState<JpamaSectionConfig>(() => getStoredJpamaConfig());
   const [activeSubTab, setActiveSubTab] = useState<
-    "bylaws" | "purposes" | "heritage" | "achievements" | "customTabs"
+    "bylaws" | "purposes" | "heritage" | "achievements" | "customTabs" | "gazette"
   >("bylaws");
   const [isSaved, setIsSaved] = useState(false);
   const [syncNotice, setSyncNotice] = useState<string>("");
@@ -528,6 +528,18 @@ export default function AboutPageEditor({ onSavedNotify }: AboutPageEditorProps)
         >
           <Layers className="w-3.5 h-3.5 text-[#C5A059]" />
           <span>Dynamic Custom Tabs ({config.customTabs?.length || 0})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab("gazette")}
+          className={`px-4 py-2 rounded-xl flex items-center gap-2 whitespace-nowrap transition-all ${
+            activeSubTab === "gazette"
+              ? "bg-[#0A2540] text-white shadow-sm"
+              : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+          }`}
+        >
+          <FileText className="w-3.5 h-3.5 text-[#C5A059]" />
+          <span>Gazette Edition Settings</span>
         </button>
       </div>
 
@@ -1361,6 +1373,66 @@ export default function AboutPageEditor({ onSavedNotify }: AboutPageEditorProps)
           </div>
         </div>
       )}
+
+      {/* ══════════ SUBTAB 6: GAZETTE EDITION SETTINGS ══════════ */}
+      {activeSubTab === "gazette" && (
+        <div className="space-y-6 max-w-2xl mx-auto">
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-5">
+            <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
+              <FileText className="w-5 h-5 text-[#C5A059]" />
+              <div>
+                <h3 className="font-serif font-bold text-base text-[#0A2540]">Gazette Edition Display Mode</h3>
+                <p className="text-xs text-slate-500 mt-0.5">Choose how the &ldquo;Open Full Gazette Edition&rdquo; button presents the Constitution &amp; By-Laws to visitors.</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button type="button" onClick={() => setConfig({ ...config, gazette_use_pdf: false })}
+                className={`p-4 rounded-xl border-2 text-left transition-all ${!config.gazette_use_pdf ? "border-[#0A2540] bg-[#EAF2FA]" : "border-slate-200 bg-white hover:border-slate-300"}`}>
+                <div className="flex items-center gap-2 mb-1">
+                  <BookOpen className={`w-4 h-4 ${!config.gazette_use_pdf ? "text-[#0A2540]" : "text-slate-400"}`} />
+                  <span className={`text-xs font-bold ${!config.gazette_use_pdf ? "text-[#0A2540]" : "text-slate-600"}`}>Built-in Article Reader</span>
+                  {!config.gazette_use_pdf && <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-bold">Active</span>}
+                </div>
+                <p className="text-[11px] text-slate-500">Show the 11-article reader with search, jump-to-article, and print. Edit content from the Constitution tab.</p>
+              </button>
+              <button type="button" onClick={() => setConfig({ ...config, gazette_use_pdf: true })}
+                className={`p-4 rounded-xl border-2 text-left transition-all ${config.gazette_use_pdf ? "border-[#0A2540] bg-[#EAF2FA]" : "border-slate-200 bg-white hover:border-slate-300"}`}>
+                <div className="flex items-center gap-2 mb-1">
+                  <FileText className={`w-4 h-4 ${config.gazette_use_pdf ? "text-[#0A2540]" : "text-slate-400"}`} />
+                  <span className={`text-xs font-bold ${config.gazette_use_pdf ? "text-[#0A2540]" : "text-slate-600"}`}>PDF Link Viewer</span>
+                  {config.gazette_use_pdf && <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-bold">Active</span>}
+                </div>
+                <p className="text-[11px] text-slate-500">Embed a Google Drive or PDF link. Viewers see it read-only — they cannot access the actual Drive folder.</p>
+              </button>
+            </div>
+            {config.gazette_use_pdf && (
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <label className="block text-xs font-bold text-slate-700">Google Drive / PDF Link</label>
+                <p className="text-[11px] text-slate-500">Paste a Google Drive shareable link (e.g. <code className="bg-slate-100 px-1 rounded text-[10px]">drive.google.com/file/d/.../view</code>) or a direct PDF URL. It will be auto-converted to read-only preview embed.</p>
+                <input type="url"
+                  placeholder="https://drive.google.com/file/d/FILE_ID/view?usp=sharing"
+                  value={config.gazette_pdf_url || ""}
+                  onChange={(e) => setConfig({ ...config, gazette_pdf_url: e.target.value })}
+                  className="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#0A2540] font-mono" />
+                {config.gazette_pdf_url && (
+                  <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                    <span><strong>Link set.</strong> The Gazette modal will embed this document as read-only.</span>
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="pt-3 border-t border-slate-100">
+              <button type="button" onClick={handleSave}
+                className="px-5 py-2.5 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all">
+                <Save className="w-3.5 h-3.5" />
+                <span>Save Gazette Settings</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

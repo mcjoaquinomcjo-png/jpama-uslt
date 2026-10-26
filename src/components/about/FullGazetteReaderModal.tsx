@@ -7,22 +7,29 @@ import {
   Printer,
   Search,
   BookOpen,
-  Building,
   ShieldCheck,
-  ChevronDown,
-  ChevronUp,
   Bookmark,
   Share2,
   Check,
-  Award,
+  FileText,
 } from "lucide-react";
 import { ByLawArticle } from "@/config/jpamaSettings";
+
+/** Converts any Google Drive share URL to a /preview embed URL (blocks Drive UI access) */
+function toDrivePreviewUrl(url: string): string {
+  if (!url) return "";
+  const match = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+  if (match) return `https://drive.google.com/file/d/${match[1]}/preview`;
+  return url;
+}
 
 interface FullGazetteReaderModalProps {
   isOpen: boolean;
   onClose: () => void;
   articles: ByLawArticle[];
   initialArticleId?: string;
+  use_pdf?: boolean;
+  pdf_url?: string;
 }
 
 export default function FullGazetteReaderModal({
@@ -30,10 +37,13 @@ export default function FullGazetteReaderModal({
   onClose,
   articles,
   initialArticleId,
+  use_pdf = false,
+  pdf_url = "",
 }: FullGazetteReaderModalProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedArticleId, setSelectedArticleId] = useState<string>(initialArticleId || "all");
   const [copied, setCopied] = useState(false);
+  const embedUrl = use_pdf && pdf_url ? toDrivePreviewUrl(pdf_url) : "";
 
   React.useEffect(() => {
     if (initialArticleId) {
@@ -94,7 +104,7 @@ export default function FullGazetteReaderModal({
                 CONSTITUTION & BY-LAWS GAZETTE EDITION
               </span>
               <span className="hidden md:inline px-2 py-0.5 rounded text-[10px] bg-amber-500/20 text-[#E8C97A] border border-amber-500/30">
-                11 Articles Promulgated
+                {use_pdf && pdf_url ? "PDF Edition" : "11 Articles Promulgated"}
               </span>
             </div>
 
@@ -126,6 +136,23 @@ export default function FullGazetteReaderModal({
             </div>
           </div>
 
+          {/* PDF Viewer Mode */}
+          {use_pdf && embedUrl ? (
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="px-4 py-2 bg-amber-50 border-b border-amber-200 text-xs text-amber-800 font-medium flex items-center gap-2">
+                <FileText className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                This document is displayed in read-only mode. Access to the source file is restricted.
+              </div>
+              <iframe
+                src={embedUrl}
+                className="flex-1 w-full"
+                style={{ minHeight: "70vh", border: "none" }}
+                title="JPAMA Constitution & By-Laws Gazette Edition"
+                sandbox="allow-scripts allow-same-origin"
+              />
+            </div>
+          ) : (
+          <>
           {/* Subheader: Filter & Search Bar */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-6 py-3 bg-white border-b border-slate-200 text-xs flex-shrink-0 print:hidden">
             {/* Table of contents dropdown */}
@@ -280,6 +307,8 @@ export default function FullGazetteReaderModal({
               </p>
             </div>
           </div>
+          </>
+          )}
         </motion.div>
       </div>
     </AnimatePresence>

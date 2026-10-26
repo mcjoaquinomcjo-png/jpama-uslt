@@ -164,7 +164,7 @@ export default function MembershipPage() {
                     <input
                       type="text"
                       required
-                      placeholder="e.g. 2024-00142"
+                      placeholder="Enter your student ID number"
                       value={studentNumber}
                       onChange={(e) => setStudentNumber(e.target.value)}
                       className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs text-slate-800 focus:outline-none focus:border-[#0A2540] focus:bg-white transition-colors"
@@ -296,7 +296,7 @@ export default function MembershipPage() {
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Enter Student ID (e.g. 2023-01042)"
+                    placeholder="Enter your student ID number"
                     value={lookupQuery}
                     onChange={(e) => setLookupQuery(e.target.value)}
                     className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs text-slate-800 focus:outline-none focus:border-[#0A2540] focus:bg-white transition-colors"

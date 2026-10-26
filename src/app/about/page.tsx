@@ -861,6 +861,8 @@ export default function AboutPage() {
         onClose={() => setIsFullGazetteOpen(false)}
         articles={config.bylaws}
         initialArticleId={gazetteFocusArticleId}
+        use_pdf={config.gazette_use_pdf}
+        pdf_url={config.gazette_pdf_url}
       />
 
       {/* 4. Mini Pop-Up Profile Modal for Faculty & Council Leadership */}
