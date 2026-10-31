@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Calendar as CalendarIcon,
@@ -14,16 +14,29 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { INITIAL_EVENTS, PAST_EVENTS } from "@/lib/store";
+import { EventItem } from "@/lib/types";
 
 export default function EventsCalendarPage() {
   const [activeTab, setActiveTab] = useState<"upcoming" | "archives">("upcoming");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [eventsList, setEventsList] = useState<EventItem[]>(INITIAL_EVENTS);
   
   // Interactive Monthly Calendar State (default: October 2026)
   const [currentYear, setCurrentYear] = useState<number>(2026);
   const [currentMonth, setCurrentMonth] = useState<number>(9); // 0-indexed: 9 = October
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/events?_t=${Date.now()}`, { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+          setEventsList(data.data);
+        }
+      })
+      .catch((err) => console.warn("Could not fetch live events:", err));
+  }, []);
 
   const categories = ["All", "Leadership", "Academic", "Webinar", "Competition"];
 
@@ -62,11 +75,11 @@ export default function EventsCalendarPage() {
     const formattedMonth = currentMonth + 1 < 10 ? `0${currentMonth + 1}` : `${currentMonth + 1}`;
     const dateStr = `${currentYear}-${formattedMonth}-${formattedDay}`;
 
-    return INITIAL_EVENTS.filter((e) => e.event_date.startsWith(dateStr));
+    return eventsList.filter((e) => e.event_date.startsWith(dateStr));
   };
 
   // Filtered upcoming events list
-  const filteredUpcoming = INITIAL_EVENTS.filter((ev) => {
+  const filteredUpcoming = eventsList.filter((ev) => {
     const matchesCategory = selectedCategory === "All" || ev.category === selectedCategory;
     const matchesQuery =
       ev.title.toLowerCase().includes(searchQuery.toLowerCase()) ||

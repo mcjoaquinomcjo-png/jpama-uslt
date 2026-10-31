@@ -56,10 +56,21 @@ const ICON_MAP = {
 };
 
 export default function AboutPage() {
-  const [config, setConfig] = useState<JpamaSectionConfig>(DEFAULT_JPAMA_CONFIG);
+  const [config, setConfig] = useState<JpamaSectionConfig>(() => getStoredJpamaConfig());
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [selectedCommittee, setSelectedCommittee] = useState<string>("All");
-  const [officersList, setOfficersList] = useState<any[]>(EXECUTIVE_BOARD);
+  const [officersList, setOfficersList] = useState<any[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("jpama_officers_cache");
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (e) {}
+    }
+    return EXECUTIVE_BOARD;
+  });
   const [bylawSearch, setBylawSearch] = useState<string>("");
 
   // Modals state
@@ -121,28 +132,45 @@ export default function AboutPage() {
     []
   );
 
-  // Load dynamic configuration & officers
+  // Load dynamic configuration & officers in background (zero UI delay)
   useEffect(() => {
-    // 1. Initial cached config
-    const stored = getStoredJpamaConfig();
-    setConfig(stored);
-
-    // 2. Fetch server-persisted config across all sessions and roles
+    // Sync server-persisted config silently
     fetchServerJpamaConfig()
       .then((serverCfg) => {
-        if (serverCfg) setConfig(serverCfg);
+        if (serverCfg) {
+          setConfig((prev) => (JSON.stringify(prev) === JSON.stringify(serverCfg) ? prev : serverCfg));
+        }
       })
       .catch((err) => console.error("Error syncing server config:", err));
 
-    // 3. Load latest officers from API
-    fetch("/api/leadership")
+    // Sync latest officers from API silently
+    fetch(`/api/leadership?_t=${Date.now()}`, { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
-        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
-          setOfficersList(data.data);
+        if (data.success && Array.isArray(data.data)) {
+          setOfficersList((prev) => {
+            if (JSON.stringify(prev) === JSON.stringify(data.data)) return prev;
+            try {
+              localStorage.setItem("jpama_officers_cache", JSON.stringify(data.data));
+            } catch (e) {}
+            return data.data;
+          });
         }
       })
       .catch((err) => console.error("Error loading leadership:", err));
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "jpama_dynamic_section_config") {
+        setConfig(getStoredJpamaConfig());
+      }
+      if (e.key === "jpama_officers_cache" && e.newValue) {
+        try {
+          setOfficersList(JSON.parse(e.newValue));
+        } catch (err) {}
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
 

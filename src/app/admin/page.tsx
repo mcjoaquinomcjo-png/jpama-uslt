@@ -471,11 +471,11 @@ export default function AdminDashboardPage() {
     setLoading(true);
     try {
       const [resMem, resEv, resRes, resOff, resSet, resCont, resAlum, resOverview] = await Promise.all([
-        fetch("/api/members").then((r) => r.json()),
-        fetch("/api/events").then((r) => r.json()),
-        fetch("/api/resources").then((r) => r.json()),
-        fetch("/api/leadership").then((r) => r.json()),
-        fetch("/api/settings").then((r) => r.json()),
+        fetch(`/api/members?_t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).catch(() => ({ success: false })),
+        fetch(`/api/events?_t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).catch(() => ({ success: false })),
+        fetch(`/api/resources?_t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).catch(() => ({ success: false })),
+        fetch(`/api/leadership?_t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).catch(() => ({ success: false })),
+        fetch(`/api/settings?_t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).catch(() => ({ success: false })),
         fetch(`/api/contact?_t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).catch(() => ({ success: false })),
         fetch(`/api/alumni?_t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).catch(() => ({ success: false })),
         fetch(`/api/settings/overview?_t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).catch(() => ({ success: false })),
@@ -901,9 +901,13 @@ export default function AdminDashboardPage() {
         });
         const data = await res.json();
         if (res.ok && data.success) {
-          setOfficers((prev) =>
-            prev.map((o) => (o.id === editingOfficer.id ? { ...o, ...data.data } : o))
-          );
+          setOfficers((prev) => {
+            const updated = prev.map((o) => (o.id === editingOfficer.id ? { ...o, ...data.data } : o));
+            try {
+              localStorage.setItem("jpama_officers_cache", JSON.stringify(updated));
+            } catch (e) {}
+            return updated;
+          });
         }
       } catch (err) {
         console.error(err);
@@ -917,7 +921,13 @@ export default function AdminDashboardPage() {
         });
         const data = await res.json();
         if (res.ok && data.success) {
-          setOfficers((prev) => [data.data, ...prev]);
+          setOfficers((prev) => {
+            const updated = [data.data, ...prev];
+            try {
+              localStorage.setItem("jpama_officers_cache", JSON.stringify(updated));
+            } catch (e) {}
+            return updated;
+          });
         }
       } catch (err) {
         console.error(err);
@@ -930,11 +940,17 @@ export default function AdminDashboardPage() {
     if (!confirm(`Are you sure you want to remove ${name} from leadership directory?`)) return;
 
     try {
-      const res = await fetch(`/api/leadership?id=${encodeURIComponent(id)}`, {
+      const res = await fetch(`/api/leadership?id=${encodeURIComponent(id)}&_t=${Date.now()}`, {
         method: "DELETE",
       });
       if (res.ok) {
-        setOfficers((prev) => prev.filter((o) => o.id !== id));
+        setOfficers((prev) => {
+          const updated = prev.filter((o) => o.id !== id);
+          try {
+            localStorage.setItem("jpama_officers_cache", JSON.stringify(updated));
+          } catch (e) {}
+          return updated;
+        });
       }
     } catch (err) {
       console.error(err);

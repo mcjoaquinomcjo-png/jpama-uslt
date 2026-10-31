@@ -34,15 +34,35 @@ export default function HomePage() {
   const [isSearching, setIsSearching] = useState(false);
 
   // Dynamic section order and content loaded from Super User Admin settings
-  const [sectionsOrder, setSectionsOrder] = useState<string[]>([
-    "hero",
-    "pillars",
-    "events",
-    "resources",
-    "contact",
-  ]);
+  const [sectionsOrder, setSectionsOrder] = useState<string[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const savedSections = localStorage.getItem("jpama_overview_sections");
+        if (savedSections) {
+          const parsed = JSON.parse(savedSections);
+          if (Array.isArray(parsed)) {
+            return parsed.filter((s: any) => s.visible !== false).map((s: any) => s.id);
+          }
+        }
+      } catch (e) {}
+    }
+    return ["hero", "pillars", "events", "resources", "contact"];
+  });
 
-  const [content, setContent] = useState<OverviewContent>(DEFAULT_OVERVIEW_CONTENT);
+  const [content, setContent] = useState<OverviewContent>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const savedContent = localStorage.getItem("jpama_overview_content");
+        if (savedContent) {
+          const parsed = JSON.parse(savedContent);
+          if (parsed && typeof parsed === "object") {
+            return { ...DEFAULT_OVERVIEW_CONTENT, ...parsed };
+          }
+        }
+      } catch (e) {}
+    }
+    return DEFAULT_OVERVIEW_CONTENT;
+  });
 
   useEffect(() => {
     const applySections = (sections: Array<{ id: string; visible?: boolean }>) => {

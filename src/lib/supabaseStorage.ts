@@ -1,5 +1,5 @@
 import { getSupabaseServer, isSupabaseConfigured } from "./supabase";
-import { AlumniMember } from "./types";
+import { AlumniMember, OfficerItem } from "./types";
 import { ContactInquiry } from "@/app/api/contact/route";
 
 /**
@@ -243,3 +243,79 @@ export async function saveSupabaseInquiries(list: ContactInquiry[]): Promise<boo
     return false;
   }
 }
+
+export async function getSupabaseOfficers(): Promise<OfficerItem[] | null> {
+  const client = getSupabaseServer();
+  if (!isSupabaseConfigured || !client) return null;
+
+  try {
+    // 1. Check dedicated table if it exists
+    const { data: dedicated, error: dError } = await client
+      .from("officers")
+      .select("*")
+      .order("name");
+    if (!dError && dedicated && dedicated.length > 0) {
+      return dedicated as OfficerItem[];
+    }
+
+    // 2. Query system partition in resources
+    const { data, error } = await client
+      .from("resources")
+      .select("download_url")
+      .eq("category", "__SYS_OFFICERS__")
+      .eq("title", "COUNCIL_OFFICERS")
+      .limit(1);
+
+    if (!error && data && data.length > 0 && data[0].download_url) {
+      return JSON.parse(data[0].download_url) as OfficerItem[];
+    }
+  } catch (err) {
+    console.warn("[SupabaseStorage] Read officers error:", err);
+  }
+  return null;
+}
+
+export async function saveSupabaseOfficers(list: OfficerItem[]): Promise<boolean> {
+  const client = getSupabaseServer();
+  if (!isSupabaseConfigured || !client) return false;
+
+  try {
+    const rawJson = JSON.stringify(list);
+
+    const { data: existing } = await client
+      .from("resources")
+      .select("id")
+      .eq("category", "__SYS_OFFICERS__")
+      .eq("title", "COUNCIL_OFFICERS")
+      .limit(1);
+
+    if (existing && existing.length > 0) {
+      const { error } = await client
+        .from("resources")
+        .update({
+          download_url: rawJson,
+          size: `${Math.round(rawJson.length / 1024)} KB`,
+        })
+        .eq("id", existing[0].id);
+      return !error;
+    } else {
+      const { error } = await client.from("resources").insert([
+        {
+          title: "COUNCIL_OFFICERS",
+          subject: "council_officers",
+          category: "__SYS_OFFICERS__",
+          year_level: "LEADERSHIP",
+          format: "JSON",
+          size: `${Math.round(rawJson.length / 1024)} KB`,
+          download_url: rawJson,
+          downloads_count: 0,
+        },
+      ]);
+      return !error;
+    }
+  } catch (err) {
+    console.error("[SupabaseStorage] Save officers error:", err);
+    return false;
+  }
+}
+

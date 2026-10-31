@@ -574,41 +574,58 @@ export const DEFAULT_JPAMA_CONFIG: JpamaSectionConfig = {
 
 // Storage helper functions for CMS configuration
 const CONFIG_KEY = "jpama_dynamic_section_config";
+let _memoryConfigCache: JpamaSectionConfig | null = null;
 
 export function getStoredJpamaConfig(): JpamaSectionConfig {
+  if (_memoryConfigCache) {
+    return _memoryConfigCache;
+  }
   if (typeof window === "undefined") {
     return DEFAULT_JPAMA_CONFIG;
   }
   try {
     const raw = localStorage.getItem(CONFIG_KEY);
-    if (!raw) return DEFAULT_JPAMA_CONFIG;
+    if (!raw) {
+      _memoryConfigCache = DEFAULT_JPAMA_CONFIG;
+      return DEFAULT_JPAMA_CONFIG;
+    }
     const parsed = JSON.parse(raw);
-    return {
-      chapterOverview: {
-        purposes: Array.isArray(parsed?.chapterOverview?.purposes)
-          ? parsed.chapterOverview.purposes
-          : DEFAULT_JPAMA_CONFIG.chapterOverview.purposes,
-        heritage: Array.isArray(parsed?.chapterOverview?.heritage)
-          ? parsed.chapterOverview.heritage
-          : DEFAULT_JPAMA_CONFIG.chapterOverview.heritage,
-        achievements: Array.isArray(parsed?.chapterOverview?.achievements)
-          ? parsed.chapterOverview.achievements
-          : DEFAULT_JPAMA_CONFIG.chapterOverview.achievements,
-      },
-      bylaws: Array.isArray(parsed?.bylaws) && parsed.bylaws.length > 0
-        ? parsed.bylaws
-        : DEFAULT_JPAMA_CONFIG.bylaws,
-      customTabs: Array.isArray(parsed?.customTabs)
-        ? parsed.customTabs
-        : DEFAULT_JPAMA_CONFIG.customTabs,
-    };
+    if (parsed && typeof parsed === "object") {
+      const merged: JpamaSectionConfig = {
+        ...DEFAULT_JPAMA_CONFIG,
+        ...parsed,
+        chapterOverview: {
+          ...DEFAULT_JPAMA_CONFIG.chapterOverview,
+          ...(parsed.chapterOverview || {}),
+          purposes: Array.isArray(parsed?.chapterOverview?.purposes)
+            ? parsed.chapterOverview.purposes
+            : DEFAULT_JPAMA_CONFIG.chapterOverview.purposes,
+          heritage: Array.isArray(parsed?.chapterOverview?.heritage)
+            ? parsed.chapterOverview.heritage
+            : DEFAULT_JPAMA_CONFIG.chapterOverview.heritage,
+          achievements: Array.isArray(parsed?.chapterOverview?.achievements)
+            ? parsed.chapterOverview.achievements
+            : DEFAULT_JPAMA_CONFIG.chapterOverview.achievements,
+        },
+        bylaws: Array.isArray(parsed?.bylaws)
+          ? parsed.bylaws
+          : DEFAULT_JPAMA_CONFIG.bylaws,
+        customTabs: Array.isArray(parsed?.customTabs)
+          ? parsed.customTabs
+          : DEFAULT_JPAMA_CONFIG.customTabs,
+      };
+      _memoryConfigCache = merged;
+      return merged;
+    }
   } catch (e) {
     console.error("Failed to parse JPAMA config from localStorage:", e);
-    return DEFAULT_JPAMA_CONFIG;
   }
+  _memoryConfigCache = DEFAULT_JPAMA_CONFIG;
+  return DEFAULT_JPAMA_CONFIG;
 }
 
 export function saveStoredJpamaConfig(config: JpamaSectionConfig): void {
+  _memoryConfigCache = config;
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
