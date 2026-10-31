@@ -160,9 +160,37 @@ export default function HomePage() {
 
   const pillarIcons = [Compass, Award, Users];
 
+  // Guarantee that populated custom sections (slideshows with photos) are showcased
+  const renderedSections = React.useMemo(() => {
+    const list = [...sectionsOrder];
+    if (content.custom_sections) {
+      Object.entries(content.custom_sections).forEach(([customId, sec]) => {
+        const hasContent = (sec.images && sec.images.length > 0) || (sec.title && sec.title.trim().length > 0);
+        if (!hasContent) return;
+
+        if (list.includes(customId)) return;
+
+        const placeholderIdx = list.findIndex(
+          (id) => id.startsWith("custom_") && !(content.custom_sections?.[id]?.images?.length)
+        );
+        if (placeholderIdx !== -1) {
+          list[placeholderIdx] = customId;
+        } else {
+          const contactIdx = list.indexOf("contact");
+          if (contactIdx !== -1) {
+            list.splice(contactIdx, 0, customId);
+          } else {
+            list.push(customId);
+          }
+        }
+      });
+    }
+    return list;
+  }, [sectionsOrder, content.custom_sections]);
+
   return (
     <div className="flex flex-col bg-[#F8FAFC] text-slate-800 font-sans min-h-screen">
-      {sectionsOrder.map((sectionId) => {
+      {renderedSections.map((sectionId) => {
         // 1. HERO SECTION — Rich navy/blue gradient with student verification card
         if (sectionId === "hero") {
           return (
@@ -617,7 +645,14 @@ export default function HomePage() {
         }
 
         // 7. CUSTOM DYNAMIC SECTIONS (Slideshows, Passers, Galleries, Announcements)
-        const customSec = content.custom_sections?.[sectionId];
+        const customSec =
+          content.custom_sections?.[sectionId] ||
+          (sectionId.startsWith("custom_")
+            ? Object.values(content.custom_sections || {}).find(
+                (s) => s.images && s.images.length > 0
+              )
+            : undefined);
+
         if (customSec || sectionId.startsWith("custom_")) {
           const fallbackData = customSec || {
             type: "slideshow",

@@ -504,7 +504,34 @@ export default function AdminDashboardPage() {
       if (resContactCfg?.success && resContactCfg.data) setContactContent(resContactCfg.data);
       if (resAlum?.success && Array.isArray(resAlum.data)) setAlumniList(resAlum.data);
       if (resOverview?.success && resOverview.data) {
-        if (Array.isArray(resOverview.data.sections)) setOverviewSections(resOverview.data.sections);
+        let secList: any[] = Array.isArray(resOverview.data.sections) ? [...resOverview.data.sections] : [];
+        const ovContent = resOverview.data.content || {};
+
+        if (ovContent.custom_sections) {
+          Object.entries(ovContent.custom_sections).forEach(([cId, cSec]: [string, any]) => {
+            if ((cSec.images && cSec.images.length > 0) || cSec.title) {
+              const cleanTitle = (cSec.title || "").trim().toLowerCase();
+              const existingIndex = secList.findIndex(
+                (s: any) => s.id === cId || (cleanTitle && s.label?.toLowerCase().includes(cleanTitle))
+              );
+              if (existingIndex !== -1) {
+                secList[existingIndex] = {
+                  ...secList[existingIndex],
+                  id: cId,
+                  label: cSec.title ? `${cSec.title} (${cSec.type || "slideshow"})` : secList[existingIndex].label,
+                };
+              } else {
+                secList.push({
+                  id: cId,
+                  label: cSec.title ? `${cSec.title} (${cSec.type || "slideshow"})` : `${cId} (custom)`,
+                  visible: true,
+                  type: cSec.type || "slideshow",
+                });
+              }
+            }
+          });
+        }
+        setOverviewSections(secList);
         if (resOverview.data.content) setOverviewContent(resOverview.data.content);
       }
       if (resCont.success && Array.isArray(resCont.data)) {
@@ -2705,25 +2732,34 @@ export default function AdminDashboardPage() {
                       const label = labelInput?.value.trim();
                       const type = typeSelect?.value || "custom";
                       if (!label) { alert("Please enter a section name."); return; }
-                      const newId = `custom_${Date.now()}`;
+                      // Reuse existing custom section ID if one with this title already exists
+                      const existingEntry = Object.entries(overviewContent.custom_sections || {}).find(
+                        ([, sec]) => sec.title?.trim().toLowerCase() === label.toLowerCase() || sec.label?.toLowerCase().includes(label.toLowerCase())
+                      );
+                      const targetId = existingEntry ? existingEntry[0] : `custom_${Date.now()}`;
                       const sectionLabel = `${label} (${type})`;
-                      const newSection = { id: newId, label: sectionLabel, visible: true, type };
+                      const existingSecInList = overviewSections.find((s) => s.id === targetId);
+                      const newSection = existingSecInList ? { ...existingSecInList, visible: true } : { id: targetId, label: sectionLabel, visible: true, type };
+                      const updatedSections = existingSecInList
+                        ? overviewSections.map((s) => (s.id === targetId ? newSection : s))
+                        : [...overviewSections, newSection as any];
+
                       const updatedContent = {
                         ...overviewContent,
                         custom_sections: {
                           ...(overviewContent.custom_sections || {}),
-                          [newId]: {
+                          [targetId]: {
+                            ...(overviewContent.custom_sections?.[targetId] || { images: [] }),
                             type,
                             label: sectionLabel,
                             title: label,
-                            body: "",
-                            images: [],
+                            body: overviewContent.custom_sections?.[targetId]?.body || "",
                           },
                         },
                       };
                       setOverviewContent(updatedContent);
-                      updateOverviewSections([...overviewSections, newSection as any], updatedContent);
-                      setEditingOverviewSection(newId);
+                      updateOverviewSections(updatedSections, updatedContent);
+                      setEditingOverviewSection(targetId);
                       if (labelInput) labelInput.value = "";
                     }}
                     className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold whitespace-nowrap transition-colors"

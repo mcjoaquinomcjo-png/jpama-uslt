@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   Save,
@@ -128,6 +128,34 @@ export default function OverviewContentEditor({
     });
   };
 
+  // Consolidate custom sections to prevent duplicate tabs
+  const customTabs: Array<{ id: string; label: string }> = [];
+  const registeredIds = new Set<string>();
+
+  // 1. First register sections with actual content/images from content.custom_sections
+  Object.entries(content.custom_sections || {}).forEach(([id, sec]) => {
+    registeredIds.add(id);
+    const displayLabel = sec.title?.trim() || (!sec.label?.startsWith("custom_") ? sec.label : "") || "Custom Section";
+    customTabs.push({
+      id,
+      label: displayLabel,
+    });
+  });
+
+  // 2. Then add from sections only if not already represented by ID or title
+  (sections || []).filter((s) => s.id.startsWith("custom_")).forEach((s) => {
+    if (registeredIds.has(s.id)) return;
+    const cleanLabel = s.label.replace(/\s*\([^)]*\)\s*$/, "").trim().toLowerCase();
+    const duplicate = customTabs.find((t) => t.label.trim().toLowerCase() === cleanLabel);
+    if (!duplicate) {
+      registeredIds.add(s.id);
+      customTabs.push({
+        id: s.id,
+        label: s.label || s.id,
+      });
+    }
+  });
+
   const tabs = [
     { id: "hero", label: "Hero Banner & Stats" },
     { id: "pillars", label: "BSMA Pillars" },
@@ -135,18 +163,16 @@ export default function OverviewContentEditor({
     { id: "resources", label: "Resources Banner" },
     { id: "leadership", label: "Leadership Spotlight" },
     { id: "contact", label: "Contact & Office" },
-    // Custom sections from both overviewSections and content.custom_sections
-    ...((sections || []).filter((s) => s.id.startsWith("custom_")).map((s) => ({
-      id: s.id,
-      label: s.label || s.id,
-    }))),
-    ...Object.entries(content.custom_sections || {})
-      .filter(([id]) => !(sections || []).some((s) => s.id === id))
-      .map(([id, sec]) => ({
-        id,
-        label: sec.label || id,
-      })),
+    ...customTabs,
   ];
+
+  // Auto-resolve selectedTab if activeSectionId pointed to an empty duplicate
+  useEffect(() => {
+    if (activeSectionId && !tabs.some((t) => t.id === selectedTab)) {
+      const match = customTabs.find((t) => (content.custom_sections?.[t.id]?.images || []).length > 0) || customTabs[0];
+      if (match) setSelectedTab(match.id);
+    }
+  }, [activeSectionId, tabs, customTabs, selectedTab, content.custom_sections]);
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-md overflow-hidden animate-fadeIn">
@@ -800,7 +826,7 @@ export default function OverviewContentEditor({
             <div className="space-y-4">
               <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-700 flex items-center justify-between">
                 <div>
-                  <strong>{secData.label}</strong> — Type: <code className="bg-blue-100 px-1 rounded">{secData.type}</code>
+                  <strong>{secData.title || (!secData.label?.startsWith("custom_") ? secData.label : "Custom Section")}</strong> — Type: <code className="bg-blue-100 px-1 rounded">{secData.type}</code>
                 </div>
                 <span className="text-[11px] font-mono text-slate-500">#{selectedTab}</span>
               </div>
@@ -836,14 +862,25 @@ export default function OverviewContentEditor({
                         <span>Slideshow Photos ({(secData.images || []).length})</span>
                       </label>
                       <p className="text-[11px] text-slate-500 mt-0.5">
-                        Add unlimited photos. Upload directly from your device or paste Google Drive image share links.
+                        Paste public Google Drive links to showcase your slideshow. (Optional: direct device file upload is also supported).
                       </p>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <label className="px-3 py-1.5 bg-[#C5A059] hover:bg-[#E8C97A] text-[#0A2540] rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
-                        <Upload className="w-3.5 h-3.5" />
-                        <span>Upload File (.jpg/.png)</span>
+                      <button
+                        type="button"
+                        onClick={() => updateCustomSec({ images: [...(secData.images || []), ""] })}
+                        className="px-3.5 py-1.5 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm"
+                      >
+                        <span>+ Add Image URL (Google Drive)</span>
+                      </button>
+
+                      <label
+                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
+                        title="Optional: You can also upload an image directly from your computer/device"
+                      >
+                        <Upload className="w-3.5 h-3.5 text-slate-500" />
+                        <span>(Optional) Upload Device File</span>
                         <input
                           type="file"
                           accept="image/*"
@@ -851,14 +888,6 @@ export default function OverviewContentEditor({
                           className="hidden"
                         />
                       </label>
-
-                      <button
-                        type="button"
-                        onClick={() => updateCustomSec({ images: [...(secData.images || []), ""] })}
-                        className="px-3 py-1.5 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold transition-colors"
-                      >
-                        + Add Image URL
-                      </button>
                     </div>
                   </div>
 

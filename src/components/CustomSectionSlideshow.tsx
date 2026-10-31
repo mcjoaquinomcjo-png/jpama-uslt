@@ -92,7 +92,11 @@ export default function CustomSectionSlideshow({ sectionId, data }: CustomSectio
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-[#C5A059] border border-[#C5A059]/40 text-xs font-bold uppercase tracking-wider">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>{data.label || "Chapter Spotlight"}</span>
+              <span>
+                {data.label && !data.label.startsWith("custom_")
+                  ? data.label
+                  : (data.title ? "Chapter Distinction" : "Chapter Spotlight")}
+              </span>
             </div>
 
             {data.title && (
