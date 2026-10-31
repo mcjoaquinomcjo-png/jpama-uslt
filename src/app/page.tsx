@@ -45,37 +45,20 @@ export default function HomePage() {
   const [content, setContent] = useState<OverviewContent>(DEFAULT_OVERVIEW_CONTENT);
 
   useEffect(() => {
-    // 1. Fetch live overview configuration from server
-    fetch(`/api/settings/overview?_t=${Date.now()}`, { cache: "no-store" })
-      .then((res) => res.json())
-      .then((json) => {
-        if (json.success && json.data) {
-          if (Array.isArray(json.data.sections)) {
-            const visibleIds = json.data.sections.filter((s: any) => s.visible).map((s: any) => s.id);
-            if (visibleIds.length > 0) {
-              setSectionsOrder(visibleIds);
-            }
-          }
-          if (json.data.content) {
-            setContent((prev) => ({ ...prev, ...json.data.content }));
-          }
-        }
-      })
-      .catch(() => {});
+    const applySections = (sections: Array<{ id: string; visible?: boolean }>) => {
+      if (Array.isArray(sections)) {
+        const visibleIds = sections.filter((s) => s.visible !== false).map((s) => s.id);
+        setSectionsOrder(visibleIds);
+      }
+    };
 
-    // 2. Check local storage fallback
+    // 1. Initial cached local storage (fast first paint)
     try {
       const savedSections = localStorage.getItem("jpama_overview_sections");
       if (savedSections) {
         const parsed = JSON.parse(savedSections);
-        if (Array.isArray(parsed)) {
-          const visibleIds = parsed.filter((s: any) => s.visible).map((s: any) => s.id);
-          if (visibleIds.length > 0) {
-            setSectionsOrder(visibleIds);
-          }
-        }
+        applySections(parsed);
       }
-
       const savedContent = localStorage.getItem("jpama_overview_content");
       if (savedContent) {
         const parsed = JSON.parse(savedContent);
@@ -83,9 +66,52 @@ export default function HomePage() {
           setContent((prev) => ({ ...prev, ...parsed }));
         }
       }
-    } catch (e) {
-      // ignore
-    }
+    } catch (e) {}
+
+    // 2. Fetch authoritative live overview configuration from Supabase server
+    const fetchLiveConfig = () => {
+      fetch(`/api/settings/overview?_t=${Date.now()}`, { cache: "no-store" })
+        .then((res) => res.json())
+        .then((json) => {
+          if (json.success && json.data) {
+            if (Array.isArray(json.data.sections)) {
+              applySections(json.data.sections);
+            }
+            if (json.data.content) {
+              setContent((prev) => ({ ...prev, ...json.data.content }));
+            }
+          }
+        })
+        .catch(() => {});
+    };
+
+    fetchLiveConfig();
+
+    // 3. Listen for live updates from admin portal (cross-tab or same-session)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "jpama_overview_sections" && e.newValue) {
+        try {
+          applySections(JSON.parse(e.newValue));
+        } catch (err) {}
+      }
+      if (e.key === "jpama_overview_content" && e.newValue) {
+        try {
+          setContent((prev) => ({ ...prev, ...JSON.parse(e.newValue!) }));
+        } catch (err) {}
+      }
+    };
+
+    const handleCustomUpdate = () => {
+      fetchLiveConfig();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("jpama_overview_updated", handleCustomUpdate);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("jpama_overview_updated", handleCustomUpdate);
+    };
   }, []);
 
   const handleQuickLookup = async (e: React.FormEvent) => {

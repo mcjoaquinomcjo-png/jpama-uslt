@@ -46,10 +46,28 @@ function writeConfig(config: JpamaSectionConfig): boolean {
   }
 }
 
+import { getSupabaseConfig, saveSupabaseConfig } from "@/lib/supabaseStorage";
+
 export async function GET() {
+  // 1. Try Supabase real-time storage first
+  const supabaseConfig = await getSupabaseConfig<JpamaSectionConfig>("SYS_ABOUT_CONFIG");
+  if (supabaseConfig && typeof supabaseConfig === "object" && supabaseConfig.chapterOverview) {
+    return NextResponse.json(
+      { success: true, data: supabaseConfig, source: "supabase" },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      }
+    );
+  }
+
+  // 2. Fall back to local file storage
   const config = readConfig();
   return NextResponse.json(
-    { success: true, data: config },
+    { success: true, data: config, source: "local" },
     {
       headers: {
         "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
@@ -67,21 +85,21 @@ export async function PUT(req: Request) {
       return NextResponse.json({ success: false, error: "Invalid configuration payload" }, { status: 400 });
     }
 
-    const success = writeConfig(body);
-    if (!success) {
-      return NextResponse.json({ success: false, error: "Failed to persist configuration file" }, { status: 500 });
-    }
+    // 1. Persist to Supabase
+    const supabaseSaved = await saveSupabaseConfig("SYS_ABOUT_CONFIG", body);
+
+    // 2. Also write to local file for dev backup
+    writeConfig(body);
 
     recordDbLog({
       action: "UPDATE_ABOUT_CONFIG",
       target: "JPAMA About & Bylaws CMS Config",
-      storage: "LocalStore",
+      storage: supabaseSaved ? "Supabase" : "LocalStore",
       status: "SUCCESS",
-      details: "Configuration successfully updated across all roles and sessions.",
+      details: "Configuration successfully updated across all roles and sessions via Supabase.",
     });
 
-
-    return NextResponse.json({ success: true, data: body });
+    return NextResponse.json({ success: true, data: body, syncedToSupabase: supabaseSaved });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message || "Internal server error" }, { status: 500 });
   }

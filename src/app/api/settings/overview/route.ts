@@ -67,10 +67,28 @@ function writeOverviewConfig(data: OverviewSavedPayload): boolean {
   }
 }
 
+import { getSupabaseConfig, saveSupabaseConfig } from "@/lib/supabaseStorage";
+
 export async function GET() {
+  // 1. Try Supabase real-time storage first
+  const supabaseConfig = await getSupabaseConfig<OverviewSavedPayload>("SYS_OVERVIEW_CONFIG");
+  if (supabaseConfig && Array.isArray(supabaseConfig.sections)) {
+    return NextResponse.json(
+      { success: true, data: supabaseConfig, source: "supabase" },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      }
+    );
+  }
+
+  // 2. Fall back to local file storage
   const config = readOverviewConfig();
   return NextResponse.json(
-    { success: true, data: config },
+    { success: true, data: config, source: "local" },
     {
       headers: {
         "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
@@ -88,26 +106,29 @@ export async function PUT(req: Request) {
       return NextResponse.json({ success: false, error: "Invalid payload" }, { status: 400 });
     }
 
-    const current = readOverviewConfig();
+    const currentSupabase = await getSupabaseConfig<OverviewSavedPayload>("SYS_OVERVIEW_CONFIG");
+    const current = currentSupabase || readOverviewConfig();
+
     const updated: OverviewSavedPayload = {
       sections: Array.isArray(body.sections) ? body.sections : current.sections,
       content: body.content ? { ...current.content, ...body.content } : current.content,
     };
 
-    const saved = writeOverviewConfig(updated);
-    if (!saved) {
-      return NextResponse.json({ success: false, error: "Failed to persist overview config" }, { status: 500 });
-    }
+    // 1. Persist to Supabase universal storage
+    const supabaseSaved = await saveSupabaseConfig("SYS_OVERVIEW_CONFIG", updated);
+
+    // 2. Also write to local file for dev backup
+    writeOverviewConfig(updated);
 
     recordDbLog({
       action: "UPDATE_OVERVIEW_CONFIG",
       target: "Homepage Sections & Content",
-      storage: "LocalStore",
+      storage: supabaseSaved ? "Supabase" : "LocalStore",
       status: "SUCCESS",
-      details: "Homepage section order, visibility, and copy updated live.",
+      details: "Homepage section order, visibility, and copy updated live across all devices.",
     });
 
-    return NextResponse.json({ success: true, data: updated });
+    return NextResponse.json({ success: true, data: updated, syncedToSupabase: supabaseSaved });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }

@@ -10,6 +10,7 @@ export async function GET() {
       const { data, error } = await client
         .from("resources")
         .select("*")
+        .not("category", "like", "__SYS_%")
         .order("created_at", { ascending: false });
 
       if (error) throw error;

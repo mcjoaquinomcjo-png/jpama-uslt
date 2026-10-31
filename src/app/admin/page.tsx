@@ -35,9 +35,10 @@ import {
   ChevronDown,
   User,
   Sparkles,
+  Copy,
 } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge";
-import { Member, EventItem, ResourceItem, OfficerItem, PortalSettings, YearLevel, MemberStatus, AlumniMember } from "@/lib/types";
+import { Member, EventItem, ResourceItem, OfficerItem, PortalSettings, YearLevel, MemberStatus, AlumniMember, ContactInquiry } from "@/lib/types";
 import OverviewContentEditor from "@/components/admin/OverviewContentEditor";
 import AboutPageEditor from "@/components/admin/AboutPageEditor";
 import FacultyAdvisersModal from "@/components/admin/FacultyAdvisersModal";
@@ -104,6 +105,10 @@ export default function AdminDashboardPage() {
   const [alumBadges, setAlumBadges] = useState<string[]>(["Dean's Lister"]);
   const [alumLinkedin, setAlumLinkedin] = useState("");
   const [alumPhoto, setAlumPhoto] = useState("");
+  const [customBadgeInput, setCustomBadgeInput] = useState("");
+  const [selectedInquiryModal, setSelectedInquiryModal] = useState<ContactInquiry | null>(null);
+  const [copiedEmailNotice, setCopiedEmailNotice] = useState(false);
+  const [copiedDraftNotice, setCopiedDraftNotice] = useState(false);
 
   // Overview section order/visibility (super user only)
   const defaultOverviewSections = [
@@ -191,6 +196,9 @@ export default function AdminDashboardPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sections: newSections, content: overviewContent }),
       });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("jpama_overview_updated"));
+      }
     } catch (e) {}
   };
 
@@ -204,6 +212,9 @@ export default function AdminDashboardPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sections: overviewSections, content: overviewContent }),
       });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("jpama_overview_updated"));
+      }
       setOverviewContentSaved(true);
       setTimeout(() => setOverviewContentSaved(false), 3000);
     } catch (e) {}
@@ -2898,14 +2909,31 @@ export default function AdminDashboardPage() {
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
               <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-[#C5A059]" />
-                    <h3 className="font-serif font-bold text-lg text-[#0A2540]">
-                      Secretariat Inquiries Inbox ({contactInquiries.length})
-                    </h3>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (contactInquiries.length > 0) {
+                        const firstUnread = contactInquiries.find((i) => i.status === "Unread") || contactInquiries[0];
+                        setSelectedInquiryModal(firstUnread);
+                      }
+                    }}
+                    className="text-left group cursor-pointer"
+                    title="Click to open inquiries dedicated dispatch window"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-[#C5A059]" />
+                      <h3 className="font-serif font-bold text-lg text-[#0A2540] group-hover:text-blue-700 transition-colors flex items-center gap-2">
+                        <span>Secretariat Inquiries Inbox ({contactInquiries.length})</span>
+                        {contactInquiries.filter((i) => i.status === "Unread").length > 0 && (
+                          <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white font-bold text-[10px] animate-pulse">
+                            {contactInquiries.filter((i) => i.status === "Unread").length} New
+                          </span>
+                        )}
+                      </h3>
+                    </div>
+                  </button>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Messages submitted by students and visitors via the public Contact page form.
+                    Click any student message to open the dedicated dispatch window to react and reply via Gmail, Outlook, or Yahoo Mail.
                   </p>
                 </div>
 
@@ -2921,7 +2949,6 @@ export default function AdminDashboardPage() {
                   </button>
                 )}
               </div>
-
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
@@ -2943,7 +2970,11 @@ export default function AdminDashboardPage() {
                       </tr>
                     ) : (
                       contactInquiries.map((inq) => (
-                        <tr key={inq.id} className="hover:bg-slate-50/80 transition-colors">
+                        <tr
+                          key={inq.id}
+                          onClick={() => setSelectedInquiryModal(inq)}
+                          className="hover:bg-blue-50/70 transition-colors cursor-pointer group"
+                        >
                           <td className="py-3 px-4 text-slate-500 font-mono text-[11px] whitespace-nowrap">
                             {new Date(inq.created_at).toLocaleDateString("en-US", {
                               month: "short",
@@ -2953,18 +2984,18 @@ export default function AdminDashboardPage() {
                             })}
                           </td>
                           <td className="py-3 px-4">
-                            <strong className="block text-slate-800">{inq.name}</strong>
-                            <a href={`mailto:${inq.email}`} className="text-[#0A2540] hover:underline font-mono text-[11px]">
+                            <strong className="block text-slate-800 group-hover:text-blue-900 transition-colors">{inq.name}</strong>
+                            <span className="text-[#0A2540] font-mono text-[11px]">
                               {inq.email}
-                            </a>
+                            </span>
                           </td>
                           <td className="py-3 px-4 max-w-md">
                             <span className="font-semibold text-[#0A2540] block">{inq.subject}</span>
-                            <p className="text-slate-600 text-xs mt-0.5 whitespace-pre-line leading-relaxed">
+                            <p className="text-slate-600 text-xs mt-0.5 line-clamp-2 leading-relaxed">
                               {inq.message}
                             </p>
                           </td>
-                          <td className="py-3 px-4 text-center whitespace-nowrap">
+                          <td className="py-3 px-4 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                             <span
                               className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                                 inq.status === "Unread"
@@ -2977,10 +3008,20 @@ export default function AdminDashboardPage() {
                               {inq.status}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-right whitespace-nowrap">
+                          <td className="py-3 px-4 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedInquiryModal(inq)}
+                                className="px-2.5 py-1 rounded-lg bg-[#0A2540] hover:bg-[#14487A] text-white text-[11px] font-semibold transition-colors flex items-center gap-1 shadow-xs"
+                                title="Open Dedicated Window to Reply"
+                              >
+                                <ExternalLink className="w-3 h-3 text-[#C5A059]" />
+                                <span>View & Reply</span>
+                              </button>
                               {inq.status !== "Resolved" ? (
                                 <button
+                                  type="button"
                                   onClick={() => handleUpdateInquiryStatus(inq.id, "Resolved")}
                                   className="px-2 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold transition-colors"
                                   title="Mark as Resolved"
@@ -2989,6 +3030,7 @@ export default function AdminDashboardPage() {
                                 </button>
                               ) : (
                                 <button
+                                  type="button"
                                   onClick={() => handleUpdateInquiryStatus(inq.id, "Unread")}
                                   className="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-semibold transition-colors"
                                   title="Mark as Unread"
@@ -2996,28 +3038,8 @@ export default function AdminDashboardPage() {
                                   Reopen
                                 </button>
                               )}
-                              <a
-                                href={`mailto:${inq.email}?subject=RE: ${encodeURIComponent(inq.subject)}&body=${encodeURIComponent(
-                                  `Dear ${inq.name},\n\nThank you for reaching out to the JPAMA Executive Secretariat regarding "${inq.subject}".\n\n[Type your response here]\n\nBest regards,\nExecutive Secretariat\nJunior Philippine Association of Management Accountants (JPAMA)\nSchool of Accountancy, Business, and Hospitality • University of Saint Louis Tuguegarao`
-                                )}`}
-                                className="px-2 py-1 rounded bg-[#0A2540] hover:bg-[#14487A] text-white text-[11px] font-semibold transition-colors inline-flex items-center gap-1 shadow-xs"
-                                title="Reply via Default Email Client (Outlook / Mail)"
-                              >
-                                <Mail className="w-3 h-3" />
-                                <span>Reply</span>
-                              </a>
-                              <a
-                                href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(inq.email)}&su=${encodeURIComponent(`RE: ${inq.subject}`)}&body=${encodeURIComponent(
-                                  `Dear ${inq.name},\n\nThank you for reaching out to the JPAMA Executive Secretariat regarding "${inq.subject}".\n\n[Type your response here]\n\nBest regards,\nExecutive Secretariat\nJunior Philippine Association of Management Accountants (JPAMA)\nSchool of Accountancy, Business, and Hospitality • University of Saint Louis Tuguegarao`
-                                )}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="px-2 py-1 rounded bg-red-600 hover:bg-red-700 text-white text-[11px] font-semibold transition-colors inline-block shadow-xs"
-                                title="Reply directly via Gmail Web"
-                              >
-                                Gmail
-                              </a>
                               <button
+                                type="button"
                                 onClick={() => handleDeleteInquiry(inq.id)}
                                 className="p-1 text-slate-400 hover:text-red-500 rounded hover:bg-red-50 transition-colors"
                                 title="Permanently Delete Inquiry"
@@ -3025,7 +3047,6 @@ export default function AdminDashboardPage() {
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             </div>
-
                           </td>
                         </tr>
                       ))
@@ -3680,6 +3701,556 @@ export default function AdminDashboardPage() {
         faculty={aboutContent.faculty_advisers || []}
         onSave={handleSaveFacultyModal}
       />
+
+      {/* ========================================================
+          MODAL: ADD / EDIT ALUMNI PROFILE
+          ======================================================== */}
+      {showAlumniModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-2xl w-full my-8 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="bg-[#0A2540] px-6 py-4 flex items-center justify-between text-white border-b border-[#14487A]">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-[#C5A059]">
+                  <GraduationCap className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-serif font-bold text-base text-white">
+                    {editingAlumni ? "Edit Alumni Profile" : "Register New Alumni Profile"}
+                  </h3>
+                  <p className="text-[11px] text-slate-300">
+                    BSMA Graduate Record • JPAMA USLT Directory
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAlumniModal(false)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleSaveAlumni} className="p-6 space-y-4 max-h-[calc(85vh-120px)] overflow-y-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Full Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Maria Clara Santos, CMA"
+                    value={alumFullName}
+                    onChange={(e) => setAlumFullName(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Year Graduated <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. 2024"
+                    value={alumYearGrad}
+                    onChange={(e) => setAlumYearGrad(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Batch Label (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Batch 2024 – Sihaya"
+                    value={alumBatchLabel}
+                    onChange={(e) => setAlumBatchLabel(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Current Role / Position
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Management Accounting Associate"
+                    value={alumRole}
+                    onChange={(e) => setAlumRole(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Current Company / Employer
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. SGV & Co. / EY Philippines"
+                    value={alumCompany}
+                    onChange={(e) => setAlumCompany(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Work Description / Career Journey
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="Brief description of professional focus, industry, or accounting practice..."
+                    value={alumWorkDesc}
+                    onChange={(e) => setAlumWorkDesc(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    JPAMA Leadership & Campus Experiences
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="e.g. VP for Finance (A.Y. 2023-2024), Academic Committee Head, Sihaya Convocation Organizer"
+                    value={alumLeadership}
+                    onChange={(e) => setAlumLeadership(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white"
+                  />
+                </div>
+
+                {/* Badges / Honors */}
+                <div className="sm:col-span-2 space-y-2">
+                  <label className="block text-xs font-semibold text-slate-700">
+                    Honors, Certifications & Badges
+                  </label>
+                  
+                  {/* Preset quick pills */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      "CMA Passer",
+                      "CMA Scholar",
+                      "CPA",
+                      "Dean's Lister",
+                      "President A.Y. 2023–2024",
+                      "Cum Laude",
+                      "Magna Cum Laude",
+                      "Executive Board",
+                    ].map((badge) => {
+                      const isSelected = alumBadges.includes(badge);
+                      return (
+                        <button
+                          key={badge}
+                          type="button"
+                          onClick={() => {
+                            if (isSelected) {
+                              setAlumBadges(alumBadges.filter((b) => b !== badge));
+                            } else {
+                              setAlumBadges([...alumBadges, badge]);
+                            }
+                          }}
+                          className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all ${
+                            isSelected
+                              ? "bg-[#0A2540] text-white border border-[#0A2540] shadow-xs"
+                              : "bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200"
+                          }`}
+                        >
+                          {isSelected ? `✓ ${badge}` : `+ ${badge}`}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Custom badge adder */}
+                  <div className="flex items-center gap-2 pt-1">
+                    <input
+                      type="text"
+                      placeholder="Add custom honor/badge (e.g. Top 10 Mock Board)..."
+                      value={customBadgeInput}
+                      onChange={(e) => setCustomBadgeInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          const val = customBadgeInput.trim();
+                          if (val && !alumBadges.includes(val)) {
+                            setAlumBadges([...alumBadges, val]);
+                            setCustomBadgeInput("");
+                          }
+                        }
+                      }}
+                      className="flex-1 px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const val = customBadgeInput.trim();
+                        if (val && !alumBadges.includes(val)) {
+                          setAlumBadges([...alumBadges, val]);
+                          setCustomBadgeInput("");
+                        }
+                      }}
+                      className="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg transition-colors"
+                    >
+                      Add
+                    </button>
+                  </div>
+
+                  {/* Active badges list */}
+                  {alumBadges.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {alumBadges.map((badge) => (
+                        <span
+                          key={badge}
+                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-amber-50 border border-amber-300 text-amber-900 text-xs font-semibold"
+                        >
+                          <span>{badge}</span>
+                          <button
+                            type="button"
+                            onClick={() => setAlumBadges(alumBadges.filter((b) => b !== badge))}
+                            className="text-amber-700 hover:text-amber-900 ml-0.5"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Photo URL (Optional)
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://..."
+                    value={alumPhoto}
+                    onChange={(e) => setAlumPhoto(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    LinkedIn Profile URL (Optional)
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://linkedin.com/in/..."
+                    value={alumLinkedin}
+                    onChange={(e) => setAlumLinkedin(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white"
+                  />
+                </div>
+              </div>
+
+              {/* Modal Actions */}
+              <div className="pt-4 flex items-center justify-end gap-2.5 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowAlumniModal(false)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors shadow-sm"
+                >
+                  {editingAlumni ? "Update Profile" : "Register Alumni"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          MODAL: DEDICATED SECRETARIAT INQUIRY DISPATCH WINDOW
+          ======================================================== */}
+      {selectedInquiryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-2xl w-full my-8 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            {/* Header */}
+            <div className="bg-[#0A2540] px-6 py-4 flex items-center justify-between text-white border-b border-[#14487A]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-[#C5A059]">
+                  <Mail className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-serif font-bold text-base text-white">
+                      Secretariat Inquiry Dispatch
+                    </h3>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        selectedInquiryModal.status === "Unread"
+                          ? "bg-blue-500 text-white"
+                          : selectedInquiryModal.status === "Resolved"
+                          ? "bg-emerald-500 text-white"
+                          : "bg-slate-400 text-white"
+                      }`}
+                    >
+                      {selectedInquiryModal.status}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-300">
+                    Official Student Helpdesk Communication Channel
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedInquiryModal(null)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Content Body */}
+            <div className="p-6 space-y-5 max-h-[calc(85vh-120px)] overflow-y-auto text-xs">
+              {/* Student Sender Card */}
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Sender Information
+                  </div>
+                  <div className="font-bold text-sm text-[#0A2540] mt-0.5">
+                    {selectedInquiryModal.name}
+                  </div>
+                  <div className="text-slate-600 font-mono text-xs mt-0.5">
+                    {selectedInquiryModal.email}
+                  </div>
+                  <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>
+                      Received:{" "}
+                      {new Date(selectedInquiryModal.created_at).toLocaleString("en-US", {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex sm:flex-col items-start gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(selectedInquiryModal.email);
+                      setCopiedEmailNotice(true);
+                      setTimeout(() => setCopiedEmailNotice(false), 2500);
+                    }}
+                    className="px-3 py-1.5 rounded-lg border border-slate-300 hover:border-slate-400 bg-white text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
+                  >
+                    {copiedEmailNotice ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="text-emerald-700">Email Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5 text-slate-500" />
+                        <span>Copy Email</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Inquiry Subject & Verbatim Message */}
+              <div className="space-y-2">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Subject Line
+                </div>
+                <div className="p-3 bg-white border border-slate-200 rounded-lg font-serif font-bold text-sm text-[#0A2540]">
+                  {selectedInquiryModal.subject}
+                </div>
+
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 pt-1">
+                  Message Content
+                </div>
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl font-sans text-xs text-slate-800 leading-relaxed whitespace-pre-wrap select-text">
+                  {selectedInquiryModal.message}
+                </div>
+              </div>
+
+              {/* Mail Platforms Dispatch Hub */}
+              <div className="p-4 rounded-xl bg-gradient-to-br from-[#0A2540]/5 via-blue-50/50 to-transparent border border-blue-200/60 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-bold text-xs text-[#0A2540] flex items-center gap-1.5">
+                      <ExternalLink className="w-3.5 h-3.5 text-[#C5A059]" />
+                      <span>Reply Directly Through Mail Platforms</span>
+                    </h4>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Launches your selected webmail or client with student recipient & institutional subject ready
+                    </p>
+                  </div>
+                </div>
+
+                {/* 3 Mail Service Buttons */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+                  {/* 1. Gmail */}
+                  <a
+                    href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+                      selectedInquiryModal.email
+                    )}&su=${encodeURIComponent(
+                      `Re: ${selectedInquiryModal.subject} [JPAMA USLT Secretariat]`
+                    )}&body=${encodeURIComponent(
+                      `Dear ${selectedInquiryModal.name},\n\nPeace and all good!\n\nThank you for reaching out to the JPAMA USLT Chapter Secretariat.\n\nIn reference to your message regarding "${selectedInquiryModal.subject}":\n\n\n\nIf you have additional questions, do not hesitate to contact our Secretariat desk.\n\nWarm regards,\n\nExecutive Secretariat\nJunior Philippine Association of Management Accountants (JPAMA)\nSchool of Accountancy, Business, and Hospitality\nUniversity of Saint Louis Tuguegarao`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => {
+                      if (selectedInquiryModal.status === "Unread") {
+                        handleUpdateInquiryStatus(selectedInquiryModal.id, "Read");
+                        setSelectedInquiryModal({ ...selectedInquiryModal, status: "Read" });
+                      }
+                    }}
+                    className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-white hover:bg-red-50 text-red-600 border border-red-200 font-semibold text-xs shadow-xs transition-colors"
+                  >
+                    <Mail className="w-3.5 h-3.5 text-red-500" />
+                    <span>Open in Gmail</span>
+                  </a>
+
+                  {/* 2. Default Mail / Outlook */}
+                  <a
+                    href={`mailto:${encodeURIComponent(
+                      selectedInquiryModal.email
+                    )}?subject=${encodeURIComponent(
+                      `Re: ${selectedInquiryModal.subject} [JPAMA USLT Secretariat]`
+                    )}&body=${encodeURIComponent(
+                      `Dear ${selectedInquiryModal.name},\n\nPeace and all good!\n\nThank you for reaching out to the JPAMA USLT Chapter Secretariat.\n\nIn reference to your message regarding "${selectedInquiryModal.subject}":\n\n\n\nWarm regards,\nExecutive Secretariat\nJPAMA USLT Chapter`
+                    )}`}
+                    onClick={() => {
+                      if (selectedInquiryModal.status === "Unread") {
+                        handleUpdateInquiryStatus(selectedInquiryModal.id, "Read");
+                        setSelectedInquiryModal({ ...selectedInquiryModal, status: "Read" });
+                      }
+                    }}
+                    className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-white hover:bg-blue-50 text-blue-700 border border-blue-200 font-semibold text-xs shadow-xs transition-colors"
+                  >
+                    <Mail className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Outlook / Mail Client</span>
+                  </a>
+
+                  {/* 3. Yahoo Mail */}
+                  <a
+                    href={`https://compose.mail.yahoo.com/?to=${encodeURIComponent(
+                      selectedInquiryModal.email
+                    )}&subject=${encodeURIComponent(
+                      `Re: ${selectedInquiryModal.subject} [JPAMA USLT Secretariat]`
+                    )}&body=${encodeURIComponent(
+                      `Dear ${selectedInquiryModal.name},\n\nPeace and all good!\n\nThank you for contacting JPAMA USLT.\n\nRegarding "${selectedInquiryModal.subject}":\n\n\n\nWarm regards,\nJPAMA USLT Secretariat`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => {
+                      if (selectedInquiryModal.status === "Unread") {
+                        handleUpdateInquiryStatus(selectedInquiryModal.id, "Read");
+                        setSelectedInquiryModal({ ...selectedInquiryModal, status: "Read" });
+                      }
+                    }}
+                    className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-white hover:bg-purple-50 text-purple-700 border border-purple-200 font-semibold text-xs shadow-xs transition-colors"
+                  >
+                    <Mail className="w-3.5 h-3.5 text-purple-600" />
+                    <span>Yahoo Mail</span>
+                  </a>
+                </div>
+
+                {/* Copy Draft Button */}
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const draft = `Dear ${selectedInquiryModal.name},\n\nPeace and all good!\n\nThank you for reaching out to the JPAMA USLT Chapter Secretariat.\n\nIn reference to your message regarding "${selectedInquiryModal.subject}":\n\n\n\nIf you have additional questions, do not hesitate to contact our Secretariat desk.\n\nWarm regards,\n\nExecutive Secretariat\nJunior Philippine Association of Management Accountants (JPAMA)\nSchool of Accountancy, Business, and Hospitality\nUniversity of Saint Louis Tuguegarao`;
+                      navigator.clipboard.writeText(draft);
+                      setCopiedDraftNotice(true);
+                      setTimeout(() => setCopiedDraftNotice(false), 2500);
+                    }}
+                    className="w-full py-2 px-3 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-xs"
+                  >
+                    {copiedDraftNotice ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="text-emerald-700">Official Reply Draft Copied to Clipboard!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5 text-[#C5A059]" />
+                        <span>Copy Institutional Reply Draft Template</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Status Actions & Danger Zone */}
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Status:</span>
+                  {selectedInquiryModal.status !== "Resolved" ? (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await handleUpdateInquiryStatus(selectedInquiryModal.id, "Resolved");
+                        setSelectedInquiryModal({ ...selectedInquiryModal, status: "Resolved" });
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors flex items-center gap-1"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Mark as Resolved</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await handleUpdateInquiryStatus(selectedInquiryModal.id, "Unread");
+                        setSelectedInquiryModal({ ...selectedInquiryModal, status: "Unread" });
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold transition-colors"
+                    >
+                      <span>Reopen as Unread</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const id = selectedInquiryModal.id;
+                      await handleDeleteInquiry(id);
+                      setSelectedInquiryModal(null);
+                    }}
+                    className="px-3 py-1.5 rounded-lg text-red-600 hover:bg-red-50 border border-red-200 text-xs font-semibold transition-colors flex items-center gap-1"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete</span>
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedInquiryModal(null)}
+                  className="w-full sm:w-auto px-4 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors"
+                >
+                  Close Window
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

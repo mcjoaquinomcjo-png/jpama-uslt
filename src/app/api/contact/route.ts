@@ -79,8 +79,19 @@ function writeData(inquiries: ContactInquiry[], deletedIds: string[]) {
   }
 }
 
-export async function GET() {
+import { getSupabaseInquiries, saveSupabaseInquiries } from "@/lib/supabaseStorage";
+
+async function getLiveInquiries(): Promise<ContactInquiry[]> {
+  const supabaseList = await getSupabaseInquiries();
+  if (supabaseList && Array.isArray(supabaseList)) {
+    return supabaseList;
+  }
   const { inquiries } = readData();
+  return inquiries;
+}
+
+export async function GET() {
+  const inquiries = await getLiveInquiries();
   return NextResponse.json(
     { success: true, data: inquiries },
     {
@@ -105,7 +116,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const { inquiries, deletedIds } = readData();
+    const inquiries = await getLiveInquiries();
+    const { deletedIds } = readData();
 
     const newInquiry: ContactInquiry = {
       id: "inq-" + Math.random().toString(36).substring(2, 9),
@@ -118,12 +130,13 @@ export async function POST(request: Request) {
     };
 
     inquiries.unshift(newInquiry);
+    const supabaseSaved = await saveSupabaseInquiries(inquiries);
     writeData(inquiries, deletedIds);
 
     recordDbLog({
       action: "NEW_CONTACT_INQUIRY",
       target: `Inquiry from ${newInquiry.name}`,
-      storage: "LocalStore",
+      storage: supabaseSaved ? "Supabase" : "LocalStore",
       status: "SUCCESS",
     });
 
@@ -137,7 +150,8 @@ export async function PUT(request: Request) {
   try {
     const body = await request.json();
     const { id, status } = body;
-    const { inquiries, deletedIds } = readData();
+    const inquiries = await getLiveInquiries();
+    const { deletedIds } = readData();
 
     const item = inquiries.find((i) => i.id === id);
     if (!item) {
@@ -145,12 +159,13 @@ export async function PUT(request: Request) {
     }
     if (status) item.status = status;
 
+    const supabaseSaved = await saveSupabaseInquiries(inquiries);
     writeData(inquiries, deletedIds);
 
     recordDbLog({
       action: "UPDATE_INQUIRY_STATUS",
       target: `Inquiry ${id}`,
-      storage: "LocalStore",
+      storage: supabaseSaved ? "Supabase" : "LocalStore",
       status: "SUCCESS",
     });
 
@@ -168,17 +183,19 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, error: "Missing inquiry ID" }, { status: 400 });
     }
 
-    const { inquiries, deletedIds } = readData();
+    let inquiries = await getLiveInquiries();
+    const { deletedIds } = readData();
 
     if (id === "all") {
       const allIds = inquiries.map((i) => i.id);
       const updatedDeleted = Array.from(new Set([...deletedIds, ...allIds, "inq-01", "inq-02"]));
+      const supabaseSaved = await saveSupabaseInquiries([]);
       writeData([], updatedDeleted);
 
       recordDbLog({
         action: "DELETE_ALL_INQUIRIES",
         target: "All inquiries inbox",
-        storage: "LocalStore",
+        storage: supabaseSaved ? "Supabase" : "LocalStore",
         status: "SUCCESS",
         details: "Cleared all received inquiries.",
       });
@@ -187,22 +204,18 @@ export async function DELETE(request: Request) {
     }
 
     // Single item delete
-    const index = inquiries.findIndex((i) => i.id === id);
-
+    inquiries = inquiries.filter((i) => i.id !== id);
     if (!deletedIds.includes(id)) {
       deletedIds.push(id);
     }
 
-    if (index !== -1) {
-      inquiries.splice(index, 1);
-    }
-
+    const supabaseSaved = await saveSupabaseInquiries(inquiries);
     writeData(inquiries, deletedIds);
 
     recordDbLog({
       action: "DELETE_INQUIRY",
       target: `Inquiry ${id}`,
-      storage: "LocalStore",
+      storage: supabaseSaved ? "Supabase" : "LocalStore",
       status: "SUCCESS",
       details: "Inquiry permanently deleted.",
     });

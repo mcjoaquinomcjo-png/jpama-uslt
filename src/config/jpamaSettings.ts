@@ -75,8 +75,12 @@ export interface JpamaSectionConfig {
     purposes: PurposeItem[];
     heritage: HeritageItem[];
     achievements: AchievementItem[];
+    purposes_enabled?: boolean;
+    heritage_enabled?: boolean;
+    achievements_enabled?: boolean;
   };
   bylaws: ByLawArticle[];
+  bylaws_enabled?: boolean;
   customTabs: CustomTabConfig[];
   // Gazette Edition display mode
   gazette_use_pdf?: boolean;         // true = show PDF viewer, false = show article reader

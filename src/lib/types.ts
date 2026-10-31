@@ -122,3 +122,14 @@ export interface Achievement {
   photo_url?: string;
   badge_color?: string;           // tailwind color token e.g. "amber"
 }
+
+export interface ContactInquiry {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  status: "Unread" | "Read" | "Resolved";
+  created_at: string;
+}
+

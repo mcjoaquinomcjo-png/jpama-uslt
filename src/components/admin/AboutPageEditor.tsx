@@ -547,12 +547,54 @@ export default function AboutPageEditor({ onSavedNotify }: AboutPageEditorProps)
           SUBTAB 1: CONSTITUTION & BY-LAWS (11 Articles Editor)
          ══════════════════════════════════════════════════════════════ */}
       {activeSubTab === "bylaws" && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Article Selector List */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-4 space-y-2 max-h-[750px] overflow-y-auto">
-            <div className="px-2 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-              Select Article to Edit
+        <div className="space-y-5">
+          {/* Active / Inactive Tab Status Bar */}
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-[#0A2540]">Constitution & By-Laws Tab Status:</span>
+                <span
+                  className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
+                    config.bylaws_enabled !== false && (config.bylaws.length > 0 || (config.gazette_use_pdf && config.gazette_pdf_url))
+                      ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                      : "bg-amber-100 text-amber-800 border border-amber-200"
+                  }`}
+                >
+                  {config.bylaws_enabled !== false && (config.bylaws.length > 0 || (config.gazette_use_pdf && config.gazette_pdf_url))
+                    ? "Active (Visible on About Page)"
+                    : "Inactive / Auto-Hidden from Public"}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1">
+                If inactive or if all articles are deleted (and no PDF is linked), this tab will automatically be hidden so visitors never see a blank section.
+              </p>
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                const nextState = config.bylaws_enabled === false ? true : false;
+                const updated = { ...config, bylaws_enabled: nextState };
+                setConfig(updated);
+                saveStoredJpamaConfig(updated);
+                saveServerJpamaConfig(updated);
+                showFeedback(nextState ? "Constitution tab set to Active" : "Constitution tab set to Inactive (Hidden)");
+              }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs ${
+                config.bylaws_enabled !== false
+                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  : "bg-slate-200 hover:bg-slate-300 text-slate-700"
+              }`}
+            >
+              {config.bylaws_enabled !== false ? "Active (Click to Inactivate)" : "Inactive (Click to Activate)"}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Article Selector List */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-4 space-y-2 max-h-[750px] overflow-y-auto">
+              <div className="px-2 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                Select Article to Edit
+              </div>
             {config.bylaws.map((art, idx) => (
               <button
                 key={art.id}
@@ -682,22 +724,71 @@ export default function AboutPageEditor({ onSavedNotify }: AboutPageEditorProps)
             </div>
           </div>
         </div>
+        </div>
       )}
 
       {/* ══════════════════════════════════════════════════════════════
           SUBTAB 2: ARTICLE III CORE PURPOSES
          ══════════════════════════════════════════════════════════════ */}
       {activeSubTab === "purposes" && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 space-y-6">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div className="space-y-5">
+          {/* Active / Inactive Purposes Status Bar */}
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h3 className="font-serif font-bold text-xl text-[#0A2540]">
-                Article III Core Purposes & Mandate Cards
-              </h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Rendered as the prominent 2-column core mandate block in the Chapter Overview tab.
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-[#0A2540]">Article III Core Purposes Section Status:</span>
+                <span
+                  className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
+                    config.chapterOverview?.purposes_enabled !== false && (config.chapterOverview?.purposes?.length || 0) > 0
+                      ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                      : "bg-amber-100 text-amber-800 border border-amber-200"
+                  }`}
+                >
+                  {config.chapterOverview?.purposes_enabled !== false && (config.chapterOverview?.purposes?.length || 0) > 0
+                    ? "Active (Visible on Overview)"
+                    : "Inactive / Auto-Hidden if Empty"}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1">
+                If marked Inactive or if all purposes are removed, this section will automatically be hidden from public view instead of showing an empty box.
               </p>
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                const cur = config.chapterOverview?.purposes_enabled !== false;
+                const updated = {
+                  ...config,
+                  chapterOverview: {
+                    ...config.chapterOverview,
+                    purposes_enabled: !cur,
+                  },
+                };
+                setConfig(updated);
+                saveStoredJpamaConfig(updated);
+                saveServerJpamaConfig(updated);
+                showFeedback(!cur ? "Purposes section set to Active" : "Purposes section set to Inactive (Hidden)");
+              }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs ${
+                config.chapterOverview?.purposes_enabled !== false
+                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  : "bg-slate-200 hover:bg-slate-300 text-slate-700"
+              }`}
+            >
+              {config.chapterOverview?.purposes_enabled !== false ? "Active (Click to Inactivate)" : "Inactive (Click to Activate)"}
+            </button>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div>
+                <h3 className="font-serif font-bold text-xl text-[#0A2540]">
+                  Article III Core Purposes & Mandate Cards
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Rendered as the prominent 2-column core mandate block in the Chapter Overview tab.
+                </p>
+              </div>
             <button
               type="button"
               onClick={addPurpose}
@@ -763,15 +854,64 @@ export default function AboutPageEditor({ onSavedNotify }: AboutPageEditorProps)
             ))}
           </div>
         </div>
+        </div>
       )}
 
       {/* ══════════════════════════════════════════════════════════════
           SUBTAB 3: HERITAGE & NEWSLETTERS
          ══════════════════════════════════════════════════════════════ */}
       {activeSubTab === "heritage" && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Milestones list */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-4 space-y-3">
+        <div className="space-y-5">
+          {/* Active / Inactive Heritage Status Bar */}
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-[#0A2540]">Chapter Heritage & Timeline Section Status:</span>
+                <span
+                  className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
+                    config.chapterOverview?.heritage_enabled !== false && (config.chapterOverview?.heritage?.length || 0) > 0
+                      ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                      : "bg-amber-100 text-amber-800 border border-amber-200"
+                  }`}
+                >
+                  {config.chapterOverview?.heritage_enabled !== false && (config.chapterOverview?.heritage?.length || 0) > 0
+                    ? "Active (Visible on Overview)"
+                    : "Inactive / Auto-Hidden if Empty"}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1">
+                If marked Inactive or if all milestone entries are deleted, this section will automatically be hidden from the public About page.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const cur = config.chapterOverview?.heritage_enabled !== false;
+                const updated = {
+                  ...config,
+                  chapterOverview: {
+                    ...config.chapterOverview,
+                    heritage_enabled: !cur,
+                  },
+                };
+                setConfig(updated);
+                saveStoredJpamaConfig(updated);
+                saveServerJpamaConfig(updated);
+                showFeedback(!cur ? "Heritage section set to Active" : "Heritage section set to Inactive (Hidden)");
+              }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs ${
+                config.chapterOverview?.heritage_enabled !== false
+                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  : "bg-slate-200 hover:bg-slate-300 text-slate-700"
+              }`}
+            >
+              {config.chapterOverview?.heritage_enabled !== false ? "Active (Click to Inactivate)" : "Inactive (Click to Activate)"}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Milestones list */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-4 space-y-3">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <span className="text-xs font-bold text-slate-700 uppercase">
                 Milestones Timeline
@@ -1058,22 +1198,71 @@ export default function AboutPageEditor({ onSavedNotify }: AboutPageEditorProps)
             </div>
           </div>
         </div>
+        </div>
       )}
 
       {/* ══════════════════════════════════════════════════════════════
           SUBTAB 4: DISTINCTIONS & HONORS
          ══════════════════════════════════════════════════════════════ */}
       {activeSubTab === "achievements" && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 space-y-6">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div className="space-y-5">
+          {/* Active / Inactive Achievements Status Bar */}
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h3 className="font-serif font-bold text-xl text-[#0A2540]">
-                Institutional Distinctions & Honors
-              </h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Awards, regional championships, and collegiate citations displayed on the About page.
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-[#0A2540]">Distinctions & Honors Section Status:</span>
+                <span
+                  className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
+                    config.chapterOverview?.achievements_enabled !== false && (config.chapterOverview?.achievements?.length || 0) > 0
+                      ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                      : "bg-amber-100 text-amber-800 border border-amber-200"
+                  }`}
+                >
+                  {config.chapterOverview?.achievements_enabled !== false && (config.chapterOverview?.achievements?.length || 0) > 0
+                    ? "Active (Visible on Overview)"
+                    : "Inactive / Auto-Hidden if Empty"}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1">
+                If marked Inactive or if all award cards are deleted, this section will automatically be hidden from public view instead of showing an empty box.
               </p>
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                const cur = config.chapterOverview?.achievements_enabled !== false;
+                const updated = {
+                  ...config,
+                  chapterOverview: {
+                    ...config.chapterOverview,
+                    achievements_enabled: !cur,
+                  },
+                };
+                setConfig(updated);
+                saveStoredJpamaConfig(updated);
+                saveServerJpamaConfig(updated);
+                showFeedback(!cur ? "Achievements section set to Active" : "Achievements section set to Inactive (Hidden)");
+              }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs ${
+                config.chapterOverview?.achievements_enabled !== false
+                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  : "bg-slate-200 hover:bg-slate-300 text-slate-700"
+              }`}
+            >
+              {config.chapterOverview?.achievements_enabled !== false ? "Active (Click to Inactivate)" : "Inactive (Click to Activate)"}
+            </button>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div>
+                <h3 className="font-serif font-bold text-xl text-[#0A2540]">
+                  Institutional Distinctions & Honors
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Awards, regional championships, and collegiate citations displayed on the About page.
+                </p>
+              </div>
             <button
               type="button"
               onClick={addAchievement}
@@ -1147,6 +1336,7 @@ export default function AboutPageEditor({ onSavedNotify }: AboutPageEditorProps)
               </div>
             ))}
           </div>
+        </div>
         </div>
       )}
 

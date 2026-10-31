@@ -216,15 +216,27 @@ export default function AboutPage() {
 
   // Dynamic Navigation Tabs array
   const dynamicTabs = useMemo(() => {
-    const base = [
+    const base: { id: string; label: string; icon: any; badge?: string }[] = [
       { id: "overview", label: "Chapter Overview & History", icon: Building },
       { id: "leadership", label: "Executive Council & Faculty", icon: Users },
-      { id: "constitution", label: "Constitution & By-Laws", icon: Scale, badge: "11 Articles" },
     ];
+
+    const hasBylaws = Array.isArray(config.bylaws) && config.bylaws.length > 0;
+    const hasPdf = Boolean(config.gazette_use_pdf && config.gazette_pdf_url);
+    const bylawsVisible = config.bylaws_enabled !== false && (hasBylaws || hasPdf);
+
+    if (bylawsVisible) {
+      base.push({
+        id: "constitution",
+        label: "Constitution & By-Laws",
+        icon: Scale,
+        badge: hasPdf ? "PDF Edition" : `${config.bylaws.length} Articles`,
+      });
+    }
 
     if (config.customTabs && Array.isArray(config.customTabs)) {
       config.customTabs
-        .filter((t) => t.enabled)
+        .filter((t) => t.enabled && Array.isArray(t.contentBoxes) && t.contentBoxes.length > 0)
         .forEach((t) => {
           base.push({
             id: t.id,
@@ -236,7 +248,14 @@ export default function AboutPage() {
     }
 
     return base;
-  }, [config.customTabs]);
+  }, [config.customTabs, config.bylaws, config.bylaws_enabled, config.gazette_use_pdf, config.gazette_pdf_url]);
+
+  // Keep activeTab pointing to an existing tab
+  useEffect(() => {
+    if (dynamicTabs.length > 0 && !dynamicTabs.some((t) => t.id === activeTab)) {
+      setActiveTab(dynamicTabs[0].id);
+    }
+  }, [dynamicTabs, activeTab]);
 
   return (
     <div className="flex flex-col bg-[#F8FAFC] text-slate-800 font-sans min-h-screen">
@@ -339,159 +358,165 @@ export default function AboutPage() {
               </section>
 
               {/* 1. Dynamic Mission & Core Purposes Block (Article III Mandate - Clean Compact One-Liners) */}
-              <section className="space-y-5">
-                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-slate-200 pb-4">
-                  <div>
-                    <div className="flex items-center gap-2 text-xs font-bold text-[#9E7D38] tracking-wider uppercase">
-                      <Scale className="w-3.5 h-3.5" />
-                      <span>Article III Constitutional Mandate</span>
-                    </div>
-                    <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#0A2540] tracking-tight mt-1">
-                      JPAMA Core Purposes & Mandate
-                    </h2>
-                  </div>
-                </div>
-
-                {/* Compact One-Liner Interactive Rows */}
-                <div className="space-y-3">
-                  {config.chapterOverview.purposes.map((purpose) => {
-                    const IconComponent = ICON_MAP[purpose.icon as keyof typeof ICON_MAP] || Sparkles;
-                    return (
-                      <div
-                        key={purpose.id}
-                        onClick={() => setSelectedPurposeModal(purpose)}
-                        className="group cursor-pointer bg-white px-5 py-4 rounded-xl border border-slate-200/90 hover:border-[#C5A059] hover:shadow-md transition-all duration-200 flex items-center justify-between gap-4"
-                      >
-                        <div className="flex items-center gap-3.5 min-w-0">
-                          <div className="w-9 h-9 rounded-lg bg-[#EAF2FA] group-hover:bg-[#0A2540] flex items-center justify-center flex-shrink-0 transition-colors">
-                            <IconComponent className="w-4 h-4 text-[#0A2540] group-hover:text-[#C5A059] transition-colors" />
-                          </div>
-                          <div className="flex items-center gap-2.5 min-w-0 flex-wrap sm:flex-nowrap">
-                            <span className="text-[10px] font-bold text-[#9E7D38] tracking-wider uppercase px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200/60 flex-shrink-0">
-                              {purpose.articleClause}
-                            </span>
-                            <h3 className="font-serif text-sm sm:text-base font-bold text-[#0A2540] group-hover:text-[#14487A] transition-colors truncate">
-                              {purpose.title}
-                            </h3>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-1.5 text-xs font-semibold text-[#0A2540] group-hover:text-[#C5A059] transition-colors flex-shrink-0">
-                          <span className="hidden sm:inline text-[11px]">View Clause</span>
-                          <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                        </div>
+              {config.chapterOverview?.purposes_enabled !== false && Array.isArray(config.chapterOverview?.purposes) && config.chapterOverview.purposes.length > 0 && (
+                <section className="space-y-5">
+                  <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-slate-200 pb-4">
+                    <div>
+                      <div className="flex items-center gap-2 text-xs font-bold text-[#9E7D38] tracking-wider uppercase">
+                        <Scale className="w-3.5 h-3.5" />
+                        <span>Article III Constitutional Mandate</span>
                       </div>
-                    );
-                  })}
-                </div>
-              </section>
+                      <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#0A2540] tracking-tight mt-1">
+                        JPAMA Core Purposes & Mandate
+                      </h2>
+                    </div>
+                  </div>
+
+                  {/* Compact One-Liner Interactive Rows */}
+                  <div className="space-y-3">
+                    {config.chapterOverview.purposes.map((purpose) => {
+                      const IconComponent = ICON_MAP[purpose.icon as keyof typeof ICON_MAP] || Sparkles;
+                      return (
+                        <div
+                          key={purpose.id}
+                          onClick={() => setSelectedPurposeModal(purpose)}
+                          className="group cursor-pointer bg-white px-5 py-4 rounded-xl border border-slate-200/90 hover:border-[#C5A059] hover:shadow-md transition-all duration-200 flex items-center justify-between gap-4"
+                        >
+                          <div className="flex items-center gap-3.5 min-w-0">
+                            <div className="w-9 h-9 rounded-lg bg-[#EAF2FA] group-hover:bg-[#0A2540] flex items-center justify-center flex-shrink-0 transition-colors">
+                              <IconComponent className="w-4 h-4 text-[#0A2540] group-hover:text-[#C5A059] transition-colors" />
+                            </div>
+                            <div className="flex items-center gap-2.5 min-w-0 flex-wrap sm:flex-nowrap">
+                              <span className="text-[10px] font-bold text-[#9E7D38] tracking-wider uppercase px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200/60 flex-shrink-0">
+                                {purpose.articleClause}
+                              </span>
+                              <h3 className="font-serif text-sm sm:text-base font-bold text-[#0A2540] group-hover:text-[#14487A] transition-colors truncate">
+                                {purpose.title}
+                              </h3>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#0A2540] group-hover:text-[#C5A059] transition-colors flex-shrink-0">
+                            <span className="hidden sm:inline text-[11px]">View Clause</span>
+                            <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              )}
 
 
               {/* 2. Chapter Heritage (Dynamic Timeline & Publication Reader) */}
-              <section className="space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-slate-200 pb-4">
-                  <div>
-                    <div className="flex items-center gap-2 text-xs font-bold text-[#9E7D38] tracking-wider uppercase">
-                      <Calendar className="w-3.5 h-3.5" />
-                      <span>Chapter Milestones & Gazette Dispatches</span>
+              {config.chapterOverview?.heritage_enabled !== false && Array.isArray(config.chapterOverview?.heritage) && config.chapterOverview.heritage.length > 0 && (
+                <section className="space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-slate-200 pb-4">
+                    <div>
+                      <div className="flex items-center gap-2 text-xs font-bold text-[#9E7D38] tracking-wider uppercase">
+                        <Calendar className="w-3.5 h-3.5" />
+                        <span>Chapter Milestones & Gazette Dispatches</span>
+                      </div>
+                      <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#0A2540] tracking-tight mt-1">
+                        Chapter Heritage & Historical Timeline
+                      </h2>
                     </div>
-                    <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#0A2540] tracking-tight mt-1">
-                      Chapter Heritage & Historical Timeline
-                    </h2>
                   </div>
-                </div>
 
-                {/* Dynamic Milestones Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
-                  {config.chapterOverview.heritage.map((item) => (
-                    <div
-                      key={item.id}
-                      onClick={() => handleOpenHeritagePublication(item)}
-                      className="group cursor-pointer bg-white p-6 sm:p-7 rounded-2xl border border-slate-200 hover:border-[#C5A059] hover:shadow-xl transition-all duration-300 flex flex-col justify-between relative overflow-hidden"
-                    >
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="font-serif text-2xl sm:text-3xl font-extrabold text-[#C5A059] tracking-tight">
-                            {item.year}
-                          </span>
-                          {item.category && (
-                            <span className="text-[10px] font-bold text-slate-600 tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200">
-                              {item.category}
+                  {/* Dynamic Milestones Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+                    {config.chapterOverview.heritage.map((item) => (
+                      <div
+                        key={item.id}
+                        onClick={() => handleOpenHeritagePublication(item)}
+                        className="group cursor-pointer bg-white p-6 sm:p-7 rounded-2xl border border-slate-200 hover:border-[#C5A059] hover:shadow-xl transition-all duration-300 flex flex-col justify-between relative overflow-hidden"
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="font-serif text-2xl sm:text-3xl font-extrabold text-[#C5A059] tracking-tight">
+                              {item.year}
                             </span>
-                          )}
+                            {item.category && (
+                              <span className="text-[10px] font-bold text-slate-600 tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200">
+                                {item.category}
+                              </span>
+                            )}
+                          </div>
+
+                          <h3 className="font-serif text-lg font-bold text-[#0A2540] group-hover:text-[#14487A] transition-colors leading-snug">
+                            {item.title}
+                          </h3>
+
+                          <p className="text-slate-600 text-sm leading-relaxed">
+                            {item.summary}
+                          </p>
                         </div>
 
-                        <h3 className="font-serif text-lg font-bold text-[#0A2540] group-hover:text-[#14487A] transition-colors leading-snug">
-                          {item.title}
-                        </h3>
-
-                        <p className="text-slate-600 text-sm leading-relaxed">
-                          {item.summary}
-                        </p>
+                        <div className="pt-5 mt-4 border-t border-slate-100 flex items-center justify-between text-xs text-[#0A2540] font-semibold group-hover:text-[#C5A059] transition-colors">
+                          <span className="flex items-center gap-1.5">
+                            <Newspaper className="w-3.5 h-3.5" />
+                            <span>Read Full Gazette Spread</span>
+                          </span>
+                          <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        </div>
                       </div>
-
-                      <div className="pt-5 mt-4 border-t border-slate-100 flex items-center justify-between text-xs text-[#0A2540] font-semibold group-hover:text-[#C5A059] transition-colors">
-                        <span className="flex items-center gap-1.5">
-                          <Newspaper className="w-3.5 h-3.5" />
-                          <span>Read Full Gazette Spread</span>
-                        </span>
-                        <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
+                    ))}
+                  </div>
+                </section>
+              )}
 
               {/* 3. Distinctions & Honors (Achievements 3-Column Grid) */}
-              <section className="space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-slate-200 pb-4">
-                  <div>
-                    <div className="flex items-center gap-2 text-xs font-bold text-[#9E7D38] tracking-wider uppercase">
-                      <Trophy className="w-3.5 h-3.5" />
-                      <span>Distinctions & Honors</span>
+              {config.chapterOverview?.achievements_enabled !== false && Array.isArray(config.chapterOverview?.achievements) && config.chapterOverview.achievements.length > 0 && (
+                <section className="space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-slate-200 pb-4">
+                    <div>
+                      <div className="flex items-center gap-2 text-xs font-bold text-[#9E7D38] tracking-wider uppercase">
+                        <Trophy className="w-3.5 h-3.5" />
+                        <span>Distinctions & Honors</span>
+                      </div>
+                      <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#0A2540] tracking-tight mt-1">
+                        Institutional Awards & Honors
+                      </h2>
                     </div>
-                    <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#0A2540] tracking-tight mt-1">
-                      Institutional Awards & Honors
-                    </h2>
+                    <p className="text-xs sm:text-sm text-slate-500">
+                      Scholastic victories and civic leadership citations garnered by our chapter.
+                    </p>
                   </div>
-                  <p className="text-xs sm:text-sm text-slate-500">
-                    Scholastic victories and civic leadership citations garnered by our chapter.
-                  </p>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {config.chapterOverview.achievements.map((ach) => (
-                    <div
-                      key={ach.id}
-                      className="bg-white p-6 rounded-2xl border border-slate-200/90 hover:border-amber-300 hover:shadow-md transition-all flex flex-col justify-between space-y-3"
-                    >
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-[#C5A059] bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                            {ach.year}
-                          </span>
-                          {ach.highlightTag && (
-                            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
-                              {ach.highlightTag}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {config.chapterOverview.achievements.map((ach) => (
+                      <div
+                        key={ach.id}
+                        className="bg-white p-6 rounded-2xl border border-slate-200/90 hover:border-amber-300 hover:shadow-md transition-all flex flex-col justify-between space-y-3"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-[#C5A059] bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                              {ach.year}
                             </span>
-                          )}
+                            {ach.highlightTag && (
+                              <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
+                                {ach.highlightTag}
+                              </span>
+                            )}
+                          </div>
+                          <h3 className="font-serif text-base font-bold text-[#0A2540] leading-snug">
+                            {ach.title}
+                          </h3>
+                          <p className="text-xs text-slate-600 leading-relaxed">
+                            {ach.description}
+                          </p>
                         </div>
-                        <h3 className="font-serif text-base font-bold text-[#0A2540] leading-snug">
-                          {ach.title}
-                        </h3>
-                        <p className="text-xs text-slate-600 leading-relaxed">
-                          {ach.description}
-                        </p>
-                      </div>
 
-                      <div className="text-[11px] font-semibold text-[#9E7D38] pt-2 border-t border-slate-100 flex items-center gap-1">
-                        <Award className="w-3.5 h-3.5" />
-                        <span>{ach.category}</span>
+                        <div className="text-[11px] font-semibold text-[#9E7D38] pt-2 border-t border-slate-100 flex items-center gap-1">
+                          <Award className="w-3.5 h-3.5" />
+                          <span>{ach.category}</span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
+                    ))}
+                  </div>
+                </section>
+              )}
             </motion.div>
           )}
 

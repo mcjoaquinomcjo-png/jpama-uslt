@@ -40,8 +40,26 @@ function writeAlumni(list: AlumniMember[]): boolean {
   }
 }
 
+import { getSupabaseAlumni, saveSupabaseAlumni } from "@/lib/supabaseStorage";
+
+async function getLiveAlumni(): Promise<AlumniMember[]> {
+  // 1. Check Supabase first
+  const supabaseList = await getSupabaseAlumni();
+  if (supabaseList && Array.isArray(supabaseList)) {
+    return supabaseList;
+  }
+
+  // 2. Fall back to local file
+  const localList = readAlumni();
+  // Sync to Supabase so it's initialized
+  if (localList.length > 0) {
+    saveSupabaseAlumni(localList).catch(() => {});
+  }
+  return localList;
+}
+
 export async function GET() {
-  const alumni = readAlumni();
+  const alumni = await getLiveAlumni();
   return NextResponse.json(
     { success: true, data: alumni },
     {
@@ -63,7 +81,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "Full Name and Year Graduated are required." }, { status: 400 });
     }
 
-    const alumni = readAlumni();
+    const alumni = await getLiveAlumni();
     const newMember: AlumniMember = {
       id: "alum-" + Date.now().toString(36) + Math.random().toString(36).substring(2, 5),
       full_name: full_name.trim(),
@@ -79,12 +97,13 @@ export async function POST(req: Request) {
     };
 
     alumni.unshift(newMember);
+    const supabaseSaved = await saveSupabaseAlumni(alumni);
     writeAlumni(alumni);
 
     recordDbLog({
       action: "ADD_ALUMNI",
       target: newMember.full_name,
-      storage: "LocalStore",
+      storage: supabaseSaved ? "Supabase" : "LocalStore",
       status: "SUCCESS",
       details: `Added alumni member ${newMember.full_name} (${newMember.year_graduated})`,
     });
@@ -104,19 +123,20 @@ export async function PUT(req: Request) {
       return NextResponse.json({ success: false, error: "Missing alumni ID" }, { status: 400 });
     }
 
-    const alumni = readAlumni();
+    const alumni = await getLiveAlumni();
     const index = alumni.findIndex((a) => a.id === id);
     if (index === -1) {
       return NextResponse.json({ success: false, error: "Alumni record not found" }, { status: 404 });
     }
 
     alumni[index] = { ...alumni[index], ...updates };
+    const supabaseSaved = await saveSupabaseAlumni(alumni);
     writeAlumni(alumni);
 
     recordDbLog({
       action: "UPDATE_ALUMNI",
       target: alumni[index].full_name,
-      storage: "LocalStore",
+      storage: supabaseSaved ? "Supabase" : "LocalStore",
       status: "SUCCESS",
       details: `Updated alumni profile ${alumni[index].full_name}`,
     });
@@ -136,21 +156,22 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ success: false, error: "Missing alumni ID" }, { status: 400 });
     }
 
-    const alumni = readAlumni();
+    const alumni = await getLiveAlumni();
     const index = alumni.findIndex((a) => a.id === id);
     if (index === -1) {
       return NextResponse.json({ success: false, error: "Alumni not found" }, { status: 404 });
     }
 
     const deleted = alumni.splice(index, 1)[0];
+    const supabaseSaved = await saveSupabaseAlumni(alumni);
     writeAlumni(alumni);
 
     recordDbLog({
       action: "DELETE_ALUMNI",
       target: deleted.full_name,
-      storage: "LocalStore",
+      storage: supabaseSaved ? "Supabase" : "LocalStore",
       status: "SUCCESS",
-      details: `Deleted alumni record ${deleted.full_name}`,
+      details: `Permanently deleted alumni record ${deleted.full_name}`,
     });
 
     return NextResponse.json({ success: true, message: "Alumni member deleted successfully" });
