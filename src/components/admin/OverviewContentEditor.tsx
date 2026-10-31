@@ -831,6 +831,67 @@ export default function OverviewContentEditor({
                 <span className="text-[11px] font-mono text-slate-500">#{selectedTab}</span>
               </div>
 
+              {/* Layout Presentation Selector */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
+                  <span>Presentation Layout Style</span>
+                  <span className="text-[11px] text-slate-400 font-normal">Choose how text & slideshow are arranged</span>
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => updateCustomSec({ layout: "split_text_left" })}
+                    className={`p-2.5 rounded-xl border text-left transition-all ${
+                      (secData.layout || "split_text_left") === "split_text_left"
+                        ? "border-[#0A2540] bg-[#EAF2FA] text-[#0A2540] font-bold ring-2 ring-[#0A2540]/20 shadow-sm"
+                        : "border-slate-200 bg-white hover:bg-slate-50 text-slate-600"
+                    }`}
+                  >
+                    <span className="block text-xs font-bold">📄 Left | Right 🖼️</span>
+                    <span className="block text-[10px] text-slate-500 mt-0.5">Text on Left, Photos Right</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => updateCustomSec({ layout: "split_text_right" })}
+                    className={`p-2.5 rounded-xl border text-left transition-all ${
+                      secData.layout === "split_text_right"
+                        ? "border-[#0A2540] bg-[#EAF2FA] text-[#0A2540] font-bold ring-2 ring-[#0A2540]/20 shadow-sm"
+                        : "border-slate-200 bg-white hover:bg-slate-50 text-slate-600"
+                    }`}
+                  >
+                    <span className="block text-xs font-bold">🖼️ Left | Right 📄</span>
+                    <span className="block text-[10px] text-slate-500 mt-0.5">Photos Left, Text Right</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => updateCustomSec({ layout: "stacked_text_top" })}
+                    className={`p-2.5 rounded-xl border text-left transition-all ${
+                      secData.layout === "stacked_text_top"
+                        ? "border-[#0A2540] bg-[#EAF2FA] text-[#0A2540] font-bold ring-2 ring-[#0A2540]/20 shadow-sm"
+                        : "border-slate-200 bg-white hover:bg-slate-50 text-slate-600"
+                    }`}
+                  >
+                    <span className="block text-xs font-bold">⬆️ Stacked Top</span>
+                    <span className="block text-[10px] text-slate-500 mt-0.5">Text on Top, Photos Below</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => updateCustomSec({ layout: "stacked_text_bottom" })}
+                    className={`p-2.5 rounded-xl border text-left transition-all ${
+                      secData.layout === "stacked_text_bottom"
+                        ? "border-[#0A2540] bg-[#EAF2FA] text-[#0A2540] font-bold ring-2 ring-[#0A2540]/20 shadow-sm"
+                        : "border-slate-200 bg-white hover:bg-slate-50 text-slate-600"
+                    }`}
+                  >
+                    <span className="block text-xs font-bold">⬇️ Stacked Bottom</span>
+                    <span className="block text-[10px] text-slate-500 mt-0.5">Photos Top, Text Below</span>
+                  </button>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Section Heading (Optional)</label>
                 <input
@@ -845,10 +906,10 @@ export default function OverviewContentEditor({
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Description / Subtitle (Optional)</label>
                 <textarea
-                  rows={2}
+                  rows={4}
                   value={secData.body || ""}
                   onChange={(e) => updateCustomSec({ body: e.target.value })}
-                  placeholder="Optional short description shown above the slideshow or gallery."
+                  placeholder="Optional description shown alongside or above the photos. Press Enter for separate paragraphs."
                   className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white"
                 />
               </div>

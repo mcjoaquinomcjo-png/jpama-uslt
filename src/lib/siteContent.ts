@@ -61,6 +61,7 @@ export interface OverviewContent {
     title?: string;
     body?: string;
     images?: string[];   // For slideshow: array of image URLs
+    layout?: "split_text_left" | "split_text_right" | "stacked_text_top" | "stacked_text_bottom";
   }>;
 }
 
