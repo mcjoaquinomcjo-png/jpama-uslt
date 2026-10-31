@@ -38,6 +38,18 @@ export default function ContactPage() {
         }
       }
     } catch (e) {}
+
+    fetch(`/api/settings/contact?_t=${Date.now()}`, { cache: "no-store" })
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success && res.data) {
+          setContent(res.data);
+          try {
+            localStorage.setItem("jpama_contact_content", JSON.stringify(res.data));
+          } catch (e) {}
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

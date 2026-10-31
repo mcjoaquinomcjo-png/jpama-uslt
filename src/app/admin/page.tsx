@@ -185,16 +185,20 @@ export default function AdminDashboardPage() {
     }
   }, []);
 
-  const updateOverviewSections = async (newSections: typeof defaultOverviewSections) => {
+  const updateOverviewSections = async (newSections: typeof defaultOverviewSections, customContent?: typeof overviewContent) => {
     setOverviewSections(newSections);
+    const contentToSend = customContent || overviewContent;
     try {
       localStorage.setItem("jpama_overview_sections", JSON.stringify(newSections));
+      if (customContent) {
+        localStorage.setItem("jpama_overview_content", JSON.stringify(customContent));
+      }
     } catch (e) {}
     try {
       await fetch("/api/settings/overview", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sections: newSections, content: overviewContent }),
+        body: JSON.stringify({ sections: newSections, content: contentToSend }),
       });
       if (typeof window !== "undefined") {
         window.dispatchEvent(new Event("jpama_overview_updated"));
@@ -228,12 +232,22 @@ export default function AdminDashboardPage() {
     } catch (e) {}
   };
 
-  const handleSaveContactContent = () => {
+  const handleSaveContactContent = async () => {
     try {
       localStorage.setItem("jpama_contact_content", JSON.stringify(contactContent));
+      await fetch("/api/settings/contact", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(contactContent),
+      });
       setContactContentSaved(true);
       setTimeout(() => setContactContentSaved(false), 3000);
-    } catch (e) {}
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("jpama_contact_updated"));
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleSaveAccessConfig = () => {
@@ -470,7 +484,7 @@ export default function AdminDashboardPage() {
   const loadAllData = async () => {
     setLoading(true);
     try {
-      const [resMem, resEv, resRes, resOff, resSet, resCont, resAlum, resOverview] = await Promise.all([
+      const [resMem, resEv, resRes, resOff, resSet, resCont, resAlum, resOverview, resContactCfg] = await Promise.all([
         fetch(`/api/members?_t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).catch(() => ({ success: false })),
         fetch(`/api/events?_t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).catch(() => ({ success: false })),
         fetch(`/api/resources?_t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).catch(() => ({ success: false })),
@@ -479,6 +493,7 @@ export default function AdminDashboardPage() {
         fetch(`/api/contact?_t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).catch(() => ({ success: false })),
         fetch(`/api/alumni?_t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).catch(() => ({ success: false })),
         fetch(`/api/settings/overview?_t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).catch(() => ({ success: false })),
+        fetch(`/api/settings/contact?_t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).catch(() => ({ success: false })),
       ]);
 
       if (resMem.success && Array.isArray(resMem.data)) setMembers(resMem.data);
@@ -486,6 +501,7 @@ export default function AdminDashboardPage() {
       if (resRes.success && Array.isArray(resRes.data)) setResources(resRes.data);
       if (resOff.success && Array.isArray(resOff.data)) setOfficers(resOff.data);
       if (resSet.success && resSet.data) setSettings(resSet.data);
+      if (resContactCfg?.success && resContactCfg.data) setContactContent(resContactCfg.data);
       if (resAlum?.success && Array.isArray(resAlum.data)) setAlumniList(resAlum.data);
       if (resOverview?.success && resOverview.data) {
         if (Array.isArray(resOverview.data.sections)) setOverviewSections(resOverview.data.sections);
@@ -2690,8 +2706,24 @@ export default function AdminDashboardPage() {
                       const type = typeSelect?.value || "custom";
                       if (!label) { alert("Please enter a section name."); return; }
                       const newId = `custom_${Date.now()}`;
-                      const newSection = { id: newId, label: `${label} (${type})`, visible: true, type };
-                      updateOverviewSections([...overviewSections, newSection as any]);
+                      const sectionLabel = `${label} (${type})`;
+                      const newSection = { id: newId, label: sectionLabel, visible: true, type };
+                      const updatedContent = {
+                        ...overviewContent,
+                        custom_sections: {
+                          ...(overviewContent.custom_sections || {}),
+                          [newId]: {
+                            type,
+                            label: sectionLabel,
+                            title: label,
+                            body: "",
+                            images: [],
+                          },
+                        },
+                      };
+                      setOverviewContent(updatedContent);
+                      updateOverviewSections([...overviewSections, newSection as any], updatedContent);
+                      setEditingOverviewSection(newId);
                       if (labelInput) labelInput.value = "";
                     }}
                     className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold whitespace-nowrap transition-colors"
@@ -2724,6 +2756,7 @@ export default function AdminDashboardPage() {
                   content={overviewContent}
                   onChange={setOverviewContent}
                   activeSectionId={editingOverviewSection}
+                  sections={overviewSections}
                   onClose={() => setEditingOverviewSection(null)}
                   onSave={handleSaveOverviewContent}
                   isSaved={overviewContentSaved}

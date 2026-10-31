@@ -26,6 +26,7 @@ import StatusBadge from "@/components/StatusBadge";
 import { INITIAL_EVENTS } from "@/lib/store";
 import { Member } from "@/lib/types";
 import { DEFAULT_OVERVIEW_CONTENT, OverviewContent } from "@/lib/siteContent";
+import CustomSectionSlideshow from "@/components/CustomSectionSlideshow";
 
 export default function HomePage() {
   const [lookupQuery, setLookupQuery] = useState("");
@@ -582,6 +583,53 @@ export default function HomePage() {
                 </div>
               </div>
             </section>
+          );
+        }
+
+        // 6. LEADERSHIP COUNCIL SPOTLIGHT
+        if (sectionId === "leadership") {
+          return (
+            <section key="leadership" className="py-16 bg-[#F8FAFC] border-b border-slate-200">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+                  <div className="space-y-2 max-w-2xl">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#C5A059]">
+                      {content.leadership?.section_eyebrow || "EXECUTIVE STEWARDSHIP"}
+                    </span>
+                    <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#0A2540]">
+                      {content.leadership?.section_title || "Council Leadership & Chapter Stewardship"}
+                    </h2>
+                    <p className="text-slate-600 text-sm">
+                      {content.leadership?.section_desc || "Guiding the JPAMA USLT Chapter with servant leadership and professional dedication."}
+                    </p>
+                  </div>
+                  <Link
+                    href="/about"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#0A2540] hover:bg-[#14487A] text-white text-xs font-bold uppercase tracking-wider transition-colors shadow-sm self-start sm:self-auto"
+                  >
+                    <span>{content.leadership?.btn_text || "Meet All Officers & Advisers"}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+            </section>
+          );
+        }
+
+        // 7. CUSTOM DYNAMIC SECTIONS (Slideshows, Passers, Galleries, Announcements)
+        const customSec = content.custom_sections?.[sectionId];
+        if (customSec || sectionId.startsWith("custom_")) {
+          const fallbackData = customSec || {
+            type: "slideshow",
+            label: sectionId,
+            images: [],
+          };
+          return (
+            <CustomSectionSlideshow
+              key={sectionId}
+              sectionId={sectionId}
+              data={fallbackData}
+            />
           );
         }
 

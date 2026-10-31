@@ -16,13 +16,20 @@ import {
   Clock,
   GraduationCap,
   Users,
+  Upload,
+  ArrowUp,
+  ArrowDown,
+  Trash2,
+  Image as ImageIcon,
 } from "lucide-react";
 import { OverviewContent, DEFAULT_OVERVIEW_CONTENT } from "@/lib/siteContent";
+import { resolveImageUrl, extractGoogleDriveId } from "@/lib/imageUtils";
 
 interface OverviewContentEditorProps {
   content: OverviewContent;
   onChange: (updated: OverviewContent) => void;
   activeSectionId: string | null;
+  sections?: Array<{ id: string; label: string; visible?: boolean; type?: string }>;
   onClose: () => void;
   onSave: () => void;
   isSaved: boolean;
@@ -33,6 +40,7 @@ export default function OverviewContentEditor({
   content,
   onChange,
   activeSectionId,
+  sections,
   onClose,
   onSave,
   isSaved,
@@ -127,11 +135,17 @@ export default function OverviewContentEditor({
     { id: "resources", label: "Resources Banner" },
     { id: "leadership", label: "Leadership Spotlight" },
     { id: "contact", label: "Contact & Office" },
-    // Custom sections added from Section Manager
-    ...Object.entries(content.custom_sections || {}).map(([id, sec]) => ({
-      id,
-      label: sec.label || id,
-    })),
+    // Custom sections from both overviewSections and content.custom_sections
+    ...((sections || []).filter((s) => s.id.startsWith("custom_")).map((s) => ({
+      id: s.id,
+      label: s.label || s.id,
+    }))),
+    ...Object.entries(content.custom_sections || {})
+      .filter(([id]) => !(sections || []).some((s) => s.id === id))
+      .map(([id, sec]) => ({
+        id,
+        label: sec.label || id,
+      })),
   ];
 
   return (
@@ -728,7 +742,15 @@ export default function OverviewContentEditor({
 
         {/* CUSTOM SECTION EDITOR: Slideshow / Text / Cards */}
         {selectedTab.startsWith("custom_") && (() => {
-          const secData = content.custom_sections?.[selectedTab] || { type: "custom", label: selectedTab, images: [], title: "", body: "" };
+          const secFromList = (sections || []).find((s) => s.id === selectedTab);
+          const secData = content.custom_sections?.[selectedTab] || {
+            type: secFromList?.type || "slideshow",
+            label: secFromList?.label || selectedTab,
+            images: [],
+            title: "",
+            body: "",
+          };
+
           const updateCustomSec = (patch: Partial<typeof secData>) => {
             onChange({
               ...content,
@@ -738,66 +760,214 @@ export default function OverviewContentEditor({
               },
             });
           };
+
+          const handleUploadImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (loadEvt) => {
+              const dataUrl = loadEvt.target?.result as string;
+              if (!dataUrl) return;
+              const img = new Image();
+              img.onload = () => {
+                const canvas = document.createElement("canvas");
+                let width = img.width;
+                let height = img.height;
+                const maxDim = 1600;
+                if (width > maxDim || height > maxDim) {
+                  if (width > height) {
+                    height = Math.round((height * maxDim) / width);
+                    width = maxDim;
+                  } else {
+                    width = Math.round((width * maxDim) / height);
+                    height = maxDim;
+                  }
+                }
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext("2d");
+                ctx?.drawImage(img, 0, 0, width, height);
+                const compressed = canvas.toDataURL("image/jpeg", 0.85);
+                updateCustomSec({ images: [...(secData.images || []), compressed] });
+              };
+              img.src = dataUrl;
+            };
+            reader.readAsDataURL(file);
+            e.target.value = "";
+          };
+
           return (
             <div className="space-y-4">
-              <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-700">
-                <strong>{secData.label}</strong> — Type: <code className="bg-blue-100 px-1 rounded">{secData.type}</code>
+              <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-700 flex items-center justify-between">
+                <div>
+                  <strong>{secData.label}</strong> — Type: <code className="bg-blue-100 px-1 rounded">{secData.type}</code>
+                </div>
+                <span className="text-[11px] font-mono text-slate-500">#{selectedTab}</span>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Section Heading (Optional)</label>
-                <input type="text" value={secData.title || ""} onChange={(e) => updateCustomSec({ title: e.target.value })}
-                  placeholder="e.g. CMA Passers 2025"
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white" />
+                <input
+                  type="text"
+                  value={secData.title || ""}
+                  onChange={(e) => updateCustomSec({ title: e.target.value })}
+                  placeholder="e.g. FMAA Passer 2026 or CMA Board Passers"
+                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white"
+                />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Description / Body Text (Optional)</label>
-                <textarea rows={2} value={secData.body || ""} onChange={(e) => updateCustomSec({ body: e.target.value })}
-                  placeholder="Optional short description shown above the content."
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white" />
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Description / Subtitle (Optional)</label>
+                <textarea
+                  rows={2}
+                  value={secData.body || ""}
+                  onChange={(e) => updateCustomSec({ body: e.target.value })}
+                  placeholder="Optional short description shown above the slideshow or gallery."
+                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white"
+                />
               </div>
 
               {(secData.type === "slideshow" || secData.type === "custom") && (
-                <div className="space-y-3 pt-2 border-t border-slate-200">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-[#0A2540] uppercase tracking-wider">
-                      Slideshow Images ({(secData.images || []).length})
-                    </label>
-                    <button type="button"
-                      onClick={() => updateCustomSec({ images: [...(secData.images || []), ""] })}
-                      className="px-3 py-1.5 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-[11px] font-bold transition-colors">
-                      + Add Image URL
-                    </button>
-                  </div>
-                  <p className="text-[11px] text-slate-500">
-                    Paste any public image URL or a Google Drive shareable image link. Drive links: open the image, click &ldquo;Share&rdquo; and set to &ldquo;Anyone with the link&rdquo;, then copy the link.
-                  </p>
-                  {(secData.images || []).map((url, imgIdx) => (
-                    <div key={imgIdx} className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono text-slate-400 w-5 text-right flex-shrink-0">{imgIdx + 1}</span>
-                      <input type="url" value={url}
-                        onChange={(e) => {
-                          const imgs = [...(secData.images || [])];
-                          imgs[imgIdx] = e.target.value;
-                          updateCustomSec({ images: imgs });
-                        }}
-                        placeholder="https://... or Google Drive share URL"
-                        className="flex-1 px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] font-mono" />
-                      <button type="button"
-                        onClick={() => {
-                          const imgs = (secData.images || []).filter((_, i) => i !== imgIdx);
-                          updateCustomSec({ images: imgs });
-                        }}
-                        className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors">
-                        ✕
+                <div className="space-y-3 pt-3 border-t border-slate-200">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <label className="text-xs font-bold text-[#0A2540] uppercase tracking-wider flex items-center gap-1.5">
+                        <ImageIcon className="w-4 h-4 text-[#C5A059]" />
+                        <span>Slideshow Photos ({(secData.images || []).length})</span>
+                      </label>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Add unlimited photos. Upload directly from your device or paste Google Drive image share links.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <label className="px-3 py-1.5 bg-[#C5A059] hover:bg-[#E8C97A] text-[#0A2540] rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload File (.jpg/.png)</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleUploadImage}
+                          className="hidden"
+                        />
+                      </label>
+
+                      <button
+                        type="button"
+                        onClick={() => updateCustomSec({ images: [...(secData.images || []), ""] })}
+                        className="px-3 py-1.5 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold transition-colors"
+                      >
+                        + Add Image URL
                       </button>
                     </div>
-                  ))}
+                  </div>
+
+                  <div className="space-y-2 mt-2">
+                    {(secData.images || []).map((url, imgIdx) => {
+                      const isDrive = extractGoogleDriveId(url);
+                      return (
+                        <div key={imgIdx} className="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-200">
+                          <span className="text-[10px] font-mono font-semibold text-slate-400 w-5 text-right flex-shrink-0">
+                            {imgIdx + 1}
+                          </span>
+
+                          {/* Mini Thumbnail Preview */}
+                          <div className="w-12 h-9 rounded-md bg-slate-200 overflow-hidden flex-shrink-0 border border-slate-300 flex items-center justify-center">
+                            {url ? (
+                              <img
+                                src={resolveImageUrl(url)}
+                                alt={`Preview ${imgIdx + 1}`}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLElement).style.display = "none";
+                                }}
+                              />
+                            ) : (
+                              <ImageIcon className="w-4 h-4 text-slate-400" />
+                            )}
+                          </div>
+
+                          <div className="flex-1 space-y-1">
+                            <input
+                              type="text"
+                              value={url}
+                              onChange={(e) => {
+                                const imgs = [...(secData.images || [])];
+                                imgs[imgIdx] = e.target.value;
+                                updateCustomSec({ images: imgs });
+                              }}
+                              placeholder="Paste https://... or Google Drive sharing URL"
+                              className="w-full px-2.5 py-1 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540] font-mono"
+                            />
+                            {isDrive && (
+                              <span className="inline-block text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                ✓ Google Drive detected (High-Res Proxy Enabled)
+                              </span>
+                            )}
+                            {url.startsWith("data:image/") && (
+                              <span className="inline-block text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                                ✓ Direct Device Upload (Stored in Supabase)
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Reordering Controls */}
+                          <div className="flex flex-col gap-0.5 flex-shrink-0">
+                            <button
+                              type="button"
+                              disabled={imgIdx === 0}
+                              onClick={() => {
+                                const imgs = [...(secData.images || [])];
+                                [imgs[imgIdx - 1], imgs[imgIdx]] = [imgs[imgIdx], imgs[imgIdx - 1]];
+                                updateCustomSec({ images: imgs });
+                              }}
+                              className="p-1 text-slate-400 hover:text-[#0A2540] disabled:opacity-20 transition-colors"
+                              title="Move photo up"
+                            >
+                              <ArrowUp className="w-3 h-3" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={imgIdx === (secData.images || []).length - 1}
+                              onClick={() => {
+                                const imgs = [...(secData.images || [])];
+                                [imgs[imgIdx + 1], imgs[imgIdx]] = [imgs[imgIdx], imgs[imgIdx + 1]];
+                                updateCustomSec({ images: imgs });
+                              }}
+                              className="p-1 text-slate-400 hover:text-[#0A2540] disabled:opacity-20 transition-colors"
+                              title="Move photo down"
+                            >
+                              <ArrowDown className="w-3 h-3" />
+                            </button>
+                          </div>
+
+                          {/* Delete Button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const imgs = (secData.images || []).filter((_, i) => i !== imgIdx);
+                              updateCustomSec({ images: imgs });
+                            }}
+                            className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+                            title="Remove photo"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+
                   {(secData.images || []).length === 0 && (
-                    <p className="text-xs text-slate-400 italic text-center py-4 border-2 border-dashed border-slate-200 rounded-xl">
-                      No images yet. Click &ldquo;+ Add Image URL&rdquo; to add unlimited images to this slideshow.
-                    </p>
+                    <div className="text-center py-8 border-2 border-dashed border-slate-200 rounded-2xl space-y-2">
+                      <ImageIcon className="w-8 h-8 text-slate-300 mx-auto" />
+                      <p className="text-xs text-slate-500 font-medium">
+                        No photos added to this slideshow yet.
+                      </p>
+                      <p className="text-[11px] text-slate-400">
+                        Click &ldquo;Upload File&rdquo; or &ldquo;+ Add Image URL&rdquo; to add unlimited passers/photos.
+                      </p>
+                    </div>
                   )}
                 </div>
               )}
