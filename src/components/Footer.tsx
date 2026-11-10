@@ -9,6 +9,7 @@ import {
   Linkedin,
   ShieldCheck,
   UserPlus,
+  Lock,
 } from "lucide-react";
 import { PortalSettings } from "@/lib/types";
 
@@ -156,8 +157,9 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/admin" className="hover:text-[#E8D8BA] text-slate-400 transition-colors flex items-center gap-1">
-                  <span>🔒 Officer Admin Dashboard</span>
+                <Link href="/admin" className="flex items-center gap-1.5 text-slate-300 hover:text-white transition-colors">
+                  <Lock className="w-3.5 h-3.5 text-[#C5A059]" />
+                  <span>Officer Admin Dashboard</span>
                 </Link>
               </li>
               {settings.facebook_url && (
