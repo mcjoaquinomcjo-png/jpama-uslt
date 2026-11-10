@@ -17,7 +17,7 @@ interface CustomSectionProps {
     title?: string;
     body?: string;
     images?: string[];
-    layout?: "split_text_left" | "split_text_right" | "stacked_text_top" | "stacked_text_bottom";
+    layout?: "split_text_left" | "split_text_right" | "stacked_text_top" | "stacked_text_bottom" | "royal_banner" | "infographic" | "mosaic";
     imageSize?: ImageSize;
     edgeStyle?: EdgeStyle;
   };

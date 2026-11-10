@@ -27,6 +27,7 @@ import { INITIAL_EVENTS } from "@/lib/store";
 import { Member } from "@/lib/types";
 import { DEFAULT_OVERVIEW_CONTENT, OverviewContent } from "@/lib/siteContent";
 import CustomSectionSlideshow from "@/components/CustomSectionSlideshow";
+import ActivitiesShowcase from "@/components/ActivitiesShowcase";
 import GoldCyclingBorder from "@/components/GoldCyclingBorder";
 
 export default function HomePage() {
@@ -141,33 +142,39 @@ export default function HomePage() {
 
   const pillarIcons = [Compass, Award, Users];
 
-  // Guarantee that populated custom sections (slideshows with photos) are showcased
+  // Guarantee that populated activities and custom sections are showcased
   const renderedSections = React.useMemo(() => {
     const list = [...sectionsOrder];
-    if (content.custom_sections) {
-      Object.entries(content.custom_sections).forEach(([customId, sec]) => {
-        const hasContent = (sec.images && sec.images.length > 0) || (sec.title && sec.title.trim().length > 0);
-        if (!hasContent) return;
+    const hasActivities = (content.activities_showcase?.activities || []).length > 0;
+    const hasCustomSec = Object.values(content.custom_sections || {}).some(
+      (s) => (s.images && s.images.length > 0) || (s.title && s.title.trim().length > 0)
+    );
 
-        if (list.includes(customId)) return;
-
-        const placeholderIdx = list.findIndex(
-          (id) => id.startsWith("custom_") && !(content.custom_sections?.[id]?.images?.length)
-        );
-        if (placeholderIdx !== -1) {
-          list[placeholderIdx] = customId;
+    if (hasActivities || hasCustomSec) {
+      const hasAnyActivitySection = list.some(
+        (id) => id === "activities_showcase" || id.startsWith("custom_")
+      );
+      if (!hasAnyActivitySection) {
+        const contactIdx = list.indexOf("contact");
+        if (contactIdx !== -1) {
+          list.splice(contactIdx, 0, "activities_showcase");
         } else {
-          const contactIdx = list.indexOf("contact");
-          if (contactIdx !== -1) {
-            list.splice(contactIdx, 0, customId);
-          } else {
-            list.push(customId);
-          }
+          list.push("activities_showcase");
         }
-      });
+      }
     }
-    return list;
-  }, [sectionsOrder, content.custom_sections]);
+
+    // Filter so that only 1 occurrence of an activity section is rendered
+    let seenActivities = false;
+    return list.filter((id) => {
+      if (id === "activities_showcase" || id.startsWith("custom_")) {
+        if (seenActivities) return false;
+        seenActivities = true;
+        return true;
+      }
+      return true;
+    });
+  }, [sectionsOrder, content.activities_showcase, content.custom_sections]);
 
   return (
     <div suppressHydrationWarning className="flex flex-col bg-[#F8FAFC] text-slate-800 font-sans min-h-screen">
@@ -737,29 +744,29 @@ export default function HomePage() {
           );
         }
 
-        // 7. CUSTOM DYNAMIC SECTIONS — Hides If Blank (No Images, Title, or Body)
-        const customSec =
-          content.custom_sections?.[sectionId] ||
-          (sectionId.startsWith("custom_")
-            ? Object.values(content.custom_sections || {}).find(
-                (s) => s.images && s.images.length > 0
-              )
-            : undefined);
+        // 7. CHAPTER ACTIVITIES SHOWCASE & CUSTOM SECTIONS
+        if (sectionId === "activities_showcase" || sectionId.startsWith("custom_")) {
+          const customSec =
+            content.custom_sections?.[sectionId] ||
+            Object.values(content.custom_sections || {}).find(
+              (s) => s.images && s.images.length > 0
+            );
 
-        if (customSec) {
-          const hasImages = (customSec.images || []).some((img) => img && typeof img === "string" && img.trim().length > 0);
-          const hasTitle = Boolean(customSec.title && customSec.title.trim().length > 0);
-          const hasBody = Boolean(customSec.body && customSec.body.trim().length > 0);
+          const hasActivities = (content.activities_showcase?.activities || []).length > 0;
+          const hasCustomSec =
+            customSec &&
+            ((customSec.images && customSec.images.length > 0) ||
+              (customSec.title && customSec.title.trim().length > 0));
 
-          if (!hasImages && !hasTitle && !hasBody) {
+          if (!hasActivities && !hasCustomSec) {
             return null; // Blank: hide section
           }
 
           return (
-            <CustomSectionSlideshow
+            <ActivitiesShowcase
               key={sectionId}
-              sectionId={sectionId}
-              data={customSec}
+              config={content.activities_showcase}
+              legacyCustomSection={customSec}
             />
           );
         }

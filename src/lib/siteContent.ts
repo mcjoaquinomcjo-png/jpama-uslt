@@ -59,6 +59,27 @@ export interface OverviewContent {
     hours_title: string;
     hours_desc: string;
   };
+  // Dynamic Chapter Activities Showcase (Max 10 activities with Royal Tabs or Swipable Deck)
+  activities_showcase?: {
+    enabled?: boolean;
+    mode?: "tabs" | "slider";
+    section_eyebrow?: string;
+    section_title?: string;
+    activities: Array<{
+      id: string;
+      tab_label: string;
+      icon?: string;
+      category_badge?: string;
+      title: string;
+      subtitle?: string;
+      body: string;
+      images: string[];
+      layout?: "split_text_left" | "split_text_right" | "stacked_text_top" | "stacked_text_bottom" | "royal_banner" | "infographic" | "mosaic";
+      imageSize?: "2x2" | "4:3" | "16:9" | "small" | "medium" | "large";
+      edgeStyle?: "fade" | "fine" | "lined" | "none";
+      visible?: boolean;
+    }>;
+  };
   // Dynamically added custom sections (slideshow images, text blocks, etc.)
   custom_sections?: Record<string, {
     type: string;
@@ -66,10 +87,25 @@ export interface OverviewContent {
     title?: string;
     body?: string;
     images?: string[];   // For slideshow: array of image URLs
-    layout?: "split_text_left" | "split_text_right" | "stacked_text_top" | "stacked_text_bottom";
+    layout?: "split_text_left" | "split_text_right" | "stacked_text_top" | "stacked_text_bottom" | "royal_banner" | "infographic" | "mosaic";
     imageSize?: "2x2" | "4:3" | "16:9" | "small" | "medium" | "large";
     edgeStyle?: "fade" | "fine" | "lined" | "none";
   }>;
+}
+
+export interface ChapterActivity {
+  id: string;
+  tab_label: string;
+  icon?: string;
+  category_badge?: string;
+  title: string;
+  subtitle?: string;
+  body: string;
+  images: string[];
+  layout?: "split_text_left" | "split_text_right" | "stacked_text_top" | "stacked_text_bottom" | "royal_banner" | "infographic" | "mosaic";
+  imageSize?: "2x2" | "4:3" | "16:9" | "small" | "medium" | "large";
+  edgeStyle?: "fade" | "fine" | "lined" | "none";
+  visible?: boolean;
 }
 
 export const DEFAULT_OVERVIEW_CONTENT: OverviewContent = {
@@ -136,6 +172,117 @@ export const DEFAULT_OVERVIEW_CONTENT: OverviewContent = {
     email_desc: "jpama@uslt.edu.ph",
     hours_title: "Office Hours",
     hours_desc: "Monday – Friday: 8:00 AM – 5:00 PM (SABH Hallway Desk)",
+  },
+  activities_showcase: {
+    enabled: true,
+    mode: "tabs",
+    section_eyebrow: "CHAPTER SPOTLIGHT & ACTIVITIES",
+    section_title: "Highlights, Passers & Student Dispatches",
+    activities: [
+      {
+        id: "act_fmaa_passers",
+        tab_label: "FMAA Passers",
+        icon: "trophy",
+        category_badge: "CHAPTER DISTINCTION",
+        title: "FMAA PASSER 2026",
+        subtitle: "ANOTHER PROOF THAT LOUISIAN MAS ARE MEANT TO SHINE. ✨",
+        body: "Every achievement is a reminder that with the right guidance, determination, and the courage to keep going, every Louisian has the potential to shine in their own field. And today, JPAMA–USLT celebrates a milestone that makes our whole community proud!\n\nOur warmest congratulations to Angela Grace Udani, John Rolan Alilam, Erod Harell Corpuz, Angel Trisha Mae B. Cabantoc, and all the FMAA passers from the University of Saint Louis–Tuguegarao! 🎉\n\nYour success is not just a personal victory; it is also an inspiration to every Management Accounting student who is still working toward their own goals. You remind us that every small step, every late-night review, and every effort made along the way can lead to something worth celebrating.\n\nAs you continue your journey, may you carry the Louisians' spirit with you and keep proving that every MA has a light of their own, ready to shine in different fields and opportunities. And with the guidance and support of Insights Financial Review Services Inc., may more aspiring professionals find their way toward their dreams.\n\nFrom your JPAMA–USLT family, congratulations! We are truly proud of what you have achieved, and we look forward to seeing you embrace even greater opportunities and shine even brighter in the journey ahead. Here’s to more doors opening and more dreams coming to life!\n\n#JPAMAUSLT #ProudLouisians #FMAAPassers #EveryMACanShine #ManagementAccounting",
+        images: [
+          "https://drive.google.com/file/d/1ytjYS8XFJgKFtQ83SBlUssfFfaQHCx7r/view?usp=drive_link",
+          "https://drive.google.com/file/d/15YAci2rQNdqoSzBNIk6FGGODpGgx3Dzx/view?usp=drive_link",
+          "https://drive.google.com/file/d/1Cc89cpl5bLIGaUzDS0nKQR574h2NdO4o/view?usp=drive_link",
+          "https://drive.google.com/file/d/1RRkY7-6hzpJjRg7hbZF_YdA6T2oeMkFm/view?usp=drive_link",
+          "https://drive.google.com/file/d/1_FXYBwSiKAN3czJOwZLkwbSt9_vA0ozr/view?usp=drive_link",
+          "https://drive.google.com/file/d/1eQlxAXN2Qt5MzQPVfGIUEFNOM9-EE7h1/view?usp=drive_link"
+        ],
+        layout: "split_text_left",
+        imageSize: "2x2",
+        edgeStyle: "fade",
+        visible: true,
+      },
+      {
+        id: "act_cma_passers",
+        tab_label: "CMA Passers",
+        icon: "star",
+        category_badge: "GLOBAL CERTIFICATION",
+        title: "CMA PASSERS 2026",
+        subtitle: "PROVING GLOBAL EXCELLENCE IN STRATEGIC MANAGEMENT ACCOUNTING. 🌟",
+        body: "Celebrating the hard-earned triumph of our Louisian scholars and alumni who successfully passed the prestigious Certified Management Accountant (CMA) examination. Your perseverance and intellectual rigor define the golden standard of the USLT BSMA program.\n\n#CMAPassers #GlobalExcellence #LouisianAccountants #JPAMARiseToShine",
+        images: [
+          "https://drive.google.com/file/d/1ytjYS8XFJgKFtQ83SBlUssfFfaQHCx7r/view?usp=drive_link"
+        ],
+        layout: "royal_banner",
+        imageSize: "16:9",
+        edgeStyle: "lined",
+        visible: true,
+      },
+      {
+        id: "act_free_books",
+        tab_label: "Free Books",
+        icon: "book",
+        category_badge: "ACADEMIC SERVICES",
+        title: "ACADEMIC REVIEW VAULT & FREE HANDOUTS",
+        subtitle: "EMPOWERING SCHOLARS WITH COMPREHENSIVE STUDY HANDOUTS. 📖",
+        body: "Access verified handouts, practice assessments, mock board reviewers, financial modeling templates, and testbanks spanning all BSMA core subjects — from Cost Accounting and MAS to Taxation, Auditing, and Business Law. Exclusively curated for Louisian scholars.\n\n#BSMAReviewVault #AcademicExcellence #FreeReviewers",
+        images: [
+          "https://drive.google.com/file/d/15YAci2rQNdqoSzBNIk6FGGODpGgx3Dzx/view?usp=drive_link"
+        ],
+        layout: "split_text_left",
+        imageSize: "16:9",
+        edgeStyle: "lined",
+        visible: true,
+      },
+      {
+        id: "act_october_fest",
+        tab_label: "October Fest",
+        icon: "calendar",
+        category_badge: "CAMPUS LIFE & CELEBRATION",
+        title: "BSMA OCTOBER FEST & GENERAL ASSEMBLY",
+        subtitle: "UNITING FUTURE MANAGEMENT ACCOUNTANTS IN COMMUNITY & PURPOSE. 🍂",
+        body: "A grand celebration of talent, camaraderie, and chapter solidarity! The BSMA October Fest brings together all year levels for fellowship, academic quiz showdowns, team-building activities, and recognition of outstanding scholars.\n\n#OctoberFest #JPAMAUnity #LouisianSpirit",
+        images: [
+          "https://drive.google.com/file/d/1ytjYS8XFJgKFtQ83SBlUssfFfaQHCx7r/view?usp=drive_link"
+        ],
+        layout: "royal_banner",
+        imageSize: "16:9",
+        edgeStyle: "fine",
+        visible: true,
+      },
+      {
+        id: "act_trivia_week",
+        tab_label: "Trivia Week",
+        icon: "lightbulb",
+        category_badge: "THE WEEKLY LEXICON",
+        title: "THE WEEKLY LEXICON: CASH FLOW",
+        subtitle: "A NEW TERM, A NEW INSIGHT! ✨",
+        body: "Expand your accounting vocabulary, strengthen your understanding, and discover the language behind the world of Management Accountants. 📚💼\n\nLet's learn and grow together, one term at a time.\n\nCash flow (CF) describes the balance of cash that moves into and out of a company during a specified accounting period. Accountants track CF on a dedicated document known as a cash flow statement.\n\n#TheWeeklyLexicon #JPAMARiseToShine #JPAngMAlakasan #MindOlympics",
+        images: [
+          "https://drive.google.com/file/d/1Cc89cpl5bLIGaUzDS0nKQR574h2NdO4o/view?usp=drive_link"
+        ],
+        layout: "infographic",
+        imageSize: "4:3",
+        edgeStyle: "fine",
+        visible: true,
+      },
+      {
+        id: "act_exam_snack",
+        tab_label: "Exam Snack",
+        icon: "snack",
+        category_badge: "STUDENT WELFARE",
+        title: "JPAMA'S SWEET RETURNS",
+        subtitle: "A SWEET COMEBACK, SERVED WITH A WARM BOWL OF CHAMPORADO! 🥣🤎",
+        body: "A little sweetness goes a long way! 🤎\n\nOn October 28, JPAMA brought back its sweet treat tradition through JPAMA Sweet Return, serving warm bowls of champorado to our fellow JPAMAns at the BCJ Grounds.\n\nMore than just satisfying cravings, this initiative was a simple way of bringing comfort and a little happiness to students amid their busy academic routines. Because sometimes, a warm bowl of champorado and a thoughtful gesture are enough to make an ordinary school day a little better.\n\nFrom the preparation to the distribution, every bowl served carried the same intention: to share sweetness, spread warmth, and make our JPAMAns feel remembered.\n\nHere's to more little moments, shared smiles, and initiatives that make our JPAMA community a little sweeter! 🥣🤎\n\n#JPAMASweetTreat #JPAMASweetReturn #JPAMA #JPAMAn #ChamporadoDistribution #SweetnessIsServed #JPAMAInitiatives #SweetReturns",
+        images: [
+          "https://drive.google.com/file/d/1RRkY7-6hzpJjRg7hbZF_YdA6T2oeMkFm/view?usp=drive_link",
+          "https://drive.google.com/file/d/1_FXYBwSiKAN3czJOwZLkwbSt9_vA0ozr/view?usp=drive_link",
+          "https://drive.google.com/file/d/1eQlxAXN2Qt5MzQPVfGIUEFNOM9-EE7h1/view?usp=drive_link"
+        ],
+        layout: "mosaic",
+        imageSize: "16:9",
+        edgeStyle: "fade",
+        visible: true,
+      }
+    ]
   },
 };
 

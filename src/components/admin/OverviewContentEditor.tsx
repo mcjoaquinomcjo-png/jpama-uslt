@@ -21,9 +21,20 @@ import {
   ArrowDown,
   Trash2,
   Image as ImageIcon,
+  Trophy,
+  Star,
+  Lightbulb,
+  ShoppingBag,
+  Heart,
+  Megaphone,
+  Plus,
+  Layers,
+  ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
-import { OverviewContent, DEFAULT_OVERVIEW_CONTENT } from "@/lib/siteContent";
-import { resolveImageUrl, extractGoogleDriveId } from "@/lib/imageUtils";
+import { OverviewContent, DEFAULT_OVERVIEW_CONTENT, ChapterActivity } from "@/lib/siteContent";
+import { resolveImageUrl, extractGoogleDriveId, bulkExtractDriveUrls } from "@/lib/imageUtils";
+import ActivitiesShowcaseEditor from "./ActivitiesShowcaseEditor";
 
 interface OverviewContentEditorProps {
   content: OverviewContent;
@@ -47,6 +58,59 @@ export default function OverviewContentEditor({
   onReset,
 }: OverviewContentEditorProps) {
   const [selectedTab, setSelectedTab] = useState<string>(activeSectionId || "hero");
+  const [activeActivityIndex, setActiveActivityIndex] = useState<number>(0);
+  const [bulkDriveInput, setBulkDriveInput] = useState<string>("");
+  const [bulkDriveLoading, setBulkDriveLoading] = useState<boolean>(false);
+  const [bulkDriveStatus, setBulkDriveStatus] = useState<string | null>(null);
+  const [showBulkModal, setShowBulkModal] = useState<boolean>(false);
+
+  // Compute activities with fallback to legacy custom_sections
+  const activities: ChapterActivity[] = React.useMemo(() => {
+    if (content.activities_showcase?.activities && content.activities_showcase.activities.length > 0) {
+      return content.activities_showcase.activities;
+    }
+    const legacy: ChapterActivity[] = [];
+    Object.entries(content.custom_sections || {}).forEach(([id, sec]) => {
+      legacy.push({
+        id,
+        tab_label: sec.title?.slice(0, 15) || "FMAA Passers",
+        icon: "trophy",
+        category_badge: "CHAPTER DISTINCTION",
+        title: sec.title || "FMAA PASSER 2026",
+        subtitle: "ANOTHER PROOF THAT LOUISIAN MAS ARE MEANT TO SHINE. ✨",
+        body: sec.body || "",
+        images: sec.images || [],
+        layout: (sec.layout as any) || "split_text_left",
+        imageSize: sec.imageSize || "2x2",
+        edgeStyle: sec.edgeStyle || "fade",
+        visible: true,
+      });
+    });
+
+    if (legacy.length > 0) {
+      const defaults = DEFAULT_OVERVIEW_CONTENT.activities_showcase?.activities || [];
+      const others = defaults.filter((d) => !legacy.some((l) => l.title === d.title));
+      return [...legacy, ...others].slice(0, 10);
+    }
+
+    return DEFAULT_OVERVIEW_CONTENT.activities_showcase?.activities || [];
+  }, [content.activities_showcase, content.custom_sections]);
+
+  const updateActivitiesList = (newActivities: ChapterActivity[]) => {
+    const limited = newActivities.slice(0, 10);
+    onChange({
+      ...content,
+      activities_showcase: {
+        ...(content.activities_showcase || {
+          enabled: true,
+          mode: "tabs",
+          section_eyebrow: "CHAPTER SPOTLIGHT & ACTIVITIES",
+          section_title: "Highlights, Passers & Student Dispatches",
+        }),
+        activities: limited,
+      },
+    });
+  };
 
   const updateHero = (field: keyof OverviewContent["hero"], value: any) => {
     onChange({
@@ -158,6 +222,7 @@ export default function OverviewContentEditor({
 
   const tabs = [
     { id: "hero", label: "Hero Banner & Stats" },
+    { id: "activities_showcase", label: "🏆 Chapter Activities (10 Tabs)" },
     { id: "pillars", label: "BSMA Pillars" },
     { id: "events", label: "Events Spotlight" },
     { id: "resources", label: "Resources Banner" },
@@ -944,381 +1009,14 @@ export default function OverviewContentEditor({
           </div>
         )}
 
-        {/* CUSTOM SECTION EDITOR: Slideshow / Text / Cards */}
-        {selectedTab.startsWith("custom_") && (() => {
-          const secFromList = (sections || []).find((s) => s.id === selectedTab);
-          const secData = content.custom_sections?.[selectedTab] || {
-            type: secFromList?.type || "slideshow",
-            label: secFromList?.label || selectedTab,
-            images: [],
-            title: "",
-            body: "",
-          };
-
-          const updateCustomSec = (patch: Partial<typeof secData>) => {
-            onChange({
-              ...content,
-              custom_sections: {
-                ...(content.custom_sections || {}),
-                [selectedTab]: { ...secData, ...patch },
-              },
-            });
-          };
-
-          const handleUploadImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-            const file = e.target.files?.[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (loadEvt) => {
-              const dataUrl = loadEvt.target?.result as string;
-              if (!dataUrl) return;
-              const img = new Image();
-              img.onload = () => {
-                const canvas = document.createElement("canvas");
-                let width = img.width;
-                let height = img.height;
-                const maxDim = 1600;
-                if (width > maxDim || height > maxDim) {
-                  if (width > height) {
-                    height = Math.round((height * maxDim) / width);
-                    width = maxDim;
-                  } else {
-                    width = Math.round((width * maxDim) / height);
-                    height = maxDim;
-                  }
-                }
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext("2d");
-                ctx?.drawImage(img, 0, 0, width, height);
-                const compressed = canvas.toDataURL("image/jpeg", 0.85);
-                updateCustomSec({ images: [...(secData.images || []), compressed] });
-              };
-              img.src = dataUrl;
-            };
-            reader.readAsDataURL(file);
-            e.target.value = "";
-          };
-
-          return (
-            <div className="space-y-4">
-              <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-700 flex items-center justify-between">
-                <div>
-                  <strong>{secData.title || (!secData.label?.startsWith("custom_") ? secData.label : "Custom Section")}</strong> — Type: <code className="bg-blue-100 px-1 rounded">{secData.type}</code>
-                </div>
-                <span className="text-[11px] font-mono text-slate-500">#{selectedTab}</span>
-              </div>
-
-              {/* Layout Presentation Selector */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
-                  <span>Presentation Layout Style</span>
-                  <span className="text-[11px] text-slate-400 font-normal">Choose how text & slideshow are arranged</span>
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => updateCustomSec({ layout: "split_text_left" })}
-                    className={`p-2.5 rounded-xl border text-left transition-all ${
-                      (secData.layout || "split_text_left") === "split_text_left"
-                        ? "border-[#0A2540] bg-[#EAF2FA] text-[#0A2540] font-bold ring-2 ring-[#0A2540]/20 shadow-sm"
-                        : "border-slate-200 bg-white hover:bg-slate-50 text-slate-600"
-                    }`}
-                  >
-                    <span className="block text-xs font-bold">📄 Left | Right 🖼️</span>
-                    <span className="block text-[10px] text-slate-500 mt-0.5">Text on Left, Photos Right</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => updateCustomSec({ layout: "split_text_right" })}
-                    className={`p-2.5 rounded-xl border text-left transition-all ${
-                      secData.layout === "split_text_right"
-                        ? "border-[#0A2540] bg-[#EAF2FA] text-[#0A2540] font-bold ring-2 ring-[#0A2540]/20 shadow-sm"
-                        : "border-slate-200 bg-white hover:bg-slate-50 text-slate-600"
-                    }`}
-                  >
-                    <span className="block text-xs font-bold">🖼️ Left | Right 📄</span>
-                    <span className="block text-[10px] text-slate-500 mt-0.5">Photos Left, Text Right</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => updateCustomSec({ layout: "stacked_text_top" })}
-                    className={`p-2.5 rounded-xl border text-left transition-all ${
-                      secData.layout === "stacked_text_top"
-                        ? "border-[#0A2540] bg-[#EAF2FA] text-[#0A2540] font-bold ring-2 ring-[#0A2540]/20 shadow-sm"
-                        : "border-slate-200 bg-white hover:bg-slate-50 text-slate-600"
-                    }`}
-                  >
-                    <span className="block text-xs font-bold">⬆️ Stacked Top</span>
-                    <span className="block text-[10px] text-slate-500 mt-0.5">Text on Top, Photos Below</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => updateCustomSec({ layout: "stacked_text_bottom" })}
-                    className={`p-2.5 rounded-xl border text-left transition-all ${
-                      secData.layout === "stacked_text_bottom"
-                        ? "border-[#0A2540] bg-[#EAF2FA] text-[#0A2540] font-bold ring-2 ring-[#0A2540]/20 shadow-sm"
-                        : "border-slate-200 bg-white hover:bg-slate-50 text-slate-600"
-                    }`}
-                  >
-                    <span className="block text-xs font-bold">⬇️ Stacked Bottom</span>
-                    <span className="block text-[10px] text-slate-500 mt-0.5">Photos Top, Text Below</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* ── Image Size Selector ── */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
-                  <span>📐 Image Size / Aspect Ratio</span>
-                  <span className="text-[11px] text-slate-400 font-normal">Controls the slideshow display dimensions</span>
-                </label>
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                  {([
-                    { value: "2x2",   label: "2×2",   hint: "Square" },
-                    { value: "4:3",   label: "4:3",   hint: "Classic" },
-                    { value: "16:9",  label: "16:9",  hint: "Widescreen" },
-                    { value: "small", label: "Small",  hint: "Compact" },
-                    { value: "medium",label: "Medium", hint: "Standard" },
-                    { value: "large", label: "Large",  hint: "Cinematic" },
-                  ] as const).map(({ value, label, hint }) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => updateCustomSec({ imageSize: value })}
-                      className={`p-2 rounded-xl border text-center transition-all ${
-                        (secData.imageSize || "16:9") === value
-                          ? "border-[#C5A059] bg-amber-50 text-[#9E7D38] font-bold ring-2 ring-[#C5A059]/20 shadow-sm"
-                          : "border-slate-200 bg-white hover:bg-slate-50 text-slate-600"
-                      }`}
-                    >
-                      <span className="block text-xs font-bold">{label}</span>
-                      <span className="block text-[10px] text-slate-500 mt-0.5">{hint}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* ── Edge Style Selector ── */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
-                  <span>🌅 Edge / Border Style</span>
-                  <span className="text-[11px] text-slate-400 font-normal">Controls the vignette around the slideshow</span>
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {([
-                    { value: "none",  label: "None",   hint: "Clean edge" },
-                    { value: "fade",  label: "Fade",   hint: "Soft vignette" },
-                    { value: "fine",  label: "Fine",   hint: "Inner shadow" },
-                    { value: "lined", label: "Lined",  hint: "White border" },
-                  ] as const).map(({ value, label, hint }) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => updateCustomSec({ edgeStyle: value })}
-                      className={`p-2 rounded-xl border text-center transition-all ${
-                        (secData.edgeStyle || "none") === value
-                          ? "border-[#0A2540] bg-[#EAF2FA] text-[#0A2540] font-bold ring-2 ring-[#0A2540]/20 shadow-sm"
-                          : "border-slate-200 bg-white hover:bg-slate-50 text-slate-600"
-                      }`}
-                    >
-                      <span className="block text-xs font-bold">{label}</span>
-                      <span className="block text-[10px] text-slate-500 mt-0.5">{hint}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Section Heading (Optional)</label>
-                <input
-                  type="text"
-                  value={secData.title || ""}
-                  onChange={(e) => updateCustomSec({ title: e.target.value })}
-                  placeholder="e.g. FMAA Passer 2026 or CMA Board Passers"
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Description / Subtitle (Optional)</label>
-                <textarea
-                  rows={4}
-                  value={secData.body || ""}
-                  onChange={(e) => updateCustomSec({ body: e.target.value })}
-                  placeholder="Optional description shown alongside or above the photos. Press Enter for separate paragraphs."
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white"
-                />
-              </div>
-
-              {(secData.type === "slideshow" || secData.type === "custom") && (
-                <div className="space-y-3 pt-3 border-t border-slate-200">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div>
-                      <label className="text-xs font-bold text-[#0A2540] uppercase tracking-wider flex items-center gap-1.5">
-                        <ImageIcon className="w-4 h-4 text-[#C5A059]" />
-                        <span>Slideshow Photos ({(secData.images || []).length})</span>
-                      </label>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        Paste public Google Drive links to showcase your slideshow. (Optional: direct device file upload is also supported).
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => updateCustomSec({ images: [...(secData.images || []), ""] })}
-                        className="px-3.5 py-1.5 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm"
-                      >
-                        <span>+ Add Image URL (Google Drive)</span>
-                      </button>
-
-                      <label
-                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
-                        title="Optional: You can also upload an image directly from your computer/device"
-                      >
-                        <Upload className="w-3.5 h-3.5 text-slate-500" />
-                        <span>(Optional) Upload Device File</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleUploadImage}
-                          className="hidden"
-                        />
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 mt-2">
-                    {(secData.images || []).map((url, imgIdx) => {
-                      const isDrive = extractGoogleDriveId(url);
-                      return (
-                        <div key={imgIdx} className="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-200">
-                          <span className="text-[10px] font-mono font-semibold text-slate-400 w-5 text-right flex-shrink-0">
-                            {imgIdx + 1}
-                          </span>
-
-                          {/* Mini Thumbnail Preview */}
-                          <div className="w-12 h-9 rounded-md bg-slate-200 overflow-hidden flex-shrink-0 border border-slate-300 flex items-center justify-center">
-                            {url ? (
-                              <img
-                                src={resolveImageUrl(url)}
-                                alt={`Preview ${imgIdx + 1}`}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  (e.target as HTMLElement).style.display = "none";
-                                }}
-                              />
-                            ) : (
-                              <ImageIcon className="w-4 h-4 text-slate-400" />
-                            )}
-                          </div>
-
-                          <div className="flex-1 space-y-1">
-                            <input
-                              type="text"
-                              value={url}
-                              onChange={(e) => {
-                                const imgs = [...(secData.images || [])];
-                                imgs[imgIdx] = e.target.value;
-                                updateCustomSec({ images: imgs });
-                              }}
-                              placeholder="Paste https://... or Google Drive sharing URL"
-                              className="w-full px-2.5 py-1 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#0A2540] font-mono"
-                            />
-                            {isDrive && (
-                              <span className="inline-block text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                                ✓ Google Drive detected (High-Res Proxy Enabled)
-                              </span>
-                            )}
-                            {url.startsWith("data:image/") && (
-                              <span className="inline-block text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                                ✓ Direct Device Upload (Stored in Supabase)
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Reordering Controls */}
-                          <div className="flex flex-col gap-0.5 flex-shrink-0">
-                            <button
-                              type="button"
-                              disabled={imgIdx === 0}
-                              onClick={() => {
-                                const imgs = [...(secData.images || [])];
-                                [imgs[imgIdx - 1], imgs[imgIdx]] = [imgs[imgIdx], imgs[imgIdx - 1]];
-                                updateCustomSec({ images: imgs });
-                              }}
-                              className="p-1 text-slate-400 hover:text-[#0A2540] disabled:opacity-20 transition-colors"
-                              title="Move photo up"
-                            >
-                              <ArrowUp className="w-3 h-3" />
-                            </button>
-                            <button
-                              type="button"
-                              disabled={imgIdx === (secData.images || []).length - 1}
-                              onClick={() => {
-                                const imgs = [...(secData.images || [])];
-                                [imgs[imgIdx + 1], imgs[imgIdx]] = [imgs[imgIdx], imgs[imgIdx + 1]];
-                                updateCustomSec({ images: imgs });
-                              }}
-                              className="p-1 text-slate-400 hover:text-[#0A2540] disabled:opacity-20 transition-colors"
-                              title="Move photo down"
-                            >
-                              <ArrowDown className="w-3 h-3" />
-                            </button>
-                          </div>
-
-                          {/* Delete Button */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const imgs = (secData.images || []).filter((_, i) => i !== imgIdx);
-                              updateCustomSec({ images: imgs });
-                            }}
-                            className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
-                            title="Remove photo"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {(secData.images || []).length === 0 && (
-                    <div className="text-center py-8 border-2 border-dashed border-slate-200 rounded-2xl space-y-2">
-                      <ImageIcon className="w-8 h-8 text-slate-300 mx-auto" />
-                      <p className="text-xs text-slate-500 font-medium">
-                        No photos added to this slideshow yet.
-                      </p>
-                      <p className="text-[11px] text-slate-400">
-                        Click &ldquo;Upload File&rdquo; or &ldquo;+ Add Image URL&rdquo; to add unlimited passers/photos.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Inline Save Bar for Custom Section */}
-              <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <span className="text-[11.5px] text-slate-500">
-                  💡 Tip: If headline, description, and photos are all blank, this custom section automatically hides from the homepage.
-                </span>
-                <button
-                  type="button"
-                  onClick={onSave}
-                  className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all flex-shrink-0"
-                >
-                  <Save className="w-3.5 h-3.5" />
-                  <span>Save Custom Section</span>
-                </button>
-              </div>
-            </div>
-          );
-        })()}
+        {/* CHAPTER ACTIVITIES SHOWCASE & CUSTOM SECTION EDITOR (Up to 10 Activities) */}
+        {(selectedTab === "activities_showcase" || selectedTab.startsWith("custom_")) && (
+          <ActivitiesShowcaseEditor
+            content={content}
+            onChange={onChange}
+            onSave={onSave}
+          />
+        )}
 
         {/* Footer controls */}
         <div className="pt-4 border-t border-slate-100 flex items-center justify-between">

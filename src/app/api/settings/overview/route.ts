@@ -73,8 +73,15 @@ export async function GET() {
   // 1. Try Supabase real-time storage first
   const supabaseConfig = await getSupabaseConfig<OverviewSavedPayload>("SYS_OVERVIEW_CONFIG");
   if (supabaseConfig && Array.isArray(supabaseConfig.sections)) {
+    const mergedContent = {
+      ...DEFAULT_OVERVIEW_CONTENT,
+      ...supabaseConfig.content,
+      activities_showcase:
+        supabaseConfig.content?.activities_showcase ||
+        DEFAULT_OVERVIEW_CONTENT.activities_showcase,
+    };
     return NextResponse.json(
-      { success: true, data: supabaseConfig, source: "supabase" },
+      { success: true, data: { ...supabaseConfig, content: mergedContent }, source: "supabase" },
       {
         headers: {
           "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
