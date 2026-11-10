@@ -16,6 +16,11 @@ export interface OverviewContent {
     stat_convocations?: string;
     stat_passers?: string;
     stat_partners?: string;
+    emblem_image?: string;
+    emblem_title?: string;
+    emblem_subtitle?: string;
+    emblem_motion?: "static" | "glow" | "floating";
+    emblem_visible?: boolean;
   };
   pillars: {
     section_eyebrow: string;
@@ -62,6 +67,8 @@ export interface OverviewContent {
     body?: string;
     images?: string[];   // For slideshow: array of image URLs
     layout?: "split_text_left" | "split_text_right" | "stacked_text_top" | "stacked_text_bottom";
+    imageSize?: "2x2" | "4:3" | "16:9" | "small" | "medium" | "large";
+    edgeStyle?: "fade" | "fine" | "lined" | "none";
   }>;
 }
 
@@ -82,6 +89,11 @@ export const DEFAULT_OVERVIEW_CONTENT: OverviewContent = {
     stat_convocations: "12+ Annual Assemblies",
     stat_passers: "100% CMA Passing Rate",
     stat_partners: "8 Top Accounting Firms",
+    emblem_image: "/jpama-hero-emblem.jpg",
+    emblem_title: "Official Chapter Seal",
+    emblem_subtitle: "",
+    emblem_motion: "glow",
+    emblem_visible: true,
   },
   pillars: {
     section_eyebrow: "ACADEMIC FOCUS",

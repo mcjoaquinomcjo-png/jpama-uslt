@@ -112,12 +112,8 @@ body {
    Collegiate Metallic Gold Shimmer & Gleam
    ============================================================ */
 @keyframes goldShimmer {
-  0% {
-    background-position: -200% center;
-  }
-  100% {
-    background-position: 200% center;
-  }
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
 }
 
 @keyframes goldPulseGlow {
@@ -175,12 +171,223 @@ body {
 }
 
 @keyframes goldGleamSlide {
+  0% { transform: translateX(-150%) rotate(25deg); }
+  30%, 100% { transform: translateX(150%) rotate(25deg); }
+}
+
+/* ============================================================
+   CYCLING GOLD SHIMMER BORDER BEAM (360° Perimeter Animation)
+   ============================================================ */
+@keyframes goldBeamCycle {
   0% {
-    transform: translateX(-150%) rotate(25deg);
+    stroke-dashoffset: 0;
   }
-  30%, 100% {
-    transform: translateX(150%) rotate(25deg);
+  100% {
+    stroke-dashoffset: -1000;
   }
+}
+
+@keyframes glintPulseSlow {
+  0%, 100% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.15);
+  }
+}
+
+.animate-glint-pulse {
+  animation: glintPulseSlow 3.2s ease-in-out infinite;
+}
+
+/* Elegant floating emblem levitation */
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-9px);
+  }
+}
+
+.animate-float {
+  animation: floatSlow 5.5s ease-in-out infinite;
+}
+
+/* Base high-visibility gold card with glow */
+.gold-card-luxury {
+  position: relative;
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  box-shadow: 0 4px 20px -2px rgba(10, 37, 64, 0.4), 0 0 15px -3px rgba(212, 175, 55, 0.2);
+}
+
+/* ============================================================
+   Prestige Gold Border — thin metallic 1px, 35% opacity
+   ============================================================ */
+.gold-border {
+  border: 1px solid rgba(212, 175, 55, 0.35);
+}
+.gold-border-hover:hover {
+  border-color: rgba(212, 175, 55, 0.7);
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.25);
+  transition: all 0.3s ease;
+}
+
+/* ============================================================
+   Corner Lens-Flare / 4-point Star Glint
+   Places subtle star sparks on the corners of a container.
+   Usage: add class="gold-corner-glint" and position:relative.
+   ============================================================ */
+.gold-corner-glint {
+  position: relative;
+}
+
+/* Star helper — reused for each corner via pseudo approach */
+.gold-corner-glint::before,
+.gold-corner-glint::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Top-left & top-right star glints via ::before */
+.gold-corner-glint::before {
+  top: -1px;
+  left: -1px;
+  width: 10px;
+  height: 10px;
+  background:
+    /* vertical bar */
+    linear-gradient(to bottom, transparent 35%, rgba(212,175,55,0.9) 50%, transparent 65%),
+    /* horizontal bar */
+    linear-gradient(to right,  transparent 35%, rgba(212,175,55,0.9) 50%, transparent 65%);
+  background-size: 2px 10px, 10px 2px;
+  background-repeat: no-repeat;
+  background-position: center center, center center;
+  filter: blur(0.3px);
+  animation: glintPulse 3.5s ease-in-out infinite;
+}
+
+/* Bottom-right star glint via ::after */
+.gold-corner-glint::after {
+  bottom: -1px;
+  right: -1px;
+  width: 10px;
+  height: 10px;
+  background:
+    linear-gradient(to bottom, transparent 35%, rgba(212,175,55,0.9) 50%, transparent 65%),
+    linear-gradient(to right,  transparent 35%, rgba(212,175,55,0.9) 50%, transparent 65%);
+  background-size: 2px 10px, 10px 2px;
+  background-repeat: no-repeat;
+  background-position: center center, center center;
+  filter: blur(0.3px);
+  animation: glintPulse 3.5s ease-in-out infinite 1.75s;
+}
+
+@keyframes glintPulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50%       { opacity: 1;   transform: scale(1.2); }
+}
+
+/* ============================================================
+   360° Traversing Light-Fraction Line along top + side edges
+   Usage: add .gold-sweep-border to a position:relative wrapper
+   ============================================================ */
+.gold-sweep-border {
+  position: relative;
+  overflow: hidden;
+}
+
+.gold-sweep-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 5;
+  /* Animated conic sweep masked to top + right edges only */
+  background: conic-gradient(
+    from 0deg at 0% 0%,
+    transparent 0deg,
+    rgba(212,175,55,0.0)  60deg,
+    rgba(212,175,55,0.55) 90deg,
+    rgba(255,235,130,0.8) 95deg,
+    rgba(212,175,55,0.55) 100deg,
+    rgba(212,175,55,0.0)  140deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box,
+                linear-gradient(#000 0 0);
+  -webkit-mask-composite: destination-out;
+  mask-composite: exclude;
+  padding: 1px;
+  animation: sweepLine 5s linear infinite;
+}
+
+@keyframes sweepLine {
+  from { --start: 0deg;   transform: rotate(0deg);   }
+  to   { --start: 360deg; transform: rotate(360deg); }
+}
+
+/* Simpler cross-browser approach — a moving shimmer across top edge */
+.gold-sweep-border::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(212,175,55,0.0) 10%,
+    rgba(255,235,130,0.9) 50%,
+    rgba(212,175,55,0.0) 90%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 6;
+  animation: sweepGlintLine 4s ease-in-out infinite;
+}
+
+@keyframes sweepGlintLine {
+  0%   { left: -60%; opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+
+/* Stat metric boxes — gold border + glint on hover */
+.stat-box-prestige {
+  border: 1px solid rgba(212,175,55,0.20);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.stat-box-prestige:hover {
+  border-color: rgba(212,175,55,0.5);
+  box-shadow: 0 0 10px rgba(212,175,55,0.1);
+}
+
+/* ============================================================
+   Unified Prestige Academic Typography System
+   ============================================================ */
+h1, h2, h3, h4, .font-serif, .font-display {
+  font-family: var(--font-cinzel), 'Cinzel', 'Playfair Display', Georgia, serif;
+}
+
+.font-sans, p, input, select, textarea, button {
+  font-family: var(--font-jakarta), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Prestige Badges & Section Eyebrows */
+.prestige-badge {
+  font-family: var(--font-jakarta), -apple-system, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 /* Printable PDF Program Styling */

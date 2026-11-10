@@ -281,12 +281,16 @@ export default function FullGazetteReaderModal({
                         </p>
 
                         {section.subpoints && section.subpoints.length > 0 && (
-                          <div className="mt-3 pl-4 border-l-2 border-[#C5A059] space-y-1.5 font-sans text-xs text-slate-600">
-                            {section.subpoints.map((sub, subIdx) => (
-                              <p key={subIdx} className="leading-normal">
-                                • {sub}
-                              </p>
-                            ))}
+                          <div className="mt-3 pl-4 border-l-2 border-[#C5A059] space-y-2 font-sans text-xs sm:text-[13px] text-slate-700">
+                            {section.subpoints.map((sub, subIdx) => {
+                              // Remove any leading bullet points so it cleanly retains a), b), c), d)
+                              const cleanSub = sub.replace(/^[•\-\*]\s*/, "");
+                              return (
+                                <p key={subIdx} className="leading-relaxed">
+                                  {cleanSub}
+                                </p>
+                              );
+                            })}
                           </div>
                         )}
                       </div>

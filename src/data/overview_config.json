@@ -1,0 +1,122 @@
+{
+  "sections": [
+    {
+      "id": "hero",
+      "label": "Hero Banner & Lookup",
+      "visible": true
+    },
+    {
+      "id": "custom_1793462341735",
+      "label": "FMAA Passer 2026 (custom)",
+      "visible": true,
+      "type": "custom"
+    },
+    {
+      "id": "pillars",
+      "label": "BSMA Academic Pillars",
+      "visible": false
+    },
+    {
+      "id": "events",
+      "label": "Upcoming Convocations",
+      "visible": true
+    },
+    {
+      "id": "resources",
+      "label": "Academic Resources Library",
+      "visible": false
+    },
+    {
+      "id": "leadership",
+      "label": "Council & Faculty Stewardship",
+      "visible": false
+    },
+    {
+      "id": "contact",
+      "label": "Office & Contact Desk",
+      "visible": true
+    }
+  ],
+  "content": {
+    "hero": {
+      "badge": "Bachelor of Science in Management Accounting (BSMA)",
+      "title_start": "Empowering Louisian",
+      "title_highlight": "Management Accountants",
+      "description": "Welcome to the official web portal of the Junior Philippine Association of Management Accountants (JPAMA) – University of Saint Louis Tuguegarao Chapter. Your dedicated hub for chapter events, academic reviewers, and student membership.",
+      "tagline_dept": "School of Accountancy, Business, and Hospitality",
+      "tagline_loc": "USLT Tuguegarao City",
+      "btn_primary_text": "Explore Convocations",
+      "btn_primary_link": "/events",
+      "btn_secondary_text": "Access Review Vault",
+      "btn_secondary_link": "/resources",
+      "stat_scholars": "",
+      "stat_convocations": "",
+      "stat_passers": "",
+      "stat_partners": ""
+    },
+    "pillars": {
+      "section_eyebrow": "ACADEMIC FOCUS",
+      "section_title": "The BS Management Accounting Program",
+      "section_desc": "Bridging financial analytics, cost control, and strategic management for USLT scholars.",
+      "items": [
+        {
+          "title": "Strategic Cost & Management",
+          "desc": "Mastering cost behavior, budgeting, performance evaluation, and decision modeling for modern business controllership.",
+          "tag": "Core Academic"
+        },
+        {
+          "title": "CMA & Professional Pathways",
+          "desc": "Preparing Louisian scholars for global certifications, corporate accounting, financial planning, and advisory careers.",
+          "tag": "Career Ready"
+        },
+        {
+          "title": "Leadership & Chapter Donning",
+          "desc": "Building ethical leadership, student camaraderie, and executive governance through our annual assembly rites.",
+          "tag": "Student Life"
+        }
+      ]
+    },
+    "events": {
+      "section_eyebrow": "CALENDAR SPOTLIGHT",
+      "section_title": "Upcoming Assemblies & Convocations"
+    },
+    "resources": {
+      "badge": "Academic Library & Materials",
+      "title": "Curated BSMA Reviewers & Course Syllabi",
+      "description": "Access verified handouts, practice assessments, mock board reviewers, financial modeling templates, and testbanks spanning all BSMA core subjects — from Cost Accounting and MAS to Taxation, Auditing, and Business Law. Exclusively curated for Louisian scholars.",
+      "tags": [
+        "Cost Accounting & MAS",
+        "Taxation & Business Law",
+        "Auditing & Assurance"
+      ],
+      "btn_text": "Explore Resources"
+    },
+    "contact": {
+      "office_title": "Chapter Office",
+      "office_desc": "Bulwagang San Jacinto, USLT Mabini Campus, Tuguegarao City, Cagayan",
+      "email_title": "Official Inquiries",
+      "email_desc": "jpama@uslt.edu.ph",
+      "hours_title": "Office Hours",
+      "hours_desc": "Monday – Friday: 8:00 AM – 5:00 PM (SABH Hallway Desk)"
+    },
+    "custom_sections": {
+      "custom_1793462341735": {
+        "type": "custom",
+        "label": "custom_1793462341735",
+        "images": [
+          "https://drive.google.com/file/d/1ytjYS8XFJgKFtQ83SBlUssfFfaQHCx7r/view?usp=drive_link",
+          "https://drive.google.com/file/d/15YAci2rQNdqoSzBNIk6FGGODpGgx3Dzx/view?usp=drive_link",
+          "https://drive.google.com/file/d/1Cc89cpl5bLIGaUzDS0nKQR574h2NdO4o/view?usp=drive_link",
+          "https://drive.google.com/file/d/1RRkY7-6hzpJjRg7hbZF_YdA6T2oeMkFm/view?usp=drive_link",
+          "https://drive.google.com/file/d/1_FXYBwSiKAN3czJOwZLkwbSt9_vA0ozr/view?usp=drive_link",
+          "https://drive.google.com/file/d/1eQlxAXN2Qt5MzQPVfGIUEFNOM9-EE7h1/view?usp=drive_link"
+        ],
+        "title": "FMAA Passer 2026",
+        "body": "ANOTHER PROOF THAT LOUISIAN MAs ARE MEANT TO SHINE. ✨\n\nEvery achievement is a reminder that with the right guidance, determination, and the courage to keep going, every Louisian has the potential to shine in their own field. And today, JPAMA–USLT celebrates a milestone that makes our whole community proud!\n\nOur warmest congratulations to Angela Grace Udani, John Rolan Alilam, Erod Harell Corpuz, Angel Trisha Mae B. Cabantoc, and all the FMAA passers from the University of Saint Louis–Tuguegarao! 🎉\n\nYour success is not just a personal victory; it is also an inspiration to every Management Accounting student who is still working toward their own goals. You remind us that every small step, every late-night review, and every effort made along the way can lead to something worth celebrating.\n\nAs you continue your journey, may you carry the Louisians' spirit with you and keep proving that every MA has a light of their own, ready to shine in different fields and opportunities. And with the guidance and support of Insights Financial Review Services Inc., may more aspiring professionals find their way toward their dreams.\n\nFrom your JPAMA–USLT family, congratulations! We are truly proud of what you have achieved, and we look forward to seeing you embrace even greater opportunities and shine even brighter in the journey ahead. Here’s to more doors opening and more dreams coming to life!\n\n#JPAMAUSLT #ProudLouisians #FMAAPassers #EveryMACanShine #ManagementAccounting",
+        "layout": "split_text_left",
+        "imageSize": "2x2",
+        "edgeStyle": "fade"
+      }
+    }
+  }
+}

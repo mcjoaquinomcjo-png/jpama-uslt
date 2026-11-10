@@ -424,7 +424,7 @@ export default function AboutPageEditor({ onSavedNotify }: AboutPageEditorProps)
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Action Header Banner */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="sticky top-2 z-30 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200 shadow-md p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200 text-xs font-semibold mb-2">
             <Scale className="w-3.5 h-3.5 text-[#C5A059]" />
@@ -720,6 +720,21 @@ export default function AboutPageEditor({ onSavedNotify }: AboutPageEditorProps)
                     </div>
                   ))}
                 </div>
+
+                {/* Inline Save Bar for By-Laws */}
+                <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <span className="text-[11.5px] text-slate-500">
+                    💡 Edits to {currentArticle.articleNumber} will be synced across the public constitution viewer.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all flex-shrink-0"
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    <span>Save By-Laws</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -852,6 +867,21 @@ export default function AboutPageEditor({ onSavedNotify }: AboutPageEditorProps)
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Inline Save Bar for Purposes */}
+          <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <span className="text-[11.5px] text-slate-500">
+              💡 Tip: Inactive or empty purposes are automatically hidden from the public overview.
+            </span>
+            <button
+              type="button"
+              onClick={handleSave}
+              className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all flex-shrink-0"
+            >
+              <Save className="w-3.5 h-3.5" />
+              <span>Save Purposes</span>
+            </button>
           </div>
         </div>
         </div>
@@ -1195,6 +1225,20 @@ export default function AboutPageEditor({ onSavedNotify }: AboutPageEditorProps)
                 </div>
               </div>
 
+              {/* Inline Save Bar for Heritage */}
+              <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <span className="text-[11.5px] text-slate-500">
+                  💡 Tip: Empty or inactive heritage milestones are automatically hidden from the timeline.
+                </span>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all flex-shrink-0"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>Save Heritage</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1335,6 +1379,21 @@ export default function AboutPageEditor({ onSavedNotify }: AboutPageEditorProps)
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Inline Save Bar for Distinctions & Honors */}
+          <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <span className="text-[11.5px] text-slate-500">
+              💡 Tip: Empty or inactive distinction cards are automatically hidden from the public overview.
+            </span>
+            <button
+              type="button"
+              onClick={handleSave}
+              className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all flex-shrink-0"
+            >
+              <Save className="w-3.5 h-3.5" />
+              <span>Save Distinctions</span>
+            </button>
           </div>
         </div>
         </div>
@@ -1485,6 +1544,21 @@ export default function AboutPageEditor({ onSavedNotify }: AboutPageEditorProps)
                           </div>
                         ))}
                       </div>
+                    </div>
+
+                    {/* Inline Save Bar for Custom Tab */}
+                    <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <span className="text-[11.5px] text-slate-500">
+                        💡 Tip: If disabled or empty, this tab will be omitted from public view.
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleSave}
+                        className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all flex-shrink-0"
+                      >
+                        <Save className="w-3.5 h-3.5" />
+                        <span>Save Custom Tab</span>
+                      </button>
                     </div>
                   </div>
                 </div>

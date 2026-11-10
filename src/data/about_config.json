@@ -3,31 +3,38 @@
     "purposes": [
       {
         "id": "p1",
-        "title": "Promoting Management Accounting Excellence",
-        "description": "To champion the rigorous study and professional advancement of Management Accounting as a distinguished discipline within the School of Accountancy, Business, and Hospitality.",
+        "title": "Promoting Management Accounting Discipline",
+        "description": "To promote management accounting as a profession and discipline across the University and region.",
         "icon": "GraduationCap",
-        "articleClause": "Article III, Section 1"
+        "articleClause": "Article III, Sec. 1(a)"
       },
       {
         "id": "p2",
-        "title": "Building Multisectoral Harmony & Linkages",
-        "description": "To cultivate robust institutional relationships with professional bodies including PICPA, CMA Philippines, national federation chapters, and corporate finance industries.",
-        "icon": "Users",
-        "articleClause": "Article III, Section 2"
+        "title": "Practical Environment & Experiential Learning",
+        "description": "To familiarize the members with the practical environment and activities specific to the field of management accounting.",
+        "icon": "BookOpen",
+        "articleClause": "Article III, Sec. 1(b)"
       },
       {
         "id": "p3",
-        "title": "Fostering Louisian Camaraderie & Spirit",
-        "description": "To unite BSMA students through collaborative academic summits, leadership immersions, and collegiate development that nurture a culture of solidarity.",
-        "icon": "Sparkles",
-        "articleClause": "Article III, Section 3"
+        "title": "Upholding High Moral & Professional Standards",
+        "description": "To uphold moral standards that are in the best interests of the JPAMA, management accounting profession, and its members.",
+        "icon": "ShieldCheck",
+        "articleClause": "Article III, Sec. 1(c)"
       },
       {
         "id": "p4",
-        "title": "Upholding Uncompromising Ethical Standards",
-        "description": "To instill Christian values, professional integrity, accountability, and the Louisian hallmark of Christian excellence in all academic and financial governance.",
-        "icon": "ShieldCheck",
-        "articleClause": "Article III, Section 4"
+        "title": "Harmony, Concord & Multisectoral Advancement",
+        "description": "To build a relationship of harmony and concord between JPAMA members, other students, and a multisectoral organization for the advancement of a world class nationalist oriented student organization.",
+        "icon": "Users",
+        "articleClause": "Article III, Sec. 1(d)"
+      },
+      {
+        "id": "p5",
+        "title": "Camaraderie, Fellowship & Networking",
+        "description": "To foster camaraderie, fellowship and networking among members through collaborative assemblies and academic summits.",
+        "icon": "Sparkles",
+        "articleClause": "Article III, Sec. 1(e)"
       }
     ],
     "heritage": [
@@ -149,29 +156,25 @@
         "description": "Recognized for community extension projects conducting basic bookkeeping and budgeting seminars for rural micro-entrepreneurs in Tuguegarao City.",
         "highlightTag": "Civic Outreach"
       }
-    ]
+    ],
+    "purposes_enabled": true
   },
   "bylaws": [
     {
       "id": "art-1",
       "articleNumber": "ARTICLE I",
       "title": "NAME AND LOGO",
-      "summary": "Establishes the official name, chapter jurisdiction, and heraldic symbolism of the official organization seal.",
+      "summary": "Establishes the official chapter designation and heraldic usage of the JPAMA corporate emblem.",
       "sections": [
         {
           "sectionNumber": "Section 1",
           "title": "Official Designation",
-          "content": "The organization shall be officially designated and known as the JUNIOR PHILIPPINE ASSOCIATION OF MANAGEMENT ACCOUNTANTS – UNIVERSITY OF SAINT LOUIS TUGUEGARAO CHAPTER (JPAMA – USLT), operating under the School of Accountancy, Business, and Hospitality (SABH)."
+          "content": "This Organization shall be known as the USLT Local Chapter of JUNIOR PHILIPPINE ASSOCIATION OF MANAGEMENT ACCOUNTANTS herein referred as JPAMA."
         },
         {
           "sectionNumber": "Section 2",
-          "title": "Official Seal and Emblem",
-          "content": "The official seal of JPAMA USLT shall feature the collegiate shield flanked by the laurel of academic distinction, the silhouette of visionary management accountants gazing toward national advancement, and the heraldic colors of Royal Navy and Burnished Gold.",
-          "subpoints": [
-            "Navy Blue represents institutional integrity, analytical depth, and professional dignity.",
-            "Burnished Gold symbolizes radiant wisdom, excellence, and the dawn of the Sihaya chapter.",
-            "The Laurel Wreath signifies continuous scholarly conquest and ethical leadership."
-          ]
+          "title": "Official Logo Usage",
+          "content": "The JPAMA Logo shall be used in every business transaction entered into by this organization."
         }
       ]
     },
@@ -179,17 +182,71 @@
       "id": "art-2",
       "articleNumber": "ARTICLE II",
       "title": "GENERAL PROVISIONS AND DEFINITION OF TERMS",
-      "summary": "Defines governing principles, institutional subordination to USLT policies, and standard definitions of terms.",
+      "summary": "Outlines foundational identity, governance standards, organizational jurisdiction, and formal definitions.",
       "sections": [
         {
           "sectionNumber": "Section 1",
-          "title": "Institutional Alignment",
-          "content": "JPAMA USLT adheres strictly to the University Code of Saint Louis Tuguegarao, the guidelines of the Office of Student Affairs (OSA), and the supervisory authority of the School of Accountancy, Business, and Hospitality."
+          "title": "Local Nature & Institution",
+          "content": "JPAMA is the local organization of students in Bachelor of Science in Management Accounting in the University of Saint Louis Tuguegarao."
         },
         {
           "sectionNumber": "Section 2",
-          "title": "Definition of Terms",
-          "content": "For the purposes of this Constitution and By-Laws, the terms 'Member in Good Standing', 'Executive Council', 'General Assembly', and 'Academic Term' shall be interpreted in congruence with university regulations."
+          "title": "Character of the Organization",
+          "content": "JPAMA is a democratic, non-partisan, non-political, and non-profit student organization."
+        },
+        {
+          "sectionNumber": "Section 3",
+          "title": "Professional Counterpart & Affiliation",
+          "content": "JPAMA is the only legitimate student-counterpart of PAMA and official university organization of Institute of Management Accountants - USL Student Chapter."
+        },
+        {
+          "sectionNumber": "Section 4",
+          "title": "Definition of Organization",
+          "content": "Organization shall mean JPAMA."
+        },
+        {
+          "sectionNumber": "Section 5",
+          "title": "Federation Year",
+          "content": "Federation year shall mean one school year and shall end after the Final Examination of the second semester of each Fiscal Year."
+        },
+        {
+          "sectionNumber": "Section 6",
+          "title": "Assembly",
+          "content": "The assembly of the Organization shall mean the meetings of the JPAMA leaders and/or members."
+        },
+        {
+          "sectionNumber": "Section 7",
+          "title": "Leaders",
+          "content": "Leaders shall mean the elected and appointed leaders of the Organization."
+        },
+        {
+          "sectionNumber": "Section 8",
+          "title": "JPAMAn",
+          "content": "JPAMAn means member of the Organization."
+        },
+        {
+          "sectionNumber": "Section 9",
+          "title": "Majority",
+          "content": "Majority shall mean more than 50% of the present members in the assembly."
+        },
+        {
+          "sectionNumber": "Section 10",
+          "title": "Quorum",
+          "content": "Quorum shall mean 2/3 of the Leaders."
+        },
+        {
+          "sectionNumber": "Section 11",
+          "title": "Major Activity",
+          "content": "A major activity of the Organization means:",
+          "subpoints": [
+            "a. An activity that is in line with and pursuant to the objectives of the University of Saint Louis Tuguegarao as communicated by the leaders, noted by the advisers and the dean, recommended by the Dean of Student Affairs and Services, and approved by the Vice President for Administration and/or the University President.",
+            "b. An activity that must require the participation of the JPAMAns."
+          ]
+        },
+        {
+          "sectionNumber": "Section 12",
+          "title": "Amendments Process",
+          "content": "Any alterations of the provisions of this Constitution and By-Laws shall mean amending the contents of the Constitution and By-Laws thus, shall undergo the process of Amendments."
         }
       ]
     },
@@ -197,27 +254,19 @@
       "id": "art-3",
       "articleNumber": "ARTICLE III",
       "title": "PURPOSES",
-      "summary": "Outlines the foundational mandate, aims, and co-curricular objectives governing all organizational initiatives.",
+      "summary": "Sets forth the five-fold academic, professional, ethical, and fraternal objectives of the association.",
       "sections": [
         {
           "sectionNumber": "Section 1",
-          "title": "Scholastic Competence",
-          "content": "To promote intellectual advancement and technical competence in the study and professional application of Management Accounting and strategic decision-making."
-        },
-        {
-          "sectionNumber": "Section 2",
-          "title": "Multisectoral Linkages",
-          "content": "To establish active collaborative linkages with professional accounting bodies, business leaders, industry partners, and allied student councils nationwide."
-        },
-        {
-          "sectionNumber": "Section 3",
-          "title": "Fraternal Solidarity",
-          "content": "To cultivate harmony, professional brotherhood, and mutual scholastic assistance among all students enrolled in the BSMA curriculum."
-        },
-        {
-          "sectionNumber": "Section 4",
-          "title": "Ethical Integrity",
-          "content": "To foster uncompromising ethical values, moral responsibility, and Christian Louisian virtues across all co-curricular, financial, and personal endeavors."
+          "title": "Foundational Purposes",
+          "content": "The purposes of the Organization shall:",
+          "subpoints": [
+            "a) To promote management accounting as a profession and discipline.",
+            "b) To familiarize the members with the practical environment and activities specific to the field of management accounting.",
+            "c) To uphold moral standards that are in the best interests of the JPAMA, management accounting profession, and its members.",
+            "d) To build a relationship of harmony and concord between JPAMA members, other students, and a multisectoral organization for the advancement of a world class nationalist oriented student organization.",
+            "e) To foster camaraderie, fellowship and networking among members."
+          ]
         }
       ]
     },
@@ -225,22 +274,78 @@
       "id": "art-4",
       "articleNumber": "ARTICLE IV",
       "title": "MEMBERSHIP",
-      "summary": "Specifies eligibility criteria, membership registration requirements, rights, duties, and privileges.",
+      "summary": "Defines eligibility, mandatory BSMA standing, annual dues, member rights, duties, and sanctionable violations.",
       "sections": [
         {
           "sectionNumber": "Section 1",
-          "title": "Eligibility",
-          "content": "All bona fide students officially enrolled in the Bachelor of Science in Management Accounting (BSMA) program of USLT are eligible and entitled to membership."
+          "title": "Local Membership Qualification",
+          "content": "Local membership into the Organization is mandatory to all Bachelor of Science in Management Accounting students of the University of Saint Louis Tuguegarao which is duly recognized by the Commission on Higher Education (CHED). However, in case a non-member avails of at least one of the student services offered by the Organization, the said freshman is automatically a member and thus shall abide by this constitution and by-laws."
         },
         {
           "sectionNumber": "Section 2",
-          "title": "Rights of Members",
-          "content": "Every member in good standing possesses the right to participate in general assemblies, vote in regular elections, run for eligible officer positions, and access chapter resources."
+          "title": "Freshmen Encouragement",
+          "content": "The freshmen are not mandated but are highly encouraged to be a member of the JPIA Regional Chapter and JPIA National Chapter."
         },
         {
           "sectionNumber": "Section 3",
-          "title": "Duties and Responsibilities",
-          "content": "Members shall faithfully uphold this Constitution, abide by university statutes, attend prescribed convocations, and pay requisite annual membership fees."
+          "title": "Upperclassmen Automatic Federation Membership",
+          "content": "The students taking up Bachelor of Science in Management Accounting (2nd Year to 4th Year) are automatically members of the JPIA Regional Chapter and JPIA National Chapter."
+        },
+        {
+          "sectionNumber": "Section 4",
+          "title": "Membership Dues",
+          "content": "All members must pay a membership fee every year as set by the leaders with due approval by the advisers as follows:",
+          "subpoints": [
+            "a) Local Membership fee (as set by the college student Handbook)",
+            "b) Regional Membership fee (as set by the Regional Council)",
+            "c) National Membership fee (as set by the National Council)"
+          ]
+        },
+        {
+          "sectionNumber": "Section 5",
+          "title": "Annual Subsidy",
+          "content": "All local members must pay a subsidy every year as set by the leaders with due approval by the advisers."
+        },
+        {
+          "sectionNumber": "Section 6",
+          "title": "Additional Requisite Fees",
+          "content": "All members may also be required to pay additional fees duly determined and approved by the local chapter leaders and advisers as they see reasonable and just for the benefit of the Organization."
+        },
+        {
+          "sectionNumber": "Section 7",
+          "title": "Duration & Renewal",
+          "content": "Membership in the Organization is for a period of one year and is renewable annually."
+        },
+        {
+          "sectionNumber": "Section 8",
+          "title": "Rights and Suffrage",
+          "content": "The members of the Organization shall individually or collectively have the right to be informed of any project and/or activity of the Organization and shall have the responsibility to participate in such undertaking and are entitled to vote, be voted for and hold a position."
+        },
+        {
+          "sectionNumber": "Section 9",
+          "title": "Expressed Duties & Obligations",
+          "content": "The members of this Organization shall have the following expressed duties and obligations:",
+          "subpoints": [
+            "a) The duty to comply with the provisions of this Constitution and By-Laws and other rules that may be promulgated by the leaders or may be agreed upon by the Organization.",
+            "b) The duty to attend assemblies whether general or special;",
+            "c) The duty to pay the membership fee and such other fees that may be deemed appropriate by the Leaders in accordance with the Constitution;",
+            "d) The duty to comply with any other discretionary requirements of the organization as deemed appropriate by the Leaders.",
+            "e) The duty to defend the honor, prestige, and integrity of the organization.",
+            "f) The duty to respect the other members of the organization.",
+            "g) The duty to support all the undertakings of the organization and participate actively in all the activities and functions of the organization.",
+            "h) The duty to deepen their understanding of the concept of the organization.",
+            "i) The duty to engender academic excellence in the organization."
+          ]
+        },
+        {
+          "sectionNumber": "Section 10",
+          "title": "Violations of Members",
+          "content": "Violations of members:",
+          "subpoints": [
+            "a) Culpable violations of any provisions of the Constitution and By-Laws.",
+            "b) Gross misconduct, dishonesty, discourtesy and disloyalty to the organization.",
+            "c) Inefficiency and incompetence in the performance of official duties."
+          ]
         }
       ]
     },
@@ -248,17 +353,40 @@
       "id": "art-5",
       "articleNumber": "ARTICLE V",
       "title": "PROCEEDINGS, SANCTIONS, AND TERMINATION",
-      "summary": "Details due process, academic standing obligations, disciplinary sanctions, and termination of membership.",
+      "summary": "Guarantees due process, details mandatory attendance sanctions, and establishes grounds for membership termination.",
       "sections": [
         {
           "sectionNumber": "Section 1",
-          "title": "Due Process & Code of Conduct",
-          "content": "No member shall be subjected to disciplinary sanction without written notification and an impartial hearing conducted under the jurisdiction of the Executive Council and Faculty Adviser."
+          "title": "Due Process Guarantee",
+          "content": "Proceedings. No member shall be subject to remedies and sanctions without just cause and due process."
         },
         {
           "sectionNumber": "Section 2",
-          "title": "Grounds for Sanctions",
-          "content": "Acts contrary to university discipline, intentional malversation of chapter funds, gross academic dishonesty, or willful violation of the By-Laws constitute grounds for sanction."
+          "title": "Remedies and Sanctions",
+          "content": "Violations of the following duties by a member shall be sanctioned:",
+          "subpoints": [
+            "a) Failure in compliance in the following will subject a member to violations and be sanctioned (per attendance):",
+            "    i. To attend General Assembly",
+            "    ii. To participate in the KKP",
+            "    iii. To attend in the departmental day & night",
+            "    iv. To attend related activities where participation is required",
+            "b) Other such remedies and sanctions deemed appropriate by the Leaders and advisers in accordance with this Constitution and as approved by the office of student affairs and services."
+          ]
+        },
+        {
+          "sectionNumber": "Section 3",
+          "title": "Cancellation of Rights & Privileges",
+          "content": "Students found to be guilty of gross misconduct, dishonesty, disloyalty to the Organization and other cases considered to be grave in nature shall cancel all the rights, interests, and privileges of the member in the services or resources of the Association."
+        },
+        {
+          "sectionNumber": "Section 4",
+          "title": "Termination of Membership",
+          "content": "Termination of membership:",
+          "subpoints": [
+            "a) Graduation – any member who is duly recommended by the school's Office of the Registrar for graduation ceases to become a member.",
+            "b) Shifters – any member who is disqualified to become a student under Article 2, Section 1 of this Constitution and By-Laws ceases to become a member.",
+            "c) Others – any member who, in one way or another, has failed to uphold the purposes, for which this Organization was established, upon the discretion of the JPAMA leaders and Adviser, ceases to become a member."
+          ]
         }
       ]
     },
@@ -266,44 +394,178 @@
       "id": "art-6",
       "articleNumber": "ARTICLE VI",
       "title": "THE ASSEMBLY",
-      "summary": "Defines the composition, frequency, quorum requirements, and powers of the General Assembly.",
+      "summary": "Governs mandatory annual convocations, written notifications, and validity of assembly proceedings.",
       "sections": [
         {
           "sectionNumber": "Section 1",
-          "title": "Supreme Legislative Body",
-          "content": "The General Assembly, comprising all bona fide members in good standing, constitutes the highest policy-confirming body of JPAMA USLT."
+          "title": "Annual Assembly Schedule",
+          "content": "There shall be an assembly at least once in a year; the time and date of which shall be scheduled by the leaders."
         },
         {
           "sectionNumber": "Section 2",
-          "title": "Regular and Special Convocations",
-          "content": "The General Assembly shall convene at least once per academic semester. Special assemblies may be convoked by the President upon approval of the Faculty Adviser."
+          "title": "Notice of Assembly",
+          "content": "At least two weeks prior to the date of the meeting, the Secretary of the Association shall give a written notice of the assembly through mail or use another suitable method to notify all members in writing of the assembly. Any irregularity or failure to provide proper notice will invalidate the procedure."
         }
       ]
     },
     {
       "id": "art-7",
       "articleNumber": "ARTICLE VII",
-      "title": "LEADERS (EXECUTIVE OFFICERS & DUTIES)",
-      "summary": "Codifies the executive council hierarchy, specialized vice presidencies, and specific governance portfolios.",
+      "title": "LEADERS",
+      "summary": "Prescribes executive portfolios, official duties, assembly cadence, notice guidelines, and governance authorities.",
       "sections": [
         {
           "sectionNumber": "Section 1",
-          "title": "Composition of the Executive Council",
-          "content": "The executive administration is vested in the President, Executive Vice President, specialized Vice Presidents, Secretary General, and collegiate ambassadors.",
-          "subpoints": [
-            "President: Chief Executive Officer directing general policy and institutional representation.",
-            "Executive Vice President: Deputy executive coordinating internal administrative affairs.",
-            "VP Academics: Oversees academic testbanks, symposia, and study circles.",
-            "VP Non-Academics: Coordinates civic outreach, sports festivals, and cultural events.",
-            "VP Finance & VP Audit: Safeguards organizational treasury, budget preparation, and independent audits.",
-            "VP Communications, Graphics & Marketing: Directs public notices, branding, and digital platforms.",
-            "VP Membership & Logistics: Manages student rosters, logistics, and convocations."
-          ]
+          "title": "Enumeration and Qualifications",
+          "content": "The duly elected leaders of the organization shall have the power and duties provided under these By-laws or those which may be assigned by the Advisers in conformity thereto."
         },
         {
           "sectionNumber": "Section 2",
-          "title": "Faculty Advisers",
-          "content": "The organization shall have dedicated Faculty Advisers appointed from the SABH faculty, providing moral, professional, and institutional stewardship."
+          "title": "President",
+          "content": "The President shall be the Chief Executive Officer of the Organization and shall exercise general supervision over the other officers. He shall see to it that the provisions of the Constitution and the By-laws as well as the resolutions approved by the Advisers are complied with. He shall preside at all meetings of the organization; unless otherwise specifically agreed upon. He shall represent the organization in all occasions and in all matters where it should be represented. He shall perform such other duties as are ordinarily appertaining to his office and those that the Advisers may fix or delegate from time to time."
+        },
+        {
+          "sectionNumber": "Section 3",
+          "title": "Executive Vice President",
+          "content": "The Executive Vice President shall assist the President in the execution of policies and resolutions adopted by the organization and in matters relating to the regulation of the affairs and activities of the organization. He shall be vested with all the powers and authority required to perform all the duties of the President during the absence or incapacity of the President for any cause. He shall also perform such other duties as may be assigned to him from time to time by the President and/or the Advisers. He shall be the next President right after the current federation year."
+        },
+        {
+          "sectionNumber": "Section 4",
+          "title": "VP for Academics",
+          "content": "The Vice-President for Academics shall have the authorities and duties, which include the following aside from those assigned by the Leaders:",
+          "subpoints": [
+            "a) To supervise the implementation of academic projects and activities of the organization;",
+            "b) Empower the members to observe the virtue of academic excellence;",
+            "c) Take responsibility for Academic Affairs inside and outside the organization;",
+            "d) To perform other duties inherent to the position."
+          ]
+        },
+        {
+          "sectionNumber": "Section 5",
+          "title": "VP for Non-Academics",
+          "content": "The Vice-President for Non-Academics shall have the authorities and duties, which include the following aside from those, assigned by the leaders:",
+          "subpoints": [
+            "a) To supervise and execute the complementary role curricular and extracurricular by integrating and coordinating cultural activities and incorporating these in the general activities of the organization;",
+            "b) To supervise and execute the complementary role curricular and extracurricular by integrating and coordinating sports activities and incorporate these in the general activities of the organization;",
+            "c) To coordinate with other institutions, agencies or organizations necessary for the nonacademic programs of the organization; and,",
+            "d) To perform other duties inherent to the position."
+          ]
+        },
+        {
+          "sectionNumber": "Section 6",
+          "title": "VP for Finance",
+          "content": "The Vice-President for Finance shall collect all fees, dues or contributions from the members as required under the Bylaws, or as may be authorized by the Advisers. He shall receive any and all collections of the Organization from whatever source, take charge of all funds, properties and accounts of the Organization, render financial or property reports periodically and as may be necessary. He shall prepare for the monthly meeting of the Leaders, a statement of cash flows and other financial reports that may be required."
+        },
+        {
+          "sectionNumber": "Section 7",
+          "title": "VP for Audit",
+          "content": "The Vice-President for Audit shall conduct management audits, examine the books of account of the current fiscal year and ascertain compliance with directives and resolutions of the Advisers as covered by appropriate Leader Resolutions or as recorded in the minutes of the meeting as well as by existing laws and regulations affecting the Organization, among others."
+        },
+        {
+          "sectionNumber": "Section 8",
+          "title": "VP for Communications",
+          "content": "The Vice-President for Communications shall have the following authorities and duties, which include the following aside from those assigned by the Leaders:",
+          "subpoints": [
+            "a) To disseminate information within the Organization;",
+            "b) To keep minutes of all the assemblies of the Leaders;",
+            "c) To disseminate all notices required to be given by this Constitution and By-Laws;",
+            "d) To be the custodian of all records, documents and papers of the Organization and to certify all records of the Organization noted by the President; and,",
+            "e) To perform other duties inherent to the position."
+          ]
+        },
+        {
+          "sectionNumber": "Section 9",
+          "title": "VP for Logistics",
+          "content": "The Vice-President for Logistics shall have the authorities and duties which include the following aside from those assigned by the Leaders:",
+          "subpoints": [
+            "a) To be responsible for arranging programs and making the materials used for the activities carried out by the Organization; and,",
+            "b) To perform other duties inherent to the position."
+          ]
+        },
+        {
+          "sectionNumber": "Section 10",
+          "title": "VP for Graphics and Publication",
+          "content": "The Vice-President for Graphics and Publication shall have the authorities and duties which include the following aside from those assigned by the Leaders:",
+          "subpoints": [
+            "a) To be responsible for information dissemination through the use of social media and advanced technology, photo and video documentation during the activities carried out by the organization.",
+            "b) To perform other duties inherent to the position."
+          ]
+        },
+        {
+          "sectionNumber": "Section 11",
+          "title": "VP for Marketing and Business Affairs",
+          "content": "The Vice-President for Marketing shall have the authorities and duties which include the following aside from those assigned by the Leaders:",
+          "subpoints": [
+            "a) To be responsible for the canvassing and purchasing of goods and services needed by the organization or as approved by the Leaders.",
+            "b) To carry out business activities of the organization.",
+            "c) To perform duties inherent to the position."
+          ]
+        },
+        {
+          "sectionNumber": "Section 12",
+          "title": "VP for Membership",
+          "content": "The Vice-President for Membership shall have the authorities and duties which include the following aside from those assigned by the Leaders:",
+          "subpoints": [
+            "a) To keep a complete and up-to-date list of names of members;",
+            "b) To monitor the attendance, performance and degree of participation of members in the Organization assembly and functions; and,",
+            "c) To perform other duties inherent to the position."
+          ]
+        },
+        {
+          "sectionNumber": "Section 13",
+          "title": "VP for Religious Affairs",
+          "content": "The Vice-President for Religious Affairs shall have the authorities and duties which include the following aside from those assigned by the Leaders:",
+          "subpoints": [
+            "a) To attend and communicate in all the religious activities and other church-related activities inside and outside the organization.",
+            "b) To implement and impose all the rules and regulations of the school regarding Christian living."
+          ]
+        },
+        {
+          "sectionNumber": "Section 14",
+          "title": "University Ambassadors",
+          "content": "The University Ambassadors which includes a student from first, second, third, and fourth year levels, shall have the authorities and duties which include the following aside from those assigned by the Leaders:",
+          "subpoints": [
+            "a) To be the representative of the organization to the University-related activities;",
+            "b) To be the representative of students under management accounting course;",
+            "c) To inform the class representatives of all year levels on the matters that they should be informed of discussed during assemblies of the leaders;",
+            "d) To be the primary implementers of Article V of this Constitution and By-Laws; and,",
+            "e) To perform other duties inherent to the position."
+          ]
+        },
+        {
+          "sectionNumber": "Section 15",
+          "title": "Secretary",
+          "content": "The Secretary, who is a bona fide member of the JPAMA shall keep the minutes of all meetings of the members of the Organization. He shall give or cause to be given, all notices required by the Bylaws, as well as notices of all meetings of the Leaders and of the members of the Organization. He shall be the custodian of the corporate seal and shall affix the same attested by his signature to such instruments as may require such seal. He shall make and submit such reports as may be required of him by the Adviser and/or the President and perform such other duties as may be assigned to him from time to time by the Advisers or Leaders."
+        },
+        {
+          "sectionNumber": "Section 16",
+          "title": "Term of Office",
+          "content": "The Leaders shall hold office for one Organization year or until their successors have been duly elected."
+        },
+        {
+          "sectionNumber": "Section 17",
+          "title": "Regular Assembly",
+          "content": "The Leaders shall hold regular assemblies at least twice a month on such time, place and date as may be agreed upon."
+        },
+        {
+          "sectionNumber": "Section 18",
+          "title": "Special Assembly",
+          "content": "Special assembly of the Leaders shall be called at any time by the President or by a written request of the majority of the Leaders and shall be held at such a place, time as may agree upon."
+        },
+        {
+          "sectionNumber": "Section 19",
+          "title": "Notice of the Assembly",
+          "content": "Whenever a regular or special assembly is to be held, the President shall direct the Vice President for Communication to notify the members of the Leaders. A notice of special assembly shall state the time and place thereof and the purpose/s for which it is called."
+        },
+        {
+          "sectionNumber": "Section 20",
+          "title": "Quorum",
+          "content": "Whenever there is no quorum, no business may be transacted. A majority of quorum shall decide in every question of matters submitted to the Leaders at any such assembly."
+        },
+        {
+          "sectionNumber": "Section 21",
+          "title": "Duties and Powers",
+          "content": "It shall be the duty of the Board of Directors to conduct the business and affairs of the Association and to perform such acts as shall foster and promote the purposes of the Association as mentioned in Article II- Purposes."
         }
       ]
     },
@@ -311,22 +573,39 @@
       "id": "art-8",
       "articleNumber": "ARTICLE VIII",
       "title": "VACANCIES AND ELECTION",
-      "summary": "Governs annual elections, qualification benchmarks, Electoral Board proceedings, and succession rules.",
+      "summary": "Sets vacancy protocols, nomination criteria, special election triggers, and specific year-level officer eligibility.",
       "sections": [
         {
           "sectionNumber": "Section 1",
-          "title": "Annual Elections",
-          "content": "Executive Council elections shall be held annually in the second semester under the supervision of an independent Commission on Elections (COMELEC)."
+          "title": "Vacancies and Delegation of Duties",
+          "content": "If the office of any of the Executive Officers shall become vacant by death, resignation or otherwise, the remaining directors, if still constituting a quorum, may, by majority vote from the remaining elected officers, choose a successor or successors who shall hold office for the unexpired term, at a special meeting called for the purpose. If there is no longer a quorum, a special election shall be held upon call by any remaining director or at least 10% of members in good standing as of the date of the call, to fill up the vacancies."
         },
         {
           "sectionNumber": "Section 2",
-          "title": "Qualifications",
-          "content": "Candidates must be enrolled BSMA students with good moral character, free from failing grades, and compliant with university leadership guidelines."
-        },
-        {
-          "sectionNumber": "Section 3",
-          "title": "Order of Succession",
-          "content": "Should a vacancy occur in the Presidency, the Executive Vice President shall automatically ascend to complete the unexpired term."
+          "title": "Election of Officers & Qualifications",
+          "content": "Candidates for leadership in the Organization must conform to and shall be subject to the following qualifications and requirements:",
+          "subpoints": [
+            "a) He must be a bona fide member of the JPAMA;",
+            "b) He must be a qualified member under Article 2, Section 1 of this Constitution and By-Laws;",
+            "c) Special qualifications:",
+            "    i. President open to incoming Third Year and Fourth Year.",
+            "    ii. VP-Executive open to incoming Third Year students only.",
+            "    iii. VP-Academics open to incoming Third Year and Fourth Year.",
+            "    iv. VP-Non-Academics – Sports Coordinator open to incoming Second, Third, and Fourth Year students only.",
+            "    v. VP-Non-Academics – Socio-cultural Coordinator open to incoming Second, Third, and Fourth Year students only.",
+            "    vi. VP-Finance open to Third Year students only.",
+            "    vii. VP-Audit open to incoming Third and Fourth Year students only.",
+            "    viii. VP-Communications open to incoming Second, Third, and Fourth Year students only.",
+            "    ix. VP-Logistics open to incoming Second, Third, and Fourth Year students only.",
+            "    x. VP-Graphics and Publication open to incoming Second, Third, and Fourth Year students only.",
+            "    xi. VP-Religious Affairs open to incoming Second, Third, and Fourth Year students only.",
+            "    xii. VP-Marketing and Business Affairs open to incoming Second, Third, and Fourth Year students only.",
+            "    xiii. VP-Membership open to incoming Second, Third, and Fourth Year students only.",
+            "    xiv. CECA Coordinator open to incoming Second, Third, and Fourth Year students only.",
+            "    xv. University Ambassador open to incoming Second, Third, and Fourth Year students only.",
+            "    xvi. Secretary General open to incoming Second, Third, and Fourth Year students only.",
+            "    xvii. Year Level Representative open to JPAMA Volunteers."
+          ]
         }
       ]
     },
@@ -334,17 +613,46 @@
       "id": "art-9",
       "articleNumber": "ARTICLE IX",
       "title": "FINANCES",
-      "summary": "Regulates membership dues, bank deposits, audit reports, and transparent financial stewardship.",
+      "summary": "Establishes the June 1–May 31 fiscal year, annual budget approvals, semi-annual collection, book inspection, and disbursement signatures.",
       "sections": [
         {
           "sectionNumber": "Section 1",
-          "title": "Sources of Funds",
-          "content": "Funds shall be derived from official membership dues approved by the SABH administration, authorized fund-raising projects, and voluntary collegiate contributions."
+          "title": "Fiscal Year",
+          "content": "The Fiscal year of the Organization shall be from the first day of June up to the last day of May of each year."
         },
         {
           "sectionNumber": "Section 2",
-          "title": "Audited Financial Statements",
-          "content": "The VP Audit and VP Finance shall publish an audited statement of financial condition at the conclusion of every academic semester, signed by the Faculty Adviser."
+          "title": "Sources of Funds",
+          "content": "The funds shall emanate from the membership fee and inflows from all other fundraising activities not contrary to public laws, morals and customs. This shall also include the fines and penalties duly approved by the Leader and Advisers."
+        },
+        {
+          "sectionNumber": "Section 3",
+          "title": "Yearly Budget",
+          "content": "The Association shall have and maintain an Organization year budget only approved by the JPAMA Adviser contained therein:",
+          "subpoints": [
+            "a) General appropriation fund for non-recurring expenses of the Organization.",
+            "b) Specific appropriations for recurring expenses to control disbursement of funds."
+          ]
+        },
+        {
+          "sectionNumber": "Section 4",
+          "title": "Collection of Funds",
+          "content": "The collection of the fund shall be imposed twice every fiscal year during the renewal of membership on or before the end of every semester."
+        },
+        {
+          "sectionNumber": "Section 5",
+          "title": "Inspection of Accounts",
+          "content": "The books of account and records of the Association shall be open for inspection by any member in good standing during office hours on any business day."
+        },
+        {
+          "sectionNumber": "Section 6",
+          "title": "Bank Depository",
+          "content": "All funds owned and held or otherwise under the custody of the Organization shall be deposited with authorized banks designated by the Leaders."
+        },
+        {
+          "sectionNumber": "Section 7",
+          "title": "Disbursement and Withdrawals",
+          "content": "The disbursements and withdrawals shall be allowed through the authorization and signatures of the President and Vice President for Finance. Amount of disbursements, expenditures or withdrawals requires prior approval of all the Leaders."
         }
       ]
     },
@@ -352,17 +660,17 @@
       "id": "art-10",
       "articleNumber": "ARTICLE X",
       "title": "AMENDMENTS",
-      "summary": "Specifies the constitutional convention procedures and voting thresholds required to alter these By-Laws.",
+      "summary": "Sets the affirmative majority vote of executive officers and final JPAMA adviser approval for constitutional amendments.",
       "sections": [
         {
           "sectionNumber": "Section 1",
-          "title": "Proposal of Amendments",
-          "content": "Any amendment or revision may be proposed by a two-thirds (2/3) vote of the Executive Council or upon written petition signed by at least twenty percent (20%) of the members."
+          "title": "Affirmative Vote of Officers",
+          "content": "The Constitution and By-Laws may be amended or repealed in whole or in part by the affirmative vote of the majority of the executive officers of the Association present at any regular meeting or in any special meeting duly called for that purpose."
         },
         {
           "sectionNumber": "Section 2",
-          "title": "Ratification",
-          "content": "Proposed amendments shall take effect upon ratification by a majority of votes cast in a plebiscite of the General Assembly and approval by the SABH Dean."
+          "title": "Adviser Ratification",
+          "content": "The amendments shall be subject for final approval by the JPAMA advisers. Any amendment duly approved shall be valid and binding."
         }
       ]
     },
@@ -370,17 +678,17 @@
       "id": "art-11",
       "articleNumber": "ARTICLE XI",
       "title": "EFFECTIVITY",
-      "summary": "Codifies the date of promulgation, repealing clause, and immediate binding force across the chapter.",
+      "summary": "Proclaims formal chapter effectivity beginning Federation Year 2024-2025 and immediate effectivity of adviser-approved amendments.",
       "sections": [
         {
           "sectionNumber": "Section 1",
-          "title": "Date of Effectivity",
-          "content": "This Constitution and By-Laws shall take effect immediately upon official approval by the School of Accountancy, Business, and Hospitality and the Office of Student Affairs."
+          "title": "Effectivity Date",
+          "content": "This Constitution and By-Laws shall take effect starting this Federation Year 2024-2025."
         },
         {
           "sectionNumber": "Section 2",
-          "title": "Repealing Clause",
-          "content": "All previous resolutions, constitutions, and bylaws inconsistent with the provisions herein are hereby repealed or modified accordingly."
+          "title": "Immediate Effectivity of Amendments",
+          "content": "Amendments of the Constitution and By-Laws shall be effective immediately upon approval by the JPAMA Advisers."
         }
       ]
     }
@@ -429,5 +737,6 @@
         }
       ]
     }
-  ]
+  ],
+  "bylaws_enabled": true
 }

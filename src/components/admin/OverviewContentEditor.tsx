@@ -48,7 +48,7 @@ export default function OverviewContentEditor({
 }: OverviewContentEditorProps) {
   const [selectedTab, setSelectedTab] = useState<string>(activeSectionId || "hero");
 
-  const updateHero = (field: keyof OverviewContent["hero"], value: string) => {
+  const updateHero = (field: keyof OverviewContent["hero"], value: any) => {
     onChange({
       ...content,
       hero: {
@@ -177,7 +177,8 @@ export default function OverviewContentEditor({
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-md overflow-hidden animate-fadeIn">
       {/* Header */}
-      <div className="p-5 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      {/* Modal / Editor Header — Sticky with Save Button */}
+      <div className="sticky top-0 z-30 p-5 border-b border-slate-200 bg-white/95 backdrop-blur-md shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
@@ -186,25 +187,27 @@ export default function OverviewContentEditor({
             </h3>
           </div>
           <p className="text-xs text-slate-500 mt-0.5">
-            Customize every headline, stat counter, and description rendered on the public homepage.
+            Leave any field or stat blank to automatically hide it from the public homepage.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           {isSaved && (
-            <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-md flex items-center gap-1 animate-fadeIn">
+            <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-md flex items-center gap-1 animate-fadeIn">
               <Check className="w-3.5 h-3.5" />
-              <span>Saved Live!</span>
+              <span>Saved Live in Supabase!</span>
             </span>
           )}
           <button
+            type="button"
             onClick={onSave}
             className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all"
           >
             <Save className="w-3.5 h-3.5" />
-            <span>Save Content</span>
+            <span>Save All Content</span>
           </button>
           <button
+            type="button"
             onClick={onClose}
             className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-200 transition-colors"
             title="Close editor"
@@ -402,6 +405,106 @@ export default function OverviewContentEditor({
                 </div>
               </div>
             </div>
+
+            {/* Hero Emblem / Right Crest Settings */}
+            <div className="pt-3 border-t border-slate-200 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="font-semibold text-xs text-[#0A2540] uppercase tracking-wider">
+                  Right-Side Hero Emblem & Seal
+                </h4>
+                <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={content.hero.emblem_visible !== false}
+                    onChange={(e) => updateHero("emblem_visible", e.target.checked)}
+                    className="rounded border-slate-300 text-[#0A2540] focus:ring-[#0A2540]"
+                  />
+                  <span>Show Emblem in Hero</span>
+                </label>
+              </div>
+
+              {content.hero.emblem_visible !== false && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                  <div className="sm:col-span-2">
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                      Emblem Image URL (Leave blank to use default JPAMA Chapter Emblem)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="/jpama-hero-emblem.jpg or custom image URL"
+                      value={content.hero.emblem_image || ""}
+                      onChange={(e) => updateHero("emblem_image", e.target.value)}
+                      className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                      Emblem Heading (Leave blank to hide)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Official Chapter Seal"
+                      value={content.hero.emblem_title ?? "Official Chapter Seal"}
+                      onChange={(e) => updateHero("emblem_title", e.target.value)}
+                      className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                      Emblem Subtitle (Leave blank to hide — SABH removed)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Optional subtitle (blank hides this line)"
+                      value={content.hero.emblem_subtitle || ""}
+                      onChange={(e) => updateHero("emblem_subtitle", e.target.value)}
+                      className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540]"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1.5">
+                      Emblem Motion Style
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { id: "glow", label: "✨ Royal Glow", desc: "Steady majestic aura (No wobbling)" },
+                        { id: "static", label: "🏛️ Solid Static", desc: "Completely still heraldic plaque" },
+                        { id: "floating", label: "🌊 Gentle Float", desc: "Slow vertical levitation" },
+                      ].map((m) => (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => updateHero("emblem_motion", m.id)}
+                          className={`p-2 rounded-lg border text-left transition-all ${
+                            (content.hero.emblem_motion || "glow") === m.id
+                              ? "border-[#0A2540] bg-[#EAF2FA] text-[#0A2540] font-bold ring-2 ring-[#0A2540]/20"
+                              : "border-slate-200 bg-white hover:bg-slate-50 text-slate-600"
+                          }`}
+                        >
+                          <span className="block text-xs font-bold">{m.label}</span>
+                          <span className="block text-[10px] text-slate-500 mt-0.5">{m.desc}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Inline Save Bar for Hero */}
+            <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <span className="text-[11.5px] text-slate-500">
+                💡 Tip: Leave any metric counter, button, or tagline blank to automatically hide that box from the public homepage.
+              </span>
+              <button
+                type="button"
+                onClick={onSave}
+                className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all flex-shrink-0"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span>Save Hero & Counters</span>
+              </button>
+            </div>
           </div>
         )}
 
@@ -496,6 +599,21 @@ export default function OverviewContentEditor({
                 </div>
               ))}
             </div>
+
+            {/* Inline Save Bar for Pillars */}
+            <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <span className="text-[11.5px] text-slate-500">
+                💡 Tip: Clear a pillar title and description to automatically hide that pillar box.
+              </span>
+              <button
+                type="button"
+                onClick={onSave}
+                className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all flex-shrink-0"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span>Save Pillars</span>
+              </button>
+            </div>
           </div>
         )}
 
@@ -554,6 +672,21 @@ export default function OverviewContentEditor({
             <p className="text-xs text-slate-500 italic">
               Note: Individual assemblies (dates, speakers, venues, agendas) are managed under the &ldquo;Assemblies &amp; Calendar&rdquo; directory.
             </p>
+
+            {/* Inline Save Bar for Events */}
+            <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <span className="text-[11.5px] text-slate-500">
+                💡 Tip: Clear headline and eyebrow to automatically hide the events spotlight section.
+              </span>
+              <button
+                type="button"
+                onClick={onSave}
+                className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all flex-shrink-0"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span>Save Events</span>
+              </button>
+            </div>
           </div>
         )}
 
@@ -624,6 +757,21 @@ export default function OverviewContentEditor({
                 className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white"
               />
             </div>
+
+            {/* Inline Save Bar for Resources */}
+            <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <span className="text-[11.5px] text-slate-500">
+                💡 Tip: Clear headline and description to automatically hide the resources banner.
+              </span>
+              <button
+                type="button"
+                onClick={onSave}
+                className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all flex-shrink-0"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span>Save Resources</span>
+              </button>
+            </div>
           </div>
         )}
 
@@ -680,6 +828,21 @@ export default function OverviewContentEditor({
             <p className="text-xs text-slate-500 italic">
               Note: Council officers and faculty posts are managed under the &ldquo;Leadership &amp; Faculty&rdquo; directory.
             </p>
+
+            {/* Inline Save Bar for Leadership */}
+            <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <span className="text-[11.5px] text-slate-500">
+                💡 Tip: Clear headline and description to automatically hide the leadership spotlight.
+              </span>
+              <button
+                type="button"
+                onClick={onSave}
+                className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all flex-shrink-0"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span>Save Leadership</span>
+              </button>
+            </div>
           </div>
         )}
 
@@ -762,6 +925,21 @@ export default function OverviewContentEditor({
                   className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0A2540] focus:bg-white"
                 />
               </div>
+            </div>
+
+            {/* Inline Save Bar for Contact */}
+            <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <span className="text-[11.5px] text-slate-500">
+                💡 Tip: Any empty contact cards will automatically be hidden on the homepage.
+              </span>
+              <button
+                type="button"
+                onClick={onSave}
+                className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all flex-shrink-0"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span>Save Contact</span>
+              </button>
             </div>
           </div>
         )}
@@ -889,6 +1067,68 @@ export default function OverviewContentEditor({
                     <span className="block text-xs font-bold">⬇️ Stacked Bottom</span>
                     <span className="block text-[10px] text-slate-500 mt-0.5">Photos Top, Text Below</span>
                   </button>
+                </div>
+              </div>
+
+              {/* ── Image Size Selector ── */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
+                  <span>📐 Image Size / Aspect Ratio</span>
+                  <span className="text-[11px] text-slate-400 font-normal">Controls the slideshow display dimensions</span>
+                </label>
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                  {([
+                    { value: "2x2",   label: "2×2",   hint: "Square" },
+                    { value: "4:3",   label: "4:3",   hint: "Classic" },
+                    { value: "16:9",  label: "16:9",  hint: "Widescreen" },
+                    { value: "small", label: "Small",  hint: "Compact" },
+                    { value: "medium",label: "Medium", hint: "Standard" },
+                    { value: "large", label: "Large",  hint: "Cinematic" },
+                  ] as const).map(({ value, label, hint }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => updateCustomSec({ imageSize: value })}
+                      className={`p-2 rounded-xl border text-center transition-all ${
+                        (secData.imageSize || "16:9") === value
+                          ? "border-[#C5A059] bg-amber-50 text-[#9E7D38] font-bold ring-2 ring-[#C5A059]/20 shadow-sm"
+                          : "border-slate-200 bg-white hover:bg-slate-50 text-slate-600"
+                      }`}
+                    >
+                      <span className="block text-xs font-bold">{label}</span>
+                      <span className="block text-[10px] text-slate-500 mt-0.5">{hint}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── Edge Style Selector ── */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
+                  <span>🌅 Edge / Border Style</span>
+                  <span className="text-[11px] text-slate-400 font-normal">Controls the vignette around the slideshow</span>
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {([
+                    { value: "none",  label: "None",   hint: "Clean edge" },
+                    { value: "fade",  label: "Fade",   hint: "Soft vignette" },
+                    { value: "fine",  label: "Fine",   hint: "Inner shadow" },
+                    { value: "lined", label: "Lined",  hint: "White border" },
+                  ] as const).map(({ value, label, hint }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => updateCustomSec({ edgeStyle: value })}
+                      className={`p-2 rounded-xl border text-center transition-all ${
+                        (secData.edgeStyle || "none") === value
+                          ? "border-[#0A2540] bg-[#EAF2FA] text-[#0A2540] font-bold ring-2 ring-[#0A2540]/20 shadow-sm"
+                          : "border-slate-200 bg-white hover:bg-slate-50 text-slate-600"
+                      }`}
+                    >
+                      <span className="block text-xs font-bold">{label}</span>
+                      <span className="block text-[10px] text-slate-500 mt-0.5">{hint}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -1061,6 +1301,21 @@ export default function OverviewContentEditor({
                   )}
                 </div>
               )}
+
+              {/* Inline Save Bar for Custom Section */}
+              <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <span className="text-[11.5px] text-slate-500">
+                  💡 Tip: If headline, description, and photos are all blank, this custom section automatically hides from the homepage.
+                </span>
+                <button
+                  type="button"
+                  onClick={onSave}
+                  className="px-4 py-2 bg-[#0A2540] hover:bg-[#14487A] text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all flex-shrink-0"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>Save Custom Section</span>
+                </button>
+              </div>
             </div>
           );
         })()}

@@ -602,17 +602,13 @@ export default function AboutPage() {
                           <h4 className="font-serif font-bold text-sm sm:text-base text-[#0A2540] leading-snug group-hover:text-[#14487A] transition-colors">
                             {fac.name}
                           </h4>
-                          <p className="text-xs font-bold text-[#9E7D38] mt-0.5">
+                          <p className="text-xs font-semibold text-[#9E7D38] mt-0.5">
                             {fac.role}
                           </p>
                           <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-600 font-medium">
                             {fac.badge}
                           </span>
                         </div>
-
-                        <p className="text-xs text-slate-500 italic px-2 line-clamp-3">
-                          "{fac.bio}"
-                        </p>
                       </div>
 
                       <div className="pt-3 mt-3 border-t border-slate-100 text-[11px] text-[#0A2540] font-semibold text-center flex items-center justify-center gap-1 group-hover:text-[#C5A059] transition-colors">
@@ -691,23 +687,18 @@ export default function AboutPage() {
                           <h4 className="font-serif font-bold text-sm text-[#0A2540] leading-snug group-hover:text-[#14487A] transition-colors">
                             {officer.name}
                           </h4>
-                          <p className="text-xs font-bold text-[#9E7D38] mt-0.5">
+                          <p className="text-xs font-semibold text-[#9E7D38] mt-0.5">
                             {officer.role}
                           </p>
-                          <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-600 font-medium">
+                          <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-600 font-medium">
                             {officer.committee || "Executive Council"}
                           </span>
                         </div>
-
-                        {officer.quote && (
-                          <p className="text-xs text-slate-500 italic px-2 line-clamp-3">
-                            "{officer.quote}"
-                          </p>
-                        )}
                       </div>
 
-                      <div className="pt-3 mt-3 border-t border-slate-100 text-[11px] text-slate-400 text-center font-medium">
-                        {officer.term || "A.Y. 2026–2027"} • {officer.yearProgram || "BSMA"}
+                      <div className="pt-3 mt-3 border-t border-slate-100 text-[11px] text-[#0A2540] font-semibold text-center flex items-center justify-center gap-1 group-hover:text-[#C5A059] transition-colors">
+                        <span>View Profile</span>
+                        <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                       </div>
                     </div>
                   ))}

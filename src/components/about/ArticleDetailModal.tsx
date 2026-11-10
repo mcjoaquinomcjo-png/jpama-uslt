@@ -100,13 +100,15 @@ export default function ArticleDetailModal({
                 </p>
 
                 {section.subpoints && section.subpoints.length > 0 && (
-                  <ul className="mt-3 space-y-2 pl-2 border-l-2 border-[#C5A059]/50 text-xs text-slate-600">
-                    {section.subpoints.map((sub, sIdx) => (
-                      <li key={sIdx} className="flex items-start gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#9E7D38] flex-shrink-0 mt-0.5" />
-                        <span>{sub}</span>
-                      </li>
-                    ))}
+                  <ul className="mt-3 space-y-2 pl-3 border-l-2 border-[#C5A059]/60 text-xs sm:text-[13px] text-slate-700">
+                    {section.subpoints.map((sub, sIdx) => {
+                      const cleanSub = sub.replace(/^[•\-\*]\s*/, "");
+                      return (
+                        <li key={sIdx} className="leading-relaxed">
+                          {cleanSub}
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </div>
